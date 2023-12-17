@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe", "Spiffe\Spiffe.csproj", "{49B83F34-733F-4F1F-9E33-C6936BC03C4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Client", "Spiffe.Client\Spiffe.Client.csproj", "{928754C4-5323-44C1-8190-299CC71D55C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Tests", "Spiffe.Tests\Spiffe.Tests.csproj", "{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{49B83F34-733F-4F1F-9E33-C6936BC03C4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49B83F34-733F-4F1F-9E33-C6936BC03C4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49B83F34-733F-4F1F-9E33-C6936BC03C4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49B83F34-733F-4F1F-9E33-C6936BC03C4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{928754C4-5323-44C1-8190-299CC71D55C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{928754C4-5323-44C1-8190-299CC71D55C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{928754C4-5323-44C1-8190-299CC71D55C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{928754C4-5323-44C1-8190-299CC71D55C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
