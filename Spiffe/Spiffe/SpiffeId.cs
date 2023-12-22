@@ -1,20 +1,19 @@
-namespace Spiffe.SpiffeId;
+namespace Spiffe;
 
-using System.Security.Cryptography;
 using System.Text;
-using static Spiffe.SpiffeId.SpiffePath;
-using static Spiffe.SpiffeId.SpiffeTrustDomain;
+using static Spiffe.SpiffePath;
+using static Spiffe.SpiffeTrustDomain;
 
 public class SpiffeId
 {
-  private const string SchemePrefix = "spiffe";
+  private const string SchemePrefix = "spiffe://";
 
   private static readonly int SchemePrefixLength = SchemePrefix.Length;
 
   private readonly string id;
 
-	// pathIndex tracks the index to the beginning of the path inside of id. This
-	// is used when extracting the trust domain or path portions of the id.
+  // pathIndex tracks the index to the beginning of the path inside of id. This
+  // is used when extracting the trust domain or path portions of the id.
   private readonly int pathIndex;
 
   private SpiffeId(string id, int pathIndex)
@@ -26,8 +25,8 @@ public class SpiffeId
   /// <summary>
   /// The trust domain of the SPIFFE ID.
   /// </summary>
-  public SpiffeTrustDomain TrustDomain => 
-    IsZero 
+  public SpiffeTrustDomain TrustDomain =>
+    IsZero
       ? new(string.Empty)
       : new(id[SchemePrefixLength..pathIndex]);
 
@@ -36,7 +35,7 @@ public class SpiffeId
   /// </summary>
   public string Path => id[pathIndex..];
 
-  public bool IsZero => id == string.Empty;
+  public bool IsZero => string.IsNullOrEmpty(id);
 
   /// <summary>
   /// True if the SPIFFE ID is a member of the given trust domain.
@@ -48,6 +47,21 @@ public class SpiffeId
   /// "spiffe://example.org/foo/bar".
   /// </summary>
   public string String => id;
+
+  public override string ToString() => id;
+
+  public override int GetHashCode() => id.GetHashCode();
+
+  public override bool Equals(object? other)
+  {
+    if (other is not SpiffeTrustDomain)
+    {
+      return false;
+    }
+
+    string otherId = (other as SpiffeId)!.id;
+    return string.Equals(id, otherId, StringComparison.Ordinal);
+  }
 
   /// <summary>
   /// URI for SPIFFE ID.
@@ -71,7 +85,7 @@ public class SpiffeId
   /// SPIFFE specification.
   /// Reference: <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
   /// </summary>
-    public static SpiffeId FromPath(SpiffeTrustDomain td, string path)
+  public static SpiffeId FromPath(SpiffeTrustDomain td, string path)
   {
     ValidatePath(path);
     return MakeId(td, path);
@@ -128,6 +142,8 @@ public class SpiffeId
 
       if (!IsValidTrustDomainChar(c))
       {
+        Console.WriteLine(id);
+        Console.WriteLine(c);
         throw new ArgumentException(Errors.BadTrustDomainChar, nameof(id));
       }
     }
@@ -147,7 +163,7 @@ public class SpiffeId
   /// </summary>
   public static SpiffeId FromStringf(string format, params object[] args)
   {
-	  return FromString(string.Format(format, args));
+    return FromString(string.Format(format, args));
   }
 
   /// <summary>
