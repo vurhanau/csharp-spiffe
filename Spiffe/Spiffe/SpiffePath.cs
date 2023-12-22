@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Spiffe;
@@ -11,6 +12,9 @@ public static class SpiffePath
   /// </summary>
   public static string FormatPath(string format, params object[] args)
   {
+    _ = format ?? throw new ArgumentNullException(nameof(format));
+    _ = args ?? throw new ArgumentNullException(nameof(args));
+
     string path = string.Format(format, args);
     ValidatePath(path);
 
@@ -26,6 +30,8 @@ public static class SpiffePath
   /// <returns></returns>
   public static string JoinPathSegments(params string[] segments)
   {
+    _ = segments ?? throw new ArgumentNullException(nameof(segments));
+
     StringBuilder builder = new();
     foreach (string segment in segments)
     {

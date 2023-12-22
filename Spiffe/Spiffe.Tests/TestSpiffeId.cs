@@ -1,4 +1,4 @@
-using System.Data.Common;
+using Xunit.Sdk;
 
 namespace Spiffe.Tests;
 
@@ -44,7 +44,23 @@ public class TestSpiffeId
         Assert.Throws<ArgumentException>(() => SpiffeId.FromString(null));
         Assert.Throws<ArgumentException>(() => SpiffeId.FromString(string.Empty));
         
-        AssertOk("spiffe://trustdomain", td, string.Empty);
+        Action<string, SpiffeTrustDomain, string> assertOk = (idString, expectedTd, expectedPath) =>
+        {
+            SpiffeId id = SpiffeId.FromString(idString);
+            AssertIdEqual(id, expectedTd, expectedPath);
+            id = SpiffeId.FromStringf("{0}", idString);
+            AssertIdEqual(id, expectedTd, expectedPath);
+        };
+
+        Action<string, string> assertFail = (idString, err) =>
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromString(idString));
+            Assert.Contains(err, e.Message);
+            e = Assert.Throws<ArgumentException>(() => SpiffeId.FromStringf("{0}", idString));
+            Assert.Contains(err, e.Message);
+        };
+
+        assertOk("spiffe://trustdomain", td, string.Empty);
         
         // Go all the way through 255, which ensures we reject UTF-8 appropriately
         for (int i = 0; i < 256; i++)
@@ -59,81 +75,108 @@ public class TestSpiffeId
             if (tdChars.Contains(c))
             {
                 // Allow good trustdomain char
-                AssertOk($"spiffe://trustdomain{c}/path", SpiffeTrustDomain.FromString($"trustdomain{c}"), "/path");
+                assertOk($"spiffe://trustdomain{c}/path", SpiffeTrustDomain.FromString($"trustdomain{c}"), "/path");
             }
             else
             {
                 // Reject bad trustdomain char
-				AssertFail($"spiffe://trustdomain{c}/path", "trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+				assertFail($"spiffe://trustdomain{c}/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
             }
 
             if (pathChars.Contains(c))
             {
                 // Allow good path char
-                AssertOk($"spiffe://trustdomain/path{c}", td, $"/path{c}");
+                assertOk($"spiffe://trustdomain/path{c}", td, $"/path{c}");
             }
             else
             {
                 // Reject bad path char
-                AssertFail($"spiffe://trustdomain/path{c}", "path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+                assertFail($"spiffe://trustdomain/path{c}", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
             }
         }
 
         // Reject bad scheme
-        AssertFail("s", "scheme is missing or invalid");
-        AssertFail("spiffe:/", "scheme is missing or invalid");
-        AssertFail("Spiffe://", "scheme is missing or invalid");
+        assertFail("s", "Scheme is missing or invalid");
+        assertFail("spiffe:/", "Scheme is missing or invalid");
+        assertFail("Spiffe://", "Scheme is missing or invalid");
 
         // Reject empty segments
-        AssertFail("spiffe://trustdomain/", "path cannot have a trailing slash");
-		AssertFail("spiffe://trustdomain//", "path cannot contain empty segments");
-		AssertFail("spiffe://trustdomain//path", "path cannot contain empty segments");
-		AssertFail("spiffe://trustdomain/path/", "path cannot have a trailing slash");
+        assertFail("spiffe://trustdomain/", "Path cannot have a trailing slash");
+		assertFail("spiffe://trustdomain//", "Path cannot contain empty segments");
+		assertFail("spiffe://trustdomain//path", "Path cannot contain empty segments");
+		assertFail("spiffe://trustdomain/path/", "Path cannot have a trailing slash");
 
         // Reject dot segments
-        AssertFail("spiffe://trustdomain/.", "path cannot contain dot segments");
-		AssertFail("spiffe://trustdomain/./path", "path cannot contain dot segments");
-		AssertFail("spiffe://trustdomain/path/./other", "path cannot contain dot segments");
-		AssertFail("spiffe://trustdomain/path/..", "path cannot contain dot segments");
-		AssertFail("spiffe://trustdomain/..", "path cannot contain dot segments");
-		AssertFail("spiffe://trustdomain/../path", "path cannot contain dot segments");
-		AssertFail("spiffe://trustdomain/path/../other", "path cannot contain dot segments");
+        assertFail("spiffe://trustdomain/.", "Path cannot contain dot segments");
+		assertFail("spiffe://trustdomain/./path", "Path cannot contain dot segments");
+		assertFail("spiffe://trustdomain/path/./other", "Path cannot contain dot segments");
+		assertFail("spiffe://trustdomain/path/..", "Path cannot contain dot segments");
+		assertFail("spiffe://trustdomain/..", "Path cannot contain dot segments");
+		assertFail("spiffe://trustdomain/../path", "Path cannot contain dot segments");
+		assertFail("spiffe://trustdomain/path/../other", "Path cannot contain dot segments");
 		// The following are ok since the the segments, while containing dots
 		// are not all dots (or are more than two dots)
-		AssertOk("spiffe://trustdomain/.path", td, "/.path");
-		AssertOk("spiffe://trustdomain/..path", td, "/..path");
-		AssertOk("spiffe://trustdomain/...", td, "/...");
+		assertOk("spiffe://trustdomain/.path", td, "/.path");
+		assertOk("spiffe://trustdomain/..path", td, "/..path");
+		assertOk("spiffe://trustdomain/...", td, "/...");
 
         // Reject percent encoding
         // percent-encoded unicode
-		AssertFail("spiffe://%F0%9F%A4%AF/path", "trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
-		AssertFail("spiffe://trustdomain/%F0%9F%A4%AF", "path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+		assertFail("spiffe://%F0%9F%A4%AF/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+		assertFail("spiffe://trustdomain/%F0%9F%A4%AF", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
 		// percent-encoded ascii
-		AssertFail("spiffe://%62%61%64/path", "trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
-		AssertFail("spiffe://trustdomain/%62%61%64", "path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+		assertFail("spiffe://%62%61%64/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+		assertFail("spiffe://trustdomain/%62%61%64", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
-    private static void AssertOk(string idString, SpiffeTrustDomain expectedTd, string expectedPath)
+    [Fact]
+    public void TestFromUri()
     {
-        SpiffeId id = SpiffeId.FromString(idString);
-        AssertIdEqual(id, expectedTd, expectedPath);
-        id = SpiffeId.FromStringf("%s", id);
-        AssertIdEqual(id, expectedTd, expectedPath);
+        Action<string> assertOk = s =>
+        {
+            SpiffeId expected = SpiffeId.FromString(s);
+            SpiffeId actual = SpiffeId.FromUri(new Uri(s));  
+            Assert.Equal(expected, actual);
+        };
+        assertOk("spiffe://trustdomain");
+        assertOk("spiffe://trustdomain/path");
+
+        var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromUri(new Uri("spiffe://trustdomain/path$")));
+        Assert.Contains("Path segment characters are limited to letters, numbers, dots, dashes, and underscores", e.Message);
     }
 
-    private static void AssertFail(string idString, string err)
+    [Fact]
+    public void TestFromSegments()
     {
-        var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromString(idString));
-        Assert.Contains(err, e.Message);
-        e = Assert.Throws<ArgumentException>(() => SpiffeId.FromStringf("%s", idString));
-        Assert.Contains(err, e.Message);
+        Action<string[], string> assertOk = (segments, expectedPath) =>
+        {
+            SpiffeId id = SpiffeId.FromSegments(td, segments);
+            AssertIdEqual(id, td, expectedPath);
+        };
+        Action<string[], string> assertFail = (segments, expectedErr) =>
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromSegments(td, segments));
+            Assert.Contains(expectedErr, e.Message);
+        };
+        Assert.Throws<ArgumentNullException>(() => SpiffeId.FromSegments(null, "foo"));
+        Assert.Throws<ArgumentNullException>(() => SpiffeId.FromSegments(td, null));
+        assertOk([], string.Empty);
+        assertOk(["foo"], "/foo");
+        assertOk(["foo", "bar"], "/foo/bar");
+
+        assertFail([string.Empty], "Path cannot contain empty segments");
+        assertFail(["/"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        assertFail(["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        assertFail(["$"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
     private static void AssertIdEqual(SpiffeId id, SpiffeTrustDomain expectedTd, string expectedPath)
     {
         Assert.Equal(expectedTd, id.TrustDomain);
         Assert.Equal(expectedPath, id.Path);
-        Assert.Equal(expectedTd.String + expectedPath, id.String);
-        Assert.Equal(id.ToUri().ToString(), id.String);
+        Assert.Equal(expectedTd.IdString + expectedPath, id.String);
+        // Root uri has trailing '/': spiffe://example.org/
+        // Uri with has no trailing '/': spiffe://example.org/abc
+        Assert.Equal(id.ToUri().ToString().TrimEnd('/'), id.String);
     }
 }

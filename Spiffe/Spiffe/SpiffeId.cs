@@ -1,5 +1,6 @@
 namespace Spiffe;
 
+using System.Security.Cryptography;
 using System.Text;
 using static Spiffe.SpiffePath;
 using static Spiffe.SpiffeTrustDomain;
@@ -54,7 +55,7 @@ public class SpiffeId
 
   public override bool Equals(object? other)
   {
-    if (other is not SpiffeTrustDomain)
+    if (other is not SpiffeId)
     {
       return false;
     }
@@ -111,6 +112,9 @@ public class SpiffeId
   /// </summary>
   public static SpiffeId FromSegments(SpiffeTrustDomain td, params string[] segments)
   {
+    _ = td ?? throw new ArgumentNullException(nameof(td));
+    _ = segments ?? throw new ArgumentNullException(nameof(segments));
+
     string path = JoinPathSegments(segments);
     return MakeId(td, path);
   }
@@ -142,8 +146,6 @@ public class SpiffeId
 
       if (!IsValidTrustDomainChar(c))
       {
-        Console.WriteLine(id);
-        Console.WriteLine(c);
         throw new ArgumentException(Errors.BadTrustDomainChar, nameof(id));
       }
     }
@@ -174,7 +176,8 @@ public class SpiffeId
   {
     _ = uri ?? throw new ArgumentNullException(nameof(uri));
 
-    return FromString(uri.ToString());
+    // Root uri has extra trailing slash
+    return FromString(uri.ToString().TrimEnd('/'));
   }
 
   /// <summary>
