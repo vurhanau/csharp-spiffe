@@ -16,8 +16,24 @@ policy:
 	cd $(SPIRE_DIR) && ./spire-server entry create -parentID spiffe://example.org/myagent \
     -spiffeID spiffe://example.org/myservice -selector unix:uid:$$(id -u)
 
+build:
+	@dotnet build
+
 run:
 	@dotnet run --project Spiffe.Client/
 
 test:
 	@dotnet test Spiffe.Tests/
+
+# dotnet tool install -g dotnet-reportgenerator-globaltool
+coverage:
+	@dotnet test --collect:"XPlat Code Coverage" | grep "coverage.cobertura.xml"
+
+coverage-report:
+	@reportgenerator \
+		-reports:"Spiffe.Tests/TestResults/$(TID)/coverage.cobertura.xml" \
+		-targetdir:"Spiffe.Tests/TestResults/$(TID)/coveragereport" \
+		-reporttypes:Html
+
+fmt:
+	@dotnet format ./Spiffe.sln

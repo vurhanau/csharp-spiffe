@@ -1,295 +1,206 @@
 namespace Spiffe;
 
-using System.Security.Cryptography;
-using System.Text;
 using static Spiffe.SpiffePath;
 using static Spiffe.SpiffeTrustDomain;
 
 public class SpiffeId
 {
-  private const string SchemePrefix = "spiffe://";
+    private const string SchemePrefix = "spiffe://";
 
-  private static readonly int SchemePrefixLength = SchemePrefix.Length;
+    private static readonly int SchemePrefixLength = SchemePrefix.Length;
 
-  private readonly string id;
+    // pathIndex tracks the index to the beginning of the path inside of id. This
+    // is used when extracting the trust domain or path portions of the id.
+    private readonly int _pathIndex;
 
-  // pathIndex tracks the index to the beginning of the path inside of id. This
-  // is used when extracting the trust domain or path portions of the id.
-  private readonly int pathIndex;
+    /// <summary>
+    /// String representation of the SPIFFE ID, e.g.,
+    /// "spiffe://example.org/foo/bar".
+    /// </summary>
+    public string Id { get; }
 
-  private SpiffeId(string id, int pathIndex)
-  {
-    this.id = id;
-    this.pathIndex = pathIndex;
-  }
-
-  /// <summary>
-  /// The trust domain of the SPIFFE ID.
-  /// </summary>
-  public SpiffeTrustDomain TrustDomain =>
-    IsZero
-      ? new(string.Empty)
-      : new(id[SchemePrefixLength..pathIndex]);
-
-  /// <summary>
-  /// The path of the SPIFFE ID inside the trust domain.
-  /// </summary>
-  public string Path => id[pathIndex..];
-
-  public bool IsZero => string.IsNullOrEmpty(id);
-
-  /// <summary>
-  /// True if the SPIFFE ID is a member of the given trust domain.
-  /// </summary>
-  public bool MemberOf(SpiffeTrustDomain td) => TrustDomain.Equals(td);
-
-  /// <summary>
-  /// String returns the string representation of the SPIFFE ID, e.g.,
-  /// "spiffe://example.org/foo/bar".
-  /// </summary>
-  public string String => id;
-
-  public override string ToString() => id;
-
-  public override int GetHashCode() => id.GetHashCode();
-
-  public override bool Equals(object? other)
-  {
-    if (other is not SpiffeId)
+    private SpiffeId(string id, int pathIndex)
     {
-      return false;
+        Id = id;
+        _pathIndex = pathIndex;
     }
 
-    string otherId = (other as SpiffeId)!.id;
-    return string.Equals(id, otherId, StringComparison.Ordinal);
-  }
+    /// <summary>
+    /// The trust domain of the SPIFFE ID.
+    /// </summary>
+    public SpiffeTrustDomain TrustDomain => new(Id[SchemePrefixLength.._pathIndex]);
 
-  /// <summary>
-  /// URI for SPIFFE ID.
-  /// </summary>
-  /// <returns></returns>
-  public Uri ToUri()
-  {
-    UriBuilder builder = new()
+    /// <summary>
+    /// The path of the SPIFFE ID inside the trust domain.
+    /// </summary>
+    public string Path => Id[_pathIndex..];
+
+    /// <summary>
+    /// True if the SPIFFE ID is a member of the given trust domain.
+    /// </summary>
+    public bool MemberOf(SpiffeTrustDomain td) => TrustDomain.Equals(td);
+
+    public override string ToString() => Id;
+
+    public override int GetHashCode() => Id.GetHashCode();
+
+    public override bool Equals(object? other)
     {
-      Scheme = SchemePrefix,
-      Host = TrustDomain.String,
-      Path = Path,
-    };
+        if (other is not SpiffeId)
+        {
+            return false;
+        }
 
-    return builder.Uri;
-  }
-
-  /// <summary>
-  /// FromPath returns a new SPIFFE ID in the given trust domain and with the
-  /// given path. The supplied path must be a valid absolute path according to the
-  /// SPIFFE specification.
-  /// Reference: <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
-  /// </summary>
-  public static SpiffeId FromPath(SpiffeTrustDomain td, string path)
-  {
-    ValidatePath(path);
-    return MakeId(td, path);
-  }
-
-  /// <summary>
-  /// FromPathf returns a new SPIFFE ID from the formatted path in the given trust
-  /// domain. The formatted path must be a valid absolute path according to the
-  /// SPIFFE specification.
-  /// Reference: <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
-  /// </summary>
-  public static SpiffeId FromPathf(SpiffeTrustDomain td, string format, params object[] args)
-  {
-    string path = FormatPath(format, args);
-    return MakeId(td, path);
-  }
-
-  /// <summary>
-  /// FromSegments returns a new SPIFFE ID in the given trust domain with joined
-  /// path segments. The path segments must be valid according to the SPIFFE
-  /// specification and must not contain path separators.
-  /// Reference: <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
-  /// </summary>
-  public static SpiffeId FromSegments(SpiffeTrustDomain td, params string[] segments)
-  {
-    _ = td ?? throw new ArgumentNullException(nameof(td));
-    _ = segments ?? throw new ArgumentNullException(nameof(segments));
-
-    string path = JoinPathSegments(segments);
-    return MakeId(td, path);
-  }
-
-  /// <summary>
-  /// Parses a SPIFFE ID from a string.
-  /// </summary>
-  /// <exception cref="ArgumentException"></exception>
-  public static SpiffeId FromString(string id)
-  {
-    if (string.IsNullOrEmpty(id))
-    {
-      throw new ArgumentException(Errors.Empty, nameof(id));
+        string otherId = (other as SpiffeId)!.Id;
+        return string.Equals(Id, otherId, StringComparison.Ordinal);
     }
 
-    if (!id.StartsWith(SchemePrefix))
+    /// <summary>
+    /// URI for SPIFFE ID.
+    /// </summary>
+    /// <returns></returns>
+    public Uri ToUri()
     {
-      throw new ArgumentException(Errors.WrongScheme, nameof(id));
+        UriBuilder builder = new()
+        {
+            Scheme = SchemePrefix,
+            Host = TrustDomain.Name,
+            Path = Path,
+        };
+
+        return builder.Uri;
     }
 
-    int pathIndex = SchemePrefixLength;
-    for (; pathIndex < id.Length; pathIndex++)
+    /// <summary>
+    /// FromPath returns a new SPIFFE ID in the given trust domain and with the
+    /// given path. The supplied path must be a valid absolute path according to the
+    /// SPIFFE specification.
+    /// Reference: <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// </summary>
+    public static SpiffeId FromPath(SpiffeTrustDomain td, string path)
     {
-      char c = id[pathIndex];
-      if (c == '/')
-      {
-        break;
-      }
-
-      if (!IsValidTrustDomainChar(c))
-      {
-        throw new ArgumentException(Errors.BadTrustDomainChar, nameof(id));
-      }
+        ValidatePath(path);
+        return MakeId(td, path);
     }
 
-    if (pathIndex == SchemePrefixLength)
+    /// <summary>
+    /// FromSegments returns a new SPIFFE ID in the given trust domain with joined
+    /// path segments. The path segments must be valid according to the SPIFFE
+    /// specification and must not contain path separators.
+    /// Reference: <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// </summary>
+    public static SpiffeId FromSegments(SpiffeTrustDomain td, params string[] segments)
     {
-      throw new ArgumentException(Errors.MissingTrustDomain, nameof(id));
+        _ = td ?? throw new ArgumentNullException(nameof(td));
+        _ = segments ?? throw new ArgumentNullException(nameof(segments));
+
+        string path = JoinPathSegments(segments);
+        return MakeId(td, path);
     }
 
-    ValidatePath(id[pathIndex..]);
-
-    return new SpiffeId(id, pathIndex);
-  }
-
-  /// <summary>
-  /// Parses a SPIFFE ID from a formatted string.
-  /// </summary>
-  public static SpiffeId FromStringf(string format, params object[] args)
-  {
-    return FromString(string.Format(format, args));
-  }
-
-  /// <summary>
-  /// Parses a SPIFFE ID from a URI.
-  /// </summary>
-  /// <exception cref="ArgumentNullException"></exception>
-  public static SpiffeId FromUri(Uri uri)
-  {
-    _ = uri ?? throw new ArgumentNullException(nameof(uri));
-
-    // Root uri has extra trailing slash
-    return FromString(uri.ToString().TrimEnd('/'));
-  }
-
-  /// <summary>
-  /// AppendPath returns an ID with the appended path. It will fail if called on a
-  /// zero value. The path to append must be a valid absolute path according to
-  /// the SPIFFE specification.
-  /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
-  /// </summary>
-  public SpiffeId AppendPath(string path)
-  {
-    if (IsZero)
+    /// <summary>
+    /// Parses a SPIFFE ID from a string.
+    /// </summary>
+    /// <exception cref="ArgumentException"></exception>
+    public static SpiffeId FromString(string id)
     {
-      throw new InvalidOperationException("Cannot append path on a zero ID value");
+        if (string.IsNullOrEmpty(id))
+        {
+            throw new ArgumentException(Errors.Empty, nameof(id));
+        }
+
+        if (!id.StartsWith(SchemePrefix))
+        {
+            throw new ArgumentException(Errors.WrongScheme, nameof(id));
+        }
+
+        int pathIndex = SchemePrefixLength;
+        for (; pathIndex < id.Length; pathIndex++)
+        {
+            char c = id[pathIndex];
+            if (c == '/')
+            {
+                break;
+            }
+
+            if (!IsValidTrustDomainChar(c))
+            {
+                throw new ArgumentException(Errors.BadTrustDomainChar, nameof(id));
+            }
+        }
+
+        if (pathIndex == SchemePrefixLength)
+        {
+            throw new ArgumentException(Errors.MissingTrustDomain, nameof(id));
+        }
+
+        ValidatePath(id[pathIndex..]);
+
+        return new SpiffeId(id, pathIndex);
     }
 
-    ValidatePath(path);
-
-    return new(id + path, pathIndex);
-  }
-
-  /// <summary>
-  /// AppendPathf returns an ID with the appended formatted path. It will fail if
-  /// called on a zero value. The formatted path must be a valid absolute path
-  /// according to the SPIFFE specification.
-  /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
-  /// </summary>
-  public SpiffeId AppendPathf(string format, params object[] args)
-  {
-    if (IsZero)
+    /// <summary>
+    /// Parses a SPIFFE ID from a URI.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"></exception>
+    public static SpiffeId FromUri(Uri uri)
     {
-      throw new InvalidOperationException("Cannot append path on a zero ID value");
+        _ = uri ?? throw new ArgumentNullException(nameof(uri));
+
+        // Root uri has extra trailing slash
+        return FromString(uri.ToString().TrimEnd('/'));
     }
 
-    string path = FormatPath(format, args);
-    return new(id + path, pathIndex);
-  }
-
-  /// <summary>
-  /// AppendSegments returns an ID with the appended joined path segments.  It
-  /// will fail if called on a zero value. The path segments must be valid
-  /// according to the SPIFFE specification and must not contain path separators.
-  /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
-  /// </summary>
-  public SpiffeId AppendSegments(params string[] segments)
-  {
-    if (IsZero)
+    /// <summary>
+    /// Returns an ID with the appended path.
+    /// The path to append must be a valid absolute path according to
+    /// the SPIFFE specification.
+    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// </summary>
+    public SpiffeId AppendPath(string path)
     {
-      throw new InvalidOperationException("Cannot append path on a zero ID value");
+        ValidatePath(path);
+        return new(Id + path, _pathIndex);
     }
 
-    string path = JoinPathSegments(segments);
-    return new(id + path, pathIndex);
-  }
-
-  /// <summary>
-  /// ReplaceSegments returns an ID with the joined path segments in the same
-  /// trust domain. It will fail if called on a zero value. The path segments must
-  /// be valid according to the SPIFFE specification and must not contain path
-  /// separators.
-  /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
-  /// </summary>
-  public SpiffeId ReplaceSegments(params string[] segments)
-  {
-    if (IsZero)
+    /// <summary>
+    /// Returns an ID with the appended joined path segments.  It
+    /// will fail if called on a zero value. The path segments must be valid
+    /// according to the SPIFFE specification and must not contain path separators.
+    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// </summary>
+    public SpiffeId AppendSegments(params string[] segments)
     {
-      throw new InvalidOperationException("Cannot replace path segments on a zero ID value");
+        string path = JoinPathSegments(segments);
+        return new(Id + path, _pathIndex);
     }
 
-    return FromSegments(TrustDomain, segments);
-  }
+    /// <summary>
+    /// Returns an ID with the given path in the same trust domain. It
+    /// will fail if called on a zero value. The given path must be a valid absolute
+    /// path according to the SPIFFE specification.
+    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// </summary>
+    public SpiffeId ReplacePath(string path) => FromPath(TrustDomain, path);
 
-  /// <summary>
-  /// MarshalText returns a text representation of the ID. If the ID is the zero
-  /// value, nil is returned.
-  /// </summary>
-  public byte[] MarshalText()
-  {
-    if (IsZero)
+    /// <summary>
+    /// Returns an ID with the joined path segments in the same
+    /// trust domain. It will fail if called on a zero value. The path segments must
+    /// be valid according to the SPIFFE specification and must not contain path
+    /// separators.
+    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// </summary>
+    public SpiffeId ReplaceSegments(params string[] segments) => FromSegments(TrustDomain, segments);
+
+    internal static SpiffeId MakeId(SpiffeTrustDomain td, string path)
     {
-      return [];
+        if (string.IsNullOrEmpty(td.Name))
+        {
+            throw new ArgumentException("Trust domain is empty", nameof(td));
+        }
+
+        string id = SchemePrefix + td.Name + path;
+        int pathIndex = SchemePrefixLength + td.Name.Length;
+        return new SpiffeId(id, pathIndex);
     }
-
-    return Encoding.ASCII.GetBytes(id);
-  }
-
-  /// <summary>
-  /// UnmarshalText decodes a text representation of the ID. If the text is empty,
-  /// the ID is set to the zero value.
-  /// </summary>
-  /// <exception cref="ArgumentNullException"></exception>
-  public static SpiffeId UnmarshallText(byte[] bytes)
-  {
-    _ = bytes ?? throw new ArgumentNullException(nameof(bytes));
-
-    if (bytes.Length == 0)
-    {
-      return new(string.Empty, 0);
-    }
-
-    string id = Encoding.ASCII.GetString(bytes);
-    return FromString(id);
-  }
-
-  internal static SpiffeId MakeId(SpiffeTrustDomain td, string path)
-  {
-    if (td.IsZero)
-    {
-      throw new ArgumentException("Trust domain is empty", nameof(td));
-    }
-
-    string id = SchemePrefix + td.Name + path;
-    int pathIndex = SchemePrefixLength + td.Name.Length;
-    return new SpiffeId(id, pathIndex);
-  }
 }

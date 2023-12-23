@@ -1,64 +1,26 @@
-using Xunit.Sdk;
-
 namespace Spiffe.Tests;
+
+using static TestConstants;
 
 public class TestSpiffeId
 {
-    private static readonly SpiffeTrustDomain td = SpiffeTrustDomain.FromString("trustdomain");
-
-    private static readonly ISet<char> lowerAlpha = new HashSet<char>()
-    {
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    };
-
-    private static readonly ISet<char> upperAlpha = new HashSet<char>()
-    {
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    };
-
-    private static readonly ISet<char> numbers = new HashSet<char>()
-    {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    };
-
-    private static readonly ISet<char> special = new HashSet<char>()
-    {
-        '.', '-', '_',
-    };
-
-    private static readonly ISet<char> tdChars = lowerAlpha
-                                                        .Concat(numbers)
-                                                        .Concat(special)
-                                                        .ToHashSet();
-    private static readonly ISet<char> pathChars = lowerAlpha
-                                                        .Concat(upperAlpha)
-                                                        .Concat(numbers)
-                                                        .Concat(special)
-                                                        .ToHashSet();
-
     [Fact]
     public void TestFromString()
     {
         Assert.Throws<ArgumentException>(() => SpiffeId.FromString(null));
         Assert.Throws<ArgumentException>(() => SpiffeId.FromString(string.Empty));
 
-        Action<string, SpiffeTrustDomain, string> assertOk = (idString, expectedTd, expectedPath) =>
+        void assertOk(string idString, SpiffeTrustDomain expectedTd, string expectedPath)
         {
             SpiffeId id = SpiffeId.FromString(idString);
             AssertIdEqual(id, expectedTd, expectedPath);
-            id = SpiffeId.FromStringf("{0}", idString);
-            AssertIdEqual(id, expectedTd, expectedPath);
-        };
+        }
 
-        Action<string, string> assertFail = (idString, err) =>
+        void assertFail(string idString, string err)
         {
             var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromString(idString));
             Assert.Contains(err, e.Message);
-            e = Assert.Throws<ArgumentException>(() => SpiffeId.FromStringf("{0}", idString));
-            Assert.Contains(err, e.Message);
-        };
+        }
 
         assertOk("spiffe://trustdomain", td, string.Empty);
 
@@ -132,12 +94,12 @@ public class TestSpiffeId
     [Fact]
     public void TestFromUri()
     {
-        Action<string> assertOk = s =>
+        static void assertOk(string s)
         {
             SpiffeId expected = SpiffeId.FromString(s);
             SpiffeId actual = SpiffeId.FromUri(new Uri(s));
             Assert.Equal(expected, actual);
-        };
+        }
         assertOk("spiffe://trustdomain");
         assertOk("spiffe://trustdomain/path");
 
@@ -148,16 +110,16 @@ public class TestSpiffeId
     [Fact]
     public void TestFromSegments()
     {
-        Action<string[], string> assertOk = (segments, expectedPath) =>
+        void assertOk(string[] segments, string expectedPath)
         {
             SpiffeId id = SpiffeId.FromSegments(td, segments);
             AssertIdEqual(id, td, expectedPath);
-        };
-        Action<string[], string> assertFail = (segments, expectedErr) =>
+        }
+        void assertFail(string[] segments, string expectedErr)
         {
             var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromSegments(td, segments));
             Assert.Contains(expectedErr, e.Message);
-        };
+        }
         Assert.Throws<ArgumentNullException>(() => SpiffeId.FromSegments(null, "foo"));
         Assert.Throws<ArgumentNullException>(() => SpiffeId.FromSegments(td, null));
         assertOk([], string.Empty);
@@ -170,13 +132,144 @@ public class TestSpiffeId
         assertFail(["$"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
-    private static void AssertIdEqual(SpiffeId id, SpiffeTrustDomain expectedTd, string expectedPath)
+    [Fact]
+    public void TestMemberOf()
     {
-        Assert.Equal(expectedTd, id.TrustDomain);
-        Assert.Equal(expectedPath, id.Path);
-        Assert.Equal(expectedTd.IdString + expectedPath, id.String);
+        SpiffeId spiffeId = SpiffeId.FromSegments(td, "path", "element");
+        Assert.True(spiffeId.MemberOf(td));
+
+        spiffeId = SpiffeId.FromSegments(td);
+        Assert.True(spiffeId.MemberOf(td));
+
+        SpiffeTrustDomain td2 = SpiffeTrustDomain.FromString("domain2.test");
+        spiffeId = SpiffeId.FromSegments(td2, "path", "element");
+        Assert.False(spiffeId.MemberOf(td));
+    }
+
+    [Fact]
+    public void TestId()
+    {
+        SpiffeId spiffeId = SpiffeId.FromString("spiffe://trustdomain");
+        Assert.Equal("spiffe://trustdomain", spiffeId.Id);
+
+        spiffeId = SpiffeId.FromString("spiffe://trustdomain/path");
+        Assert.Equal("spiffe://trustdomain/path", spiffeId.Id);
+    }
+
+    [Fact]
+    public void TestUri()
+    {
+        static Uri asUri(string td, string path) => new UriBuilder()
+        {
+            Scheme = "spiffe",
+            Host = td,
+            Path = path,
+        }.Uri;
+
+        SpiffeId spiffeId = SpiffeId.FromSegments(td, "path", "element");
+        Assert.Equal(asUri("trustdomain", "/path/element"), spiffeId.ToUri());
+
+        spiffeId = SpiffeId.FromSegments(td);
+        Assert.Equal(asUri("trustdomain", string.Empty), spiffeId.ToUri());
+    }
+
+    [Fact]
+    public void TestReplacePath()
+    {
+        void assertOk(string startsWith, string replaceWith, string expectedPath)
+        {
+            SpiffeId spiffeId = SpiffeId.FromPath(td, startsWith).ReplacePath(replaceWith);
+            AssertIdEqual(spiffeId, td, expectedPath);
+        }
+
+        void assertFail(string startsWith, string replaceWith, string expectedErr)
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(td, startsWith).ReplacePath(replaceWith));
+            Assert.Contains(expectedErr, e.Message);
+        }
+
+        assertOk("", "/foo", "/foo");
+        assertOk("/path", "/foo", "/foo");
+
+        assertFail("", "foo", "Path must have a leading slash");
+        assertFail("/path", "/", "Path cannot have a trailing slash");
+        assertFail("/path", "foo", "Path must have a leading slash");
+    }
+
+    [Fact]
+    public void TestReplaceSegments()
+    {
+        void assertOk(string startsWith, string[] replaceWith, string expectedPath)
+        {
+            SpiffeId spiffeId = SpiffeId.FromPath(td, startsWith).ReplaceSegments(replaceWith);
+            AssertIdEqual(spiffeId, td, expectedPath);
+        }
+
+        void assertFail(string startsWith, string[] replaceWith, string expectedErr)
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(td, startsWith).ReplaceSegments(replaceWith));
+            Assert.Contains(expectedErr, e.Message);
+        }
+        
+        assertOk("", ["foo"], "/foo");
+        assertOk("/path", ["foo"], "/foo");
+
+        assertFail("", [""], "Path cannot contain empty segments");
+       	assertFail("", ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+    }
+
+    [Fact]
+    public void TestAppendPath()
+    {
+        void assertOk(string startsWith, string replaceWith, string expectedPath)
+        {
+            SpiffeId spiffeId = SpiffeId.FromPath(td, startsWith).AppendPath(replaceWith);
+            AssertIdEqual(spiffeId, td, expectedPath);
+        }
+
+        void assertFail(string startsWith, string replaceWith, string expectedErr)
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(td, startsWith).AppendPath(replaceWith));
+            Assert.Contains(expectedErr, e.Message);
+        }
+
+        assertOk("", "/foo", "/foo");
+    	assertOk("/path", "/foo", "/path/foo");
+
+        assertFail("", "foo", "Path must have a leading slash");
+        assertFail("/path", "/", "Path cannot have a trailing slash");
+        assertFail("/path", "foo", "Path must have a leading slash");
+    }
+
+    [Fact]
+    public void TestAppendSegments()
+    {
+        void assertOk(string startsWith, string[] replaceWith, string expectedPath)
+        {
+            SpiffeId spiffeId = SpiffeId.FromPath(td, startsWith).AppendSegments(replaceWith);
+            AssertIdEqual(spiffeId, td, expectedPath);
+        }
+
+        void assertFail(string startsWith, string[] replaceWith, string expectedErr)
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(td, startsWith).AppendSegments(replaceWith));
+            Assert.Contains(expectedErr, e.Message);
+        }
+
+        assertOk("", ["foo"], "/foo");
+        assertOk("/path", ["foo"], "/path/foo");
+
+        assertFail("", [""], "Path cannot contain empty segments");
+        assertFail("", ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+    }
+
+    private static void AssertIdEqual(SpiffeId spiffeId, SpiffeTrustDomain expectedTd, string expectedPath)
+    {
+        Assert.Equal(expectedTd, spiffeId.TrustDomain);
+        Assert.Equal(expectedPath, spiffeId.Path);
+        Assert.Equal(expectedTd.SpiffeId.Id + expectedPath, spiffeId.Id);
         // Root uri has trailing '/': spiffe://example.org/
         // Uri with has no trailing '/': spiffe://example.org/abc
-        Assert.Equal(id.ToUri().ToString().TrimEnd('/'), id.String);
+        Assert.Equal(spiffeId.ToUri().ToString().TrimEnd('/'), spiffeId.Id);
     }
 }

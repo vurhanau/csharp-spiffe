@@ -11,21 +11,21 @@ var c = new SpiffeWorkloadAPI.SpiffeWorkloadAPIClient(ch);
 
 while (true)
 {
-  try
-  {
-    var reply = c.FetchX509SVID(new X509SVIDRequest(), headers: new ()
+    try
+    {
+        var reply = c.FetchX509SVID(new X509SVIDRequest(), headers: new()
     {{
         "workload.spiffe.io", "true"
     }});
 
-    await foreach (var r in reply.ResponseStream.ReadAllAsync())
-    {
-        Console.WriteLine(r.Svids.First().SpiffeId);
+        await foreach (var r in reply.ResponseStream.ReadAllAsync())
+        {
+            Console.WriteLine(r.Svids.First().SpiffeId);
+        }
     }
-  }
-  catch (Exception e)
-  {
-    Console.WriteLine(e);
-    Thread.Sleep(5000);
-  }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        Thread.Sleep(5000);
+    }
 }
