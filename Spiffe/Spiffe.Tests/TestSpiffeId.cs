@@ -210,12 +210,12 @@ public class TestSpiffeId
             var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(td, startsWith).ReplaceSegments(replaceWith));
             Assert.Contains(expectedErr, e.Message);
         }
-        
+
         assertOk("", ["foo"], "/foo");
         assertOk("/path", ["foo"], "/foo");
 
         assertFail("", [""], "Path cannot contain empty segments");
-       	assertFail("", ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        assertFail("", ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public class TestSpiffeId
         }
 
         assertOk("", "/foo", "/foo");
-    	assertOk("/path", "/foo", "/path/foo");
+        assertOk("/path", "/foo", "/path/foo");
 
         assertFail("", "foo", "Path must have a leading slash");
         assertFail("/path", "/", "Path cannot have a trailing slash");

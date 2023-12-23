@@ -24,16 +24,16 @@ public class TestSpiffeTrustDomain
         assertOk("spiffe://trustdomain/path", td);
 
         assertFail("spiffe:/trustdomain/path", "Scheme is missing or invalid");
-		assertFail("spiffe://", "Trust domain is missing");
-		assertFail("spiffe:///path", "Trust domain is missing");
-		assertFail("spiffe://trustdomain/", "Path cannot have a trailing slash");
-		assertFail("spiffe://trustdomain/path/", "Path cannot have a trailing slash");
-		assertFail("spiffe://%F0%9F%A4%AF/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
-		assertFail("spiffe://trustdomain/%F0%9F%A4%AF", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        assertFail("spiffe://", "Trust domain is missing");
+        assertFail("spiffe:///path", "Trust domain is missing");
+        assertFail("spiffe://trustdomain/", "Path cannot have a trailing slash");
+        assertFail("spiffe://trustdomain/path/", "Path cannot have a trailing slash");
+        assertFail("spiffe://%F0%9F%A4%AF/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+        assertFail("spiffe://trustdomain/%F0%9F%A4%AF", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
 
         for (int i = 0; i < 256; i++)
         {
-            char c = (char) i;
+            char c = (char)i;
             if (tdChars.Contains(c))
             {
                 SpiffeTrustDomain expected = SpiffeTrustDomain.FromString($"trustdomain{c}");
@@ -42,7 +42,7 @@ public class TestSpiffeTrustDomain
             }
             else
             {
-				assertFail($"trustdomain{c}", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+                assertFail($"trustdomain{c}", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
             }
         }
     }

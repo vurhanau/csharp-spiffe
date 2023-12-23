@@ -32,10 +32,10 @@ public class TestSpiffePath
         }
 
         assertFail("Path cannot contain empty segments", "");
-        assertFail("Path cannot contain dot segments", ".");        
+        assertFail("Path cannot contain dot segments", ".");
         assertFail("Path cannot contain dot segments", "..");
         assertFail("Path segment characters are limited to letters, numbers, dots, dashes, and underscores", "/");
-        
+
         var e = Record.Exception(() => SpiffePath.ValidatePathSegment("a"));
         Assert.Null(e);
     }
