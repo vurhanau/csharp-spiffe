@@ -1,4 +1,4 @@
-namespace Spiffe;
+namespace Spiffe.Id;
 
 /**
  * Represents the name of a SPIFFE trust domain (e.g. 'example.org').

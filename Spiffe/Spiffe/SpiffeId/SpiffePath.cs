@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Spiffe;
+namespace Spiffe.Id;
 
 public static class SpiffePath
 {

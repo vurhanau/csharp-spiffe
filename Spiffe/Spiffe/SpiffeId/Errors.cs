@@ -1,4 +1,4 @@
-namespace Spiffe;
+namespace Spiffe.Id;
 
 internal static class Errors
 {

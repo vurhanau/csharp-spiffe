@@ -1,7 +1,7 @@
-namespace Spiffe;
+namespace Spiffe.Id;
 
-using static Spiffe.SpiffePath;
-using static Spiffe.SpiffeTrustDomain;
+using static Spiffe.Id.SpiffePath;
+using static Spiffe.Id.SpiffeTrustDomain;
 
 public class SpiffeId
 {

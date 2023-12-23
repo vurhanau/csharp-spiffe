@@ -1,4 +1,6 @@
-namespace Spiffe.Tests;
+using Spiffe.Id;
+
+namespace Tests.Spiffe.Id;
 
 public class TestSpiffePath
 {

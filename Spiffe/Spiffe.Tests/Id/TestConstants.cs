@@ -1,4 +1,6 @@
-namespace Spiffe.Tests;
+using Spiffe.Id;
+
+namespace Tests.Spiffe.Id;
 
 internal static class TestConstants
 {
