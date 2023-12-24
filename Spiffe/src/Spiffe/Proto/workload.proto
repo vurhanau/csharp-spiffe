@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Spiffe.Workload.Grpc";
+option csharp_namespace = "Spiffe.WorkloadApi";
 
 import "google/protobuf/struct.proto";
 

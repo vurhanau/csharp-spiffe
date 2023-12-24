@@ -1,5 +1,7 @@
 SPIRE_DIR := /Users/avurhanau/Projects/spiffe/spire
 
+.PHONY: build
+
 server:
 	cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
 
@@ -20,10 +22,10 @@ build:
 	@dotnet build
 
 run:
-	@dotnet run --project Spiffe.Client/
+	@dotnet run --project src/Spiffe.Client/
 
 test:
-	@dotnet test Spiffe.Tests/
+	@dotnet test
 
 # dotnet tool install -g dotnet-reportgenerator-globaltool
 coverage:

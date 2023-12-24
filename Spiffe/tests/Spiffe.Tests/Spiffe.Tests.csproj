@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Spiffe\Spiffe.csproj" />
+    <ProjectReference Include="..\..\src\Spiffe\Spiffe.csproj" />
   </ItemGroup>
 
 </Project>

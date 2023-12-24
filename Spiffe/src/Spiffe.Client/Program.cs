@@ -1,6 +1,6 @@
 ﻿using Grpc.Core;
 using Spiffe.Grpc.Unix;
-using Spiffe.Workload.Grpc;
+using Spiffe.WorkloadApi;
 
 // bind_address = "127.0.0.1"
 // bind_port = "8081"
