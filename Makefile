@@ -1,6 +1,6 @@
 SPIRE_DIR := /Users/avurhanau/Projects/spiffe/spire
 
-.PHONY: build
+.PHONY: build coverage
 
 server:
 	cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
@@ -27,9 +27,8 @@ run:
 test:
 	@dotnet test
 
-# dotnet tool install -g dotnet-reportgenerator-globaltool
 coverage:
-	@dotnet test --collect:"XPlat Code Coverage" | grep "coverage.cobertura.xml"
+	@dotnet test --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
 
 coverage-report:
 	@reportgenerator \
