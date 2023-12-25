@@ -41,6 +41,7 @@ jobs:
 
       - name: Coverage
         uses: irongut/CodeCoverageSummary@v1.3.0
+        if: runner.os == 'Linux'
         with:
           filename: coverage/**/coverage.cobertura.xml
           badge: true
