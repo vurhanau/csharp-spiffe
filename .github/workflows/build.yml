@@ -15,6 +15,7 @@ jobs:
         with:
           dotnet-version: 8.x
           cache: true
+          cache-dependency-path: src/Spiffe/package-lock.json
       - name: Restore dependencies
         run: dotnet restore --locked-mode
       - name: Build
