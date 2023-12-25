@@ -1,19 +1,26 @@
-name: CI
+name: Build
 
 on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+        matrix:
+            os: [ubuntu-latest, windows-latest]
+            dotnet-version: [8.x]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v3
         id: setup
         with:
           dotnet-version: 8.x
+      
       - name: Restore Cache
         id: restore-cache
         uses: actions/cache@v3
@@ -22,13 +29,17 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+      
       - name: Restore
         if: steps.restore-cache.outputs.cache-hit != 'true'
         run: dotnet restore --locked-mode
+
       - name: Build
         run: dotnet build --no-restore
+
       - name: Test
         run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+
       - name: Coverage
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
