@@ -1,10 +1,10 @@
 <Project>
     <PropertyGroup>
-        <!-- net48;netcoreapp3.1;netstandard2.1; -->
+        <!-- net48;netcoreapp3.1;netstandard2.1;net5.0; ? -->
         <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
         <LangVersion>12</LangVersion>
+        <RestoreLockedMode>true</RestoreLockedMode>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     </PropertyGroup>
 
     <PropertyGroup Label="DependencyVersion">
@@ -18,11 +18,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference 
+        <!-- <PackageReference 
             Include="StyleCop.Analyzers" 
             Version="1.2.0-beta.556"
             PrivateAssets="all" 
-            Condition="$(MSBuildProjectExtension) == '.csproj'"/>
+            Condition="$(MSBuildProjectExtension) == '.csproj'"/> -->
         <PackageReference
             Include="SonarAnalyzer.CSharp"
             Version="9.16.0.82469"
