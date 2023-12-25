@@ -1,24 +1,24 @@
 namespace Spiffe.Id;
 
-/**
- * Represents the name of a SPIFFE trust domain (e.g. 'example.org').
- */
+/// <summary>
+/// Represents the name of a SPIFFE trust domain (e.g. 'example.org').
+/// </summary>
 public class SpiffeTrustDomain
 {
-    /// <summary>
-    /// The trust domain name as a string, e.g. example.org.
-    /// </summary>
-    public string Name { get; }
-
-    /// <summary>
-    /// SPIFFE ID of the trust domain.
-    /// </summary>
-    public SpiffeId SpiffeId => SpiffeId.MakeId(this, string.Empty);
-
     internal SpiffeTrustDomain(string name)
     {
         Name = name;
     }
+
+    /// <summary>
+    /// Gets the trust domain name as a string, e.g. example.org.
+    /// </summary>
+    public string Name { get; }
+
+    /// <summary>
+    /// Gets SPIFFE ID of the trust domain.
+    /// </summary>
+    public SpiffeId SpiffeId => SpiffeId.MakeId(this, string.Empty);
 
     /// <summary>
     /// Returns a new TrustDomain from a string. The string
@@ -61,6 +61,21 @@ public class SpiffeTrustDomain
         return id.TrustDomain;
     }
 
+    public override bool Equals(object? obj)
+    {
+        if (obj is not SpiffeTrustDomain)
+        {
+            return false;
+        }
+
+        string objName = (obj as SpiffeTrustDomain)!.Name;
+        return string.Equals(Name, objName, StringComparison.Ordinal);
+    }
+
+    public override int GetHashCode() => Name.GetHashCode();
+
+    public override string ToString() => Name;
+
     internal static bool IsValidTrustDomainChar(char c)
     {
         if (c >= 'a' && c <= 'z')
@@ -80,19 +95,4 @@ public class SpiffeTrustDomain
 
         return false;
     }
-
-    public override bool Equals(object? other)
-    {
-        if (other is not SpiffeTrustDomain)
-        {
-            return false;
-        }
-
-        string otherName = (other as SpiffeTrustDomain)!.Name;
-        return string.Equals(Name, otherName, StringComparison.Ordinal);
-    }
-
-    public override int GetHashCode() => Name.GetHashCode();
-
-    public override string ToString() => Name;
 }

@@ -14,13 +14,15 @@ while (true)
     try
     {
         var reply = c.FetchX509SVID(new X509SVIDRequest(), headers: new()
-    {{
-        "workload.spiffe.io", "true"
-    }});
+        {
+            {
+                "workload.spiffe.io", "true"
+            },
+        });
 
         await foreach (var r in reply.ResponseStream.ReadAllAsync())
         {
-            Console.WriteLine(r.Svids.First().SpiffeId);
+            Console.WriteLine(r.Svids.FirstOrDefault()?.SpiffeId);
         }
     }
     catch (Exception e)

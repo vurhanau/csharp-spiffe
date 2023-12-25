@@ -38,3 +38,7 @@ coverage-report:
 
 fmt:
 	@dotnet format ./Spiffe.sln
+
+# dotnet tool install -g dependadotnet
+dependabot:
+	dependadotnet . > .github/dependabot.yml

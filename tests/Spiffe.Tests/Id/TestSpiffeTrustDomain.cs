@@ -1,50 +1,49 @@
 using Spiffe.Id;
+using static Tests.Spiffe.Id.TestConstants;
 
 namespace Tests.Spiffe.Id;
-
-using static TestConstants;
 
 public class TestSpiffeTrustDomain
 {
     [Fact]
     public void TestFromString()
     {
-        void assertOk(string input, SpiffeTrustDomain expected)
+        void AssertOk(string input, SpiffeTrustDomain expected)
         {
             SpiffeTrustDomain actual = SpiffeTrustDomain.FromString(input);
             Assert.Equal(expected, actual);
         }
 
-        void assertFail(string input, string expectedErr)
+        void AssertFail(string input, string expectedErr)
         {
-            var e = Assert.Throws<ArgumentException>(() => SpiffeTrustDomain.FromString(input));
+            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeTrustDomain.FromString(input));
             Assert.Contains(expectedErr, e.Message);
         }
 
-        assertFail("", "Trust domain is missing");
-        assertOk("spiffe://trustdomain", td);
-        assertOk("spiffe://trustdomain/path", td);
+        AssertFail(string.Empty, "Trust domain is missing");
+        AssertOk("spiffe://trustdomain", Td);
+        AssertOk("spiffe://trustdomain/path", Td);
 
-        assertFail("spiffe:/trustdomain/path", "Scheme is missing or invalid");
-        assertFail("spiffe://", "Trust domain is missing");
-        assertFail("spiffe:///path", "Trust domain is missing");
-        assertFail("spiffe://trustdomain/", "Path cannot have a trailing slash");
-        assertFail("spiffe://trustdomain/path/", "Path cannot have a trailing slash");
-        assertFail("spiffe://%F0%9F%A4%AF/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
-        assertFail("spiffe://trustdomain/%F0%9F%A4%AF", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe:/trustdomain/path", "Scheme is missing or invalid");
+        AssertFail("spiffe://", "Trust domain is missing");
+        AssertFail("spiffe:///path", "Trust domain is missing");
+        AssertFail("spiffe://trustdomain/", "Path cannot have a trailing slash");
+        AssertFail("spiffe://trustdomain/path/", "Path cannot have a trailing slash");
+        AssertFail("spiffe://%F0%9F%A4%AF/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe://trustdomain/%F0%9F%A4%AF", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
 
         for (int i = 0; i < 256; i++)
         {
             char c = (char)i;
-            if (tdChars.Contains(c))
+            if (TdChars.Contains(c))
             {
                 SpiffeTrustDomain expected = SpiffeTrustDomain.FromString($"trustdomain{c}");
-                assertOk($"trustdomain{c}", expected);
-                assertOk($"spiffe://trustdomain{c}", expected);
+                AssertOk($"trustdomain{c}", expected);
+                AssertOk($"spiffe://trustdomain{c}", expected);
             }
             else
             {
-                assertFail($"trustdomain{c}", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+                AssertFail($"trustdomain{c}", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
             }
         }
     }
@@ -52,22 +51,23 @@ public class TestSpiffeTrustDomain
     [Fact]
     public void TestFromUri()
     {
-        void assertOk(string s)
+        void AssertOk(string s)
         {
             Uri uri = new(s);
             SpiffeTrustDomain td = SpiffeTrustDomain.FromUri(uri);
             Assert.Equal(SpiffeTrustDomain.FromString(uri.Host), td);
         }
-        void assertFail(Uri uri, string expectedErr)
+
+        void AssertFail(Uri uri, string expectedErr)
         {
-            var e = Assert.Throws<ArgumentException>(() => SpiffeTrustDomain.FromUri(uri));
+            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeTrustDomain.FromUri(uri));
             Assert.Contains(expectedErr, e.Message);
         }
 
-        assertOk("spiffe://trustdomain");
-        assertOk("spiffe://trustdomain/path");
+        AssertOk("spiffe://trustdomain");
+        AssertOk("spiffe://trustdomain/path");
 
-        assertFail(new Uri("spiffe://trustdomain/path$"), "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail(new Uri("spiffe://trustdomain/path$"), "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
     [Fact]
