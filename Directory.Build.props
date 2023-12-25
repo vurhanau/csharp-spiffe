@@ -3,6 +3,7 @@
         <!-- net48;netcoreapp3.1;netstandard2.1; -->
         <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
         <LangVersion>12</LangVersion>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     </PropertyGroup>
 
