@@ -14,9 +14,16 @@ jobs:
         id: setup
         with:
           dotnet-version: 8.x
-          cache: true
-          cache-dependency-path: src/Spiffe/package-lock.json
-      - name: Restore dependencies
+      - name: Restore Cache
+        id: restore-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - name: Restore
+        if: steps.restore-cache.outputs.cache-hit != 'true'
         run: dotnet restore --locked-mode
       - name: Build
         run: dotnet build --no-restore
