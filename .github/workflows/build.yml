@@ -31,7 +31,6 @@ jobs:
             ${{ runner.os }}-nuget-
       
       - name: Restore
-        if: steps.restore-cache.outputs.cache-hit != 'true'
         run: dotnet restore --locked-mode
 
       - name: Build
