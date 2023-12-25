@@ -190,14 +190,14 @@ public class TestSpiffeId
 
         void AssertFail(string startsWith, string replaceWith, string expectedErr)
         {
-            var e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).ReplacePath(replaceWith));
+            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).ReplacePath(replaceWith));
             Assert.Contains(expectedErr, e.Message);
         }
 
-        AssertOk("", "/foo", "/foo");
+        AssertOk(string.Empty, "/foo", "/foo");
         AssertOk("/path", "/foo", "/foo");
 
-        AssertFail("", "foo", "Path must have a leading slash");
+        AssertFail(string.Empty, "foo", "Path must have a leading slash");
         AssertFail("/path", "/", "Path cannot have a trailing slash");
         AssertFail("/path", "foo", "Path must have a leading slash");
     }

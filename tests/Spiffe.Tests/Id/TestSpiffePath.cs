@@ -34,7 +34,7 @@ public class TestSpiffePath
             Assert.Contains(expectedErr, e.Message);
         }
 
-        AssertFail("Path cannot contain empty segments", "");
+        AssertFail("Path cannot contain empty segments", string.Empty);
         AssertFail("Path cannot contain dot segments", ".");
         AssertFail("Path cannot contain dot segments", "..");
         AssertFail("Path segment characters are limited to letters, numbers, dots, dashes, and underscores", "/");
