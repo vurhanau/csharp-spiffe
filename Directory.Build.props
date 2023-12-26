@@ -5,6 +5,7 @@
         <LangVersion>12</LangVersion>
         <RestoreLockedMode>true</RestoreLockedMode>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup Label="DependencyVersion">
@@ -18,11 +19,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- <PackageReference 
+        <PackageReference 
             Include="StyleCop.Analyzers" 
             Version="1.2.0-beta.556"
             PrivateAssets="all" 
-            Condition="$(MSBuildProjectExtension) == '.csproj'"/> -->
+            Condition="$(MSBuildProjectExtension) == '.csproj'"/>
         <PackageReference
             Include="SonarAnalyzer.CSharp"
             Version="9.16.0.82469"

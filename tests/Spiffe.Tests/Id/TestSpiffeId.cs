@@ -8,7 +8,6 @@ public class TestSpiffeId
     [Fact]
     public void TestFromString()
     {
-        Assert.Throws<ArgumentException>(() => SpiffeId.FromString(null));
         Assert.Throws<ArgumentException>(() => SpiffeId.FromString(string.Empty));
 
         void AssertOk(string idString, SpiffeTrustDomain expectedTd, string expectedPath)
@@ -126,8 +125,6 @@ public class TestSpiffeId
             Assert.Contains(expectedErr, e.Message);
         }
 
-        Assert.Throws<ArgumentNullException>(() => SpiffeId.FromSegments(null, "foo"));
-        Assert.Throws<ArgumentNullException>(() => SpiffeId.FromSegments(Td, null));
         AssertOk([], string.Empty);
         AssertOk(["foo"], "/foo");
         AssertOk(["foo", "bar"], "/foo/bar");

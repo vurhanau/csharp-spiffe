@@ -44,7 +44,7 @@ public class SpiffeId
     /// Returns an ID with the appended path.
     /// The path to append must be a valid absolute path according to
     /// the SPIFFE specification.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
     /// </summary>
     public SpiffeId AppendPath(string path)
     {
@@ -56,7 +56,7 @@ public class SpiffeId
     /// Returns an ID with the appended joined path segments.  It
     /// will fail if called on a zero value. The path segments must be valid
     /// according to the SPIFFE specification and must not contain path separators.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
     /// </summary>
     public SpiffeId AppendSegments(params string[] segments)
     {
@@ -68,7 +68,7 @@ public class SpiffeId
     /// Returns an ID with the given path in the same trust domain. It
     /// will fail if called on a zero value. The given path must be a valid absolute
     /// path according to the SPIFFE specification.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
     /// </summary>
     public SpiffeId ReplacePath(string path) => FromPath(TrustDomain, path);
 
@@ -77,7 +77,7 @@ public class SpiffeId
     /// trust domain. It will fail if called on a zero value. The path segments must
     /// be valid according to the SPIFFE specification and must not contain path
     /// separators.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
     /// </summary>
     public SpiffeId ReplaceSegments(params string[] segments) => FromSegments(TrustDomain, segments);
 
@@ -115,7 +115,7 @@ public class SpiffeId
     /// FromPath returns a new SPIFFE ID in the given trust domain and with the
     /// given path. The supplied path must be a valid absolute path according to the
     /// SPIFFE specification.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
     /// </summary>
     public static SpiffeId FromPath(SpiffeTrustDomain td, string path)
     {
@@ -127,7 +127,7 @@ public class SpiffeId
     /// FromSegments returns a new SPIFFE ID in the given trust domain with joined
     /// path segments. The path segments must be valid according to the SPIFFE
     /// specification and must not contain path separators.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
     /// </summary>
     public static SpiffeId FromSegments(SpiffeTrustDomain td, params string[] segments)
     {

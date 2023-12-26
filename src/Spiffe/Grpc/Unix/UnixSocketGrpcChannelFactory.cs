@@ -1,4 +1,6 @@
+#pragma warning disable SA1633 // File should have header
 using System.Net.Sockets;
+#pragma warning restore SA1633 // File should have header
 using Grpc.Net.Client;
 
 namespace Spiffe.Grpc.Unix;

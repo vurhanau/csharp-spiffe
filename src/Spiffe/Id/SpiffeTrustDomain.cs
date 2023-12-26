@@ -24,7 +24,7 @@ public class SpiffeTrustDomain
     /// Returns a new TrustDomain from a string. The string
     /// can either be a trust domain name (e.g. example.org), or a valid SPIFFE ID
     /// URI (e.g. spiffe://example.org), otherwise an error is returned.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#21-trust-domain"/>.
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#21-trust-domain"/>.
     /// </summary>
     public static SpiffeTrustDomain FromString(string idOrName)
     {

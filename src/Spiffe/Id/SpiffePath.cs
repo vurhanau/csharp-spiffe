@@ -28,7 +28,7 @@ public static class SpiffePath
 
     /// <summary>
     /// ValidatePath validates that a path string is a conformant path for a SPIFFE ID.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
     /// </summary>
     public static void ValidatePath(string path)
     {
@@ -85,7 +85,7 @@ public static class SpiffePath
     /// <summary>
     /// ValidatePathSegment validates that a string is a conformant segment for
     /// inclusion in the path for a SPIFFE ID.
-    /// See <seealso cref="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
     /// </summary>
     public static void ValidatePathSegment(string segment)
     {
