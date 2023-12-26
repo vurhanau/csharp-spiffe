@@ -16,6 +16,9 @@
 # Mono auto generated files
 mono_crash.*
 
+# Mac
+.DS_Store
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -148,6 +151,7 @@ coverage*.xml
 coverage*.info
 
 # Visual Studio code coverage results
+coverage
 *.coverage
 *.coveragexml
 
