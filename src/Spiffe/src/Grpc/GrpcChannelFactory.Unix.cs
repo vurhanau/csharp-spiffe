@@ -1,4 +1,4 @@
-#if OS_LINUX || OS_MAC
+#if !OS_WINDOWS
 
 using System.Net.Sockets;
 using Grpc.Net.Client;

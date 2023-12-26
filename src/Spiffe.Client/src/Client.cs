@@ -8,12 +8,12 @@ namespace Spiffe.Client;
 
 internal static class Client
 {
-    public static async Task Run(CancellationToken cancellationToken = default)
+    public static async Task Run(string address, CancellationToken cancellationToken = default)
     {
 #if OS_WINDOWS
-        throw new PlatformNotSupportedException();
+        using GrpcChannel ch = GrpcChannelFactory.CreateNamedPipeChannel(address);
 #else
-        using GrpcChannel ch = GrpcChannelFactory.CreateUnixSocketChannel("/tmp/spire-agent/public/api.sock");
+        using GrpcChannel ch = GrpcChannelFactory.CreateUnixSocketChannel(address);
 #endif
         SpiffeWorkloadAPIClient c = new(ch);
         while (cancellationToken.IsCancellationRequested)
@@ -27,7 +27,7 @@ internal static class Client
                     },
                 });
 
-                await foreach (var r in reply.ResponseStream.ReadAllAsync())
+                await foreach (var r in reply.ResponseStream.ReadAllAsync(cancellationToken))
                 {
                     Console.WriteLine(r.Svids.FirstOrDefault()?.SpiffeId);
                 }
