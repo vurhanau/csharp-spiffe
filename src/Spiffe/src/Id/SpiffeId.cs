@@ -3,6 +3,10 @@ using static Spiffe.Id.SpiffeTrustDomain;
 
 namespace Spiffe.Id;
 
+/// <summary>
+/// Represents a SPIFFE ID as defined in the SPIFFE standard.
+/// See <seealso href="https://github.com/spiffe/spiffe/blob/master/standards/SPIFFE-ID.md">https://github.com/spiffe/spiffe/blob/master/standards/SPIFFE-ID.md</seealso>
+/// </summary>
 public class SpiffeId
 {
     private const string SchemePrefix = "spiffe://";
@@ -81,10 +85,16 @@ public class SpiffeId
     /// </summary>
     public SpiffeId ReplaceSegments(params string[] segments) => FromSegments(TrustDomain, segments);
 
+    /// <summary>
+    /// Returns the string representation of the SPIFFE ID, concatenating schema, trust domain,
+    /// and path segments (e.g. 'spiffe://example.org/path1/path2')
+    /// </summary>
     public override string ToString() => Id;
 
+    /// <inheritdoc/>
     public override int GetHashCode() => Id.GetHashCode();
 
+    /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
         if (obj is not SpiffeId)

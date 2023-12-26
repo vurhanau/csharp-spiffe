@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe", "src\Spiffe\Spiffe.csproj", "{49B83F34-733F-4F1F-9E33-C6936BC03C4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Client", "samples\Spiffe.Client\Spiffe.Client.csproj", "{928754C4-5323-44C1-8190-299CC71D55C9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Client", "src\Spiffe.Client\Spiffe.Client.csproj", "{928754C4-5323-44C1-8190-299CC71D55C9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Tests", "tests\Spiffe.Tests\Spiffe.Tests.csproj", "{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}"
 EndProject

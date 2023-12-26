@@ -53,6 +53,11 @@ public class SpiffeTrustDomain
         return new(idOrName);
     }
 
+    /// <summary>
+    /// Returns a new TrustDomain from a URI.
+    /// The URI must be a valid SPIFFE ID.
+    /// The trust domain is extracted from the host field.
+    /// </summary>
     public static SpiffeTrustDomain FromUri(Uri uri)
     {
         _ = uri ?? throw new ArgumentNullException(nameof(uri));
@@ -61,6 +66,7 @@ public class SpiffeTrustDomain
         return id.TrustDomain;
     }
 
+    /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
         if (obj is not SpiffeTrustDomain)
@@ -72,8 +78,12 @@ public class SpiffeTrustDomain
         return string.Equals(Name, objName, StringComparison.Ordinal);
     }
 
+    /// <inheritdoc/>
     public override int GetHashCode() => Name.GetHashCode();
 
+    /// <summary>
+    /// Returns the trust domain as a string.
+    /// </summary>
     public override string ToString() => Name;
 
     internal static bool IsValidTrustDomainChar(char c)

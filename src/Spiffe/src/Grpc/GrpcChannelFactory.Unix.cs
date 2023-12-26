@@ -1,13 +1,19 @@
-#pragma warning disable SA1633 // File should have header
+#if OS_LINUX || OS_MAC
+
 using System.Net.Sockets;
-#pragma warning restore SA1633 // File should have header
 using Grpc.Net.Client;
 
-namespace Spiffe.Grpc.Unix;
+namespace Spiffe.Grpc;
 
-public static class UnixSocketGrpcChannelFactory
+/// <summary>
+/// Constructs GRPC channels.
+/// </summary>
+public static partial class GrpcChannelFactory
 {
-    public static GrpcChannel CreateChannel(string socketPath)
+    /// <summary>
+    /// Creates GRPC channel over unix domain socket.
+    /// </summary>
+    public static GrpcChannel CreateUnixSocketChannel(string socketPath)
     {
         _ = socketPath ?? throw new ArgumentNullException(nameof(socketPath));
 
@@ -37,3 +43,4 @@ public static class UnixSocketGrpcChannelFactory
         });
     }
 }
+#endif

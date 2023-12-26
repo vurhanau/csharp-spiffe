@@ -2,6 +2,10 @@ using System.Text;
 
 namespace Spiffe.Id;
 
+/// <summary>
+/// Utility class to manage path component of a SPIFFE ID that allows unique identification of a given workload.
+/// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+/// </summary>
 public static class SpiffePath
 {
     /// <summary>
