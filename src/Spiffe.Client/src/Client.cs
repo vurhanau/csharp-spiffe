@@ -10,7 +10,11 @@ internal static class Client
 {
     public static async Task Run(CancellationToken cancellationToken = default)
     {
+#if OS_WINDOWS
+        throw new PlatformNotSupportedException();
+#else
         using GrpcChannel ch = GrpcChannelFactory.CreateUnixSocketChannel("/tmp/spire-agent/public/api.sock");
+#endif
         SpiffeWorkloadAPIClient c = new(ch);
         while (cancellationToken.IsCancellationRequested)
         {
