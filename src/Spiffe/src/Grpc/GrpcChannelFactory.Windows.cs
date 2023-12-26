@@ -1,6 +1,8 @@
 #if OS_WINDOWS
 
+using System.IO.Pipes;
 using System.Net.Sockets;
+using System.Security.Principal;
 using Grpc.Net.Client;
 
 namespace Spiffe.Grpc;
