@@ -1,21 +1,9 @@
 <Project>
     <PropertyGroup>
-        <!-- net48;netcoreapp3.1;netstandard2.1;net5.0; ? -->
         <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-        <!-- <TargetFrameworks>net8.0</TargetFrameworks> -->
         <LangVersion>12</LangVersion>
         <RestoreLockedMode>true</RestoreLockedMode>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    </PropertyGroup>
-
-    <PropertyGroup Label="DependencyVersion">
-        <GoogleProtobufVersion>3.25.1</GoogleProtobufVersion>
-        <GrpcNetClientVersion>2.59.0</GrpcNetClientVersion>
-        <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
-        <TestSdkVersion>17.6.0</TestSdkVersion>
-        <XunitVersion>2.4.2</XunitVersion>
-        <XunitRunnerVersion>2.4.5</XunitRunnerVersion>
-        <CoverletVersion>6.0.0</CoverletVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
@@ -34,12 +22,10 @@
     <ItemGroup>
         <PackageReference 
             Include="StyleCop.Analyzers" 
-            Version="1.2.0-beta.556"
             PrivateAssets="all" 
             Condition="$(MSBuildProjectExtension) == '.csproj'"/>
         <PackageReference
             Include="SonarAnalyzer.CSharp"
-            Version="9.16.0.82469"
             PrivateAssets="all"
             Condition="$(MSBuildProjectExtension) == '.csproj'"/>
     </ItemGroup>

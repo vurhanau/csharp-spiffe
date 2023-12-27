@@ -1,4 +1,4 @@
-using static Spiffe.Id.SpiffePath;
+﻿using static Spiffe.Id.SpiffePath;
 using static Spiffe.Id.SpiffeTrustDomain;
 
 namespace Spiffe.Id;

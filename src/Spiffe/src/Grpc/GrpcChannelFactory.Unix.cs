@@ -1,4 +1,4 @@
-#if !OS_WINDOWS
+﻿#if !OS_WINDOWS
 
 using System.Net.Sockets;
 using Grpc.Net.Client;
