@@ -1,4 +1,4 @@
-using Spiffe.Id;
+﻿using Spiffe.Id;
 using static Tests.Spiffe.Id.TestConstants;
 
 namespace Tests.Spiffe.Id;

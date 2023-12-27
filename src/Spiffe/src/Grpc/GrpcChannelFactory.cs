@@ -1,4 +1,4 @@
-namespace Spiffe.Grpc;
+﻿namespace Spiffe.Grpc;
 
 /// <summary>
 /// Constructs GRPC channels.

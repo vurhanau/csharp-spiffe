@@ -1,0 +1,36 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <GoogleProtobufVersion>3.25.1</GoogleProtobufVersion>
+        <GrpcNetClientVersion>2.59.0</GrpcNetClientVersion>
+        <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
+        <TestSdkVersion>17.6.0</TestSdkVersion>
+        <XunitVersion>2.4.2</XunitVersion>
+        <XunitRunnerVersion>2.4.5</XunitRunnerVersion>
+        <CoverletVersion>6.0.0</CoverletVersion>
+        <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
+        <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
+        <SonarVersion>9.16.0.82469</SonarVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Spiffe -->
+        <PackageVersion Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
+        <PackageVersion Include="Grpc.Net.Client" Version="$(GrpcNetClientVersion)" />
+        <PackageVersion Include="Grpc.Tools" Version="$(GrpcToolsVersion)" />
+
+        <!-- Spiffe.Client -->
+        <PackageVersion Include="CommandLineParser" Version="$(CommandLineParserVersion)" />
+
+        <!-- Spiffe.Tests -->
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
+        <PackageVersion Include="xunit" Version="$(XunitVersion)" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="$(XunitRunnerVersion)" />
+        <PackageVersion Include="coverlet.msbuild" Version="$(CoverletVersion)" />
+        <PackageVersion Include="coverlet.collector" Version="$(CoverletVersion)" />
+
+        <!-- Analyzers -->
+        <PackageVersion Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
+        <PackageVersion Include="SonarAnalyzer.CSharp" Version="$(SonarVersion)" />
+    </ItemGroup>
+</Project>

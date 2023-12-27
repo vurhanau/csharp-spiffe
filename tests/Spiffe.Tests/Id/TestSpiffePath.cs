@@ -1,4 +1,4 @@
-using Spiffe.Id;
+﻿using Spiffe.Id;
 
 namespace Tests.Spiffe.Id;
 
