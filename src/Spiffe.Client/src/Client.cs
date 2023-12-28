@@ -8,15 +8,11 @@ namespace Spiffe.Client;
 
 internal static class Client
 {
-    public static async Task Run(string address, CancellationToken cancellationToken = default)
+    public static async Task Run(string address, bool streaming = false, CancellationToken cancellationToken = default)
     {
-#if OS_WINDOWS
-        using GrpcChannel ch = GrpcChannelFactory.CreateNamedPipeChannel(address);
-#else
-        using GrpcChannel ch = GrpcChannelFactory.CreateUnixSocketChannel(address);
-#endif
+        using GrpcChannel ch = CreateChannel(address);
         SpiffeWorkloadAPIClient c = new(ch);
-        while (cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
@@ -29,7 +25,12 @@ internal static class Client
 
                 await foreach (var r in reply.ResponseStream.ReadAllAsync(cancellationToken))
                 {
-                    Console.WriteLine(r.Svids.FirstOrDefault()?.SpiffeId);
+                    var svid = r.Svids.FirstOrDefault();
+                    Console.WriteLine("Spiffe ID: " + svid?.SpiffeId);
+                    if (!streaming)
+                    {
+                        return;
+                    }
                 }
             }
             catch (Exception e)
@@ -38,5 +39,14 @@ internal static class Client
                 Thread.Sleep(5000);
             }
         }
+    }
+
+    private static GrpcChannel CreateChannel(string address)
+    {
+#if OS_WINDOWS
+        return GrpcChannelFactory.CreateNamedPipeChannel(address);
+#else
+        return GrpcChannelFactory.CreateUnixSocketChannel(address);
+#endif
     }
 }
