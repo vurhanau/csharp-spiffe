@@ -1,4 +1,4 @@
-SPIRE_DIR := /Users/avurhanau/Projects/spiffe/spire
+SPIRE_DIR := $(HOME)/Projects/spiffe/spire
 
 .PHONY: build coverage
 
