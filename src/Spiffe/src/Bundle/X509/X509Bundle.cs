@@ -1,4 +1,4 @@
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using Spiffe.Id;
 
 namespace Spiffe.Bundle.X509;
@@ -11,10 +11,10 @@ public class X509Bundle
     /// <summary>
     /// Gets a trust domain associated with bundle.
     /// </summary>
-    public required SpiffeTrustDomain TrustDomain { get; init; }
+    public TrustDomain? TrustDomain { get; init; }
 
     /// <summary>
-    /// Gets trust domain trusted authorities.
+    /// Gets trust domain authority chain.
     /// </summary>
-    public required IReadOnlyList<X509Certificate2> X509Authorities { get; init; }
+    public X509Chain? Chain { get; init; }
 }

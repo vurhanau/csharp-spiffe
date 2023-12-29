@@ -1,4 +1,4 @@
-using Spiffe.Id;
+﻿using Spiffe.Id;
 
 namespace Spiffe.Bundle.X509;
 
@@ -10,5 +10,7 @@ public class X509BundleSet
     /// <summary>
     /// Gets a trust domain to X.509 bundle mapping.
     /// </summary>
-    public required IReadOnlyDictionary<SpiffeTrustDomain, X509Bundle> Bundles { get; init; }
+    public Dictionary<TrustDomain, X509Bundle>? Bundles { get; init; }
+
+    internal static X509BundleSet Empty => new() { Bundles = [] };
 }

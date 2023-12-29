@@ -1,5 +1,5 @@
 ﻿using static Spiffe.Id.SpiffePath;
-using static Spiffe.Id.SpiffeTrustDomain;
+using static Spiffe.Id.TrustDomain;
 
 namespace Spiffe.Id;
 
@@ -32,7 +32,7 @@ public class SpiffeId
     /// <summary>
     /// Gets the trust domain of the SPIFFE ID.
     /// </summary>
-    public SpiffeTrustDomain TrustDomain => new(Id[SchemePrefixLength.._pathIndex]);
+    public TrustDomain TrustDomain => new(Id[SchemePrefixLength.._pathIndex]);
 
     /// <summary>
     /// Gets the path of the SPIFFE ID inside the trust domain.
@@ -42,7 +42,7 @@ public class SpiffeId
     /// <summary>
     /// True if the SPIFFE ID is a member of the given trust domain.
     /// </summary>
-    public bool MemberOf(SpiffeTrustDomain td) => TrustDomain.Equals(td);
+    public bool MemberOf(TrustDomain td) => TrustDomain.Equals(td);
 
     /// <summary>
     /// Returns an ID with the appended path.
@@ -127,7 +127,7 @@ public class SpiffeId
     /// SPIFFE specification.
     /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
     /// </summary>
-    public static SpiffeId FromPath(SpiffeTrustDomain td, string path)
+    public static SpiffeId FromPath(TrustDomain td, string path)
     {
         ValidatePath(path);
         return MakeId(td, path);
@@ -139,7 +139,7 @@ public class SpiffeId
     /// specification and must not contain path separators.
     /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
     /// </summary>
-    public static SpiffeId FromSegments(SpiffeTrustDomain td, params string[] segments)
+    public static SpiffeId FromSegments(TrustDomain td, params string[] segments)
     {
         _ = td ?? throw new ArgumentNullException(nameof(td));
         _ = segments ?? throw new ArgumentNullException(nameof(segments));
@@ -199,7 +199,7 @@ public class SpiffeId
         return FromString(uri.ToString().TrimEnd('/'));
     }
 
-    internal static SpiffeId MakeId(SpiffeTrustDomain td, string path)
+    internal static SpiffeId MakeId(TrustDomain td, string path)
     {
         if (string.IsNullOrEmpty(td.Name))
         {

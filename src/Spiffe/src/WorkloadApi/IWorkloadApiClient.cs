@@ -1,3 +1,5 @@
+﻿using Spiffe.Bundle.X509;
+
 namespace Spiffe.WorkloadApi;
 
 /// <summary>
@@ -24,7 +26,7 @@ public interface IWorkloadApiClient : IDisposable
     /// <summary>
     /// Fetches the X.509 bundles on a one-shot call.
     /// </summary>
-    Task FetchX509BundlesAsync(CancellationToken cancellationToken = default);
+    Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Watches for X.509 bundles updates.
@@ -33,5 +35,5 @@ public interface IWorkloadApiClient : IDisposable
     /// updates immediately after the Stream is ready and doesn't have to wait until the Workload API dispatches
     /// the next update.
     /// </summary>
-    Task WatchX509BundlesAsync(CancellationToken cancellationToken = default);
+    Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default);
 }

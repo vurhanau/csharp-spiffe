@@ -8,15 +8,15 @@ public class TestSpiffeTrustDomain
     [Fact]
     public void TestFromString()
     {
-        void AssertOk(string input, SpiffeTrustDomain expected)
+        void AssertOk(string input, TrustDomain expected)
         {
-            SpiffeTrustDomain actual = SpiffeTrustDomain.FromString(input);
+            TrustDomain actual = TrustDomain.FromString(input);
             Assert.Equal(expected, actual);
         }
 
         void AssertFail(string input, string expectedErr)
         {
-            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeTrustDomain.FromString(input));
+            ArgumentException e = Assert.Throws<ArgumentException>(() => TrustDomain.FromString(input));
             Assert.Contains(expectedErr, e.Message);
         }
 
@@ -37,7 +37,7 @@ public class TestSpiffeTrustDomain
             char c = (char)i;
             if (TdChars.Contains(c))
             {
-                SpiffeTrustDomain expected = SpiffeTrustDomain.FromString($"trustdomain{c}");
+                TrustDomain expected = TrustDomain.FromString($"trustdomain{c}");
                 AssertOk($"trustdomain{c}", expected);
                 AssertOk($"spiffe://trustdomain{c}", expected);
             }
@@ -54,13 +54,13 @@ public class TestSpiffeTrustDomain
         void AssertOk(string s)
         {
             Uri uri = new(s);
-            SpiffeTrustDomain td = SpiffeTrustDomain.FromUri(uri);
-            Assert.Equal(SpiffeTrustDomain.FromString(uri.Host), td);
+            TrustDomain td = TrustDomain.FromUri(uri);
+            Assert.Equal(TrustDomain.FromString(uri.Host), td);
         }
 
         void AssertFail(Uri uri, string expectedErr)
         {
-            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeTrustDomain.FromUri(uri));
+            ArgumentException e = Assert.Throws<ArgumentException>(() => TrustDomain.FromUri(uri));
             Assert.Contains(expectedErr, e.Message);
         }
 
@@ -77,7 +77,7 @@ public class TestSpiffeTrustDomain
         string[] arr = ["trustdomain", "spiffe://trustdomain", "spiffe://trustdomain/path"];
         foreach (string s in arr)
         {
-            var td = SpiffeTrustDomain.FromString(s);
+            var td = TrustDomain.FromString(s);
             Assert.Equal(expected, td.SpiffeId.Id);
         }
     }

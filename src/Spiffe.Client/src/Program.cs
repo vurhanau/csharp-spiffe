@@ -1,21 +1,29 @@
-﻿using System.Text.Json;
-using CommandLine;
+﻿using CommandLine;
 using Spiffe.Client;
 
-ParserResult<Options> parserResult = Parser.Default.ParseArguments<Options>(args);
-if (!parserResult.Errors.Any() && parserResult.Value != null)
+var parserResult = Parser.Default.ParseArguments<X509Command, BundleCommand>(args);
+if (parserResult.Errors.Any())
 {
-    Options options = parserResult.Value;
-    LogOptions(options);
-
-    await Client.Run(options.SocketPath!);
+    var err = string.Join(", ", parserResult.Errors);
+    Console.WriteLine($"Failed to parse command: {err}");
+    Environment.Exit(1);
+    return;
 }
 
-static void LogOptions(Options options)
+var socket = (parserResult.Value as Options)?.Socket;
+if (string.IsNullOrEmpty(socket))
 {
-    string json = JsonSerializer.Serialize(options, new JsonSerializerOptions()
-    {
-        WriteIndented = true,
-    });
-    Console.WriteLine($"Options: {json}");
+    Console.WriteLine($"Socket must be non-empty");
+    Environment.Exit(1);
+    return;
 }
+
+using var c = Client.GetClient(socket);
+
+await (parserResult.Value switch
+{
+    X509Command => c.FetchX509Context(),
+    BundleCommand => c.FetchX509Bundles(),
+    WatchCommand => Task.WhenAll(c.WatchX509Context(), c.WatchX509Bundles()),
+    _ => throw new NotSupportedException("Unknown command"),
+});

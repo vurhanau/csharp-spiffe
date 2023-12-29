@@ -1,9 +1,6 @@
-using System.Security.Cryptography.X509Certificates;
-using Grpc.Core;
+﻿using Grpc.Core;
 using Grpc.Net.Client;
 using Spiffe.Bundle.X509;
-using Spiffe.Id;
-using Spiffe.Svid.X509;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
 namespace Spiffe.WorkloadApi;
@@ -28,6 +25,8 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private static readonly X509SVIDRequest X509SvidRequest = new();
 
+    private static readonly X509BundlesRequest X509BundlesRequest = new();
+
     private WorkloadApiClient(GrpcChannel channel,
                               SpiffeWorkloadAPIClient client,
                               bool disposeChannel)
@@ -51,49 +50,25 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task<X509Context> FetchX509ContextAsync(CancellationToken cancellationToken = default)
     {
-        var call = _client.FetchX509SVID(X509SvidRequest, headers: Headers, cancellationToken: cancellationToken);
-        await foreach (X509SVIDResponse resp in call.ResponseStream.ReadAllAsync(cancellationToken))
-        {
-            List<X509Svid> svids = new();
-            Dictionary<SpiffeTrustDomain, X509Bundle> bundles = new();
-            foreach (X509SVID svid in resp.Svids)
-            {
-                svids.Add(new X509Svid
-                {
-                    SpiffeId = SpiffeId.FromString(svid.SpiffeId),
-                    Chain = new X509Chain(),
-                    Certificate = new X509Certificate2(null),
-                    Hint = svid.Hint,
-                });
-            }
-
-            var ctx = new X509Context
-            {
-                X509Svids = svids,
-                X509BundleSet = new X509BundleSet()
-                {
-                    Bundles = bundles,
-                },
-            };
-        }
+        return await FetchAsync(FetchX509Svids, Helper.ToX509Context, X509Context.Empty, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task FetchX509BundlesAsync(CancellationToken cancellationToken = default)
+    public async Task WatchX509ContextAsync(IWatcher<X509Context> watcher, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await WatchAsync(FetchX509Svids, Helper.ToX509Context, watcher, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task WatchX509BundlesAsync(CancellationToken cancellationToken = default)
+    public async Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await FetchAsync(FetchX509Bundles, Helper.ToX509BundleSet, X509BundleSet.Empty, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public Task WatchX509ContextAsync(IWatcher<X509Context> watcher, CancellationToken cancellationToken = default)
+    public async Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await WatchAsync(FetchX509Bundles, Helper.ToX509BundleSet, watcher, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -122,6 +97,60 @@ public class WorkloadApiClient : IWorkloadApiClient
             }
 
             _disposed = true;
+        }
+    }
+
+    private IAsyncEnumerable<X509SVIDResponse> FetchX509Svids(CancellationToken cancellationToken)
+    {
+        AsyncServerStreamingCall<X509SVIDResponse> call = _client.FetchX509SVID(X509SvidRequest, headers: Headers, cancellationToken: cancellationToken);
+        return call.ResponseStream.ReadAllAsync(cancellationToken);
+    }
+
+    private IAsyncEnumerable<X509BundlesResponse> FetchX509Bundles(CancellationToken cancellationToken)
+    {
+        AsyncServerStreamingCall<X509BundlesResponse> call = _client.FetchX509Bundles(X509BundlesRequest, headers: Headers, cancellationToken: cancellationToken);
+        return call.ResponseStream.ReadAllAsync(cancellationToken);
+    }
+
+    private static async Task<TResult> FetchAsync<TFrom, TResult>(Func<CancellationToken, IAsyncEnumerable<TFrom>> fetchFunc,
+                                                                  Func<TFrom, TResult> mapperFunc,
+                                                                  TResult fallbackIfAbsent,
+                                                                  CancellationToken cancellationToken)
+    {
+        IAsyncEnumerable<TFrom> stream = fetchFunc(cancellationToken);
+        IAsyncEnumerator<TFrom> enumerator = stream.GetAsyncEnumerator(cancellationToken);
+        try
+        {
+            return await enumerator.MoveNextAsync()
+                            ? mapperFunc(enumerator.Current)
+                            : fallbackIfAbsent;
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
+        }
+    }
+
+    private static async Task WatchAsync<TFrom, TResult>(Func<CancellationToken, IAsyncEnumerable<TFrom>> streamFunc,
+                                                         Func<TFrom, TResult> mapperFunc,
+                                                         IWatcher<TResult> watcher,
+                                                         CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                IAsyncEnumerable<TFrom> stream = streamFunc(cancellationToken);
+                await foreach (TFrom response in stream)
+                {
+                    TResult item = mapperFunc(response);
+                    await watcher.OnUpdateAsync(item, cancellationToken);
+                }
+            }
+            catch (Exception e)
+            {
+                await watcher.OnErrorAsync(e, cancellationToken);
+            }
         }
     }
 }
