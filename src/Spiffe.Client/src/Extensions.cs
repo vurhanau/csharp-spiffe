@@ -9,45 +9,57 @@ internal static class Extensions
     public static string ToDisplayString(this X509Chain chain)
     {
         var b = new StringBuilder();
-
-        b.AppendLine($"[{nameof(chain.ChainPolicy.RevocationFlag)}]");
-        b.AppendLine($"  {chain.ChainPolicy.RevocationFlag}");
+        var chainPolicy = chain.ChainPolicy;
+        b.AppendLine($"[{nameof(chainPolicy.RevocationFlag)}]");
+        b.AppendLine($"  {chainPolicy.RevocationFlag}");
         b.AppendLine();
-        b.AppendLine($"[{nameof(chain.ChainPolicy.RevocationMode)}]");
-        b.AppendLine($"  {chain.ChainPolicy.RevocationMode}");
+        b.AppendLine($"[{nameof(chainPolicy.RevocationMode)}]");
+        b.AppendLine($"  {chainPolicy.RevocationMode}");
         b.AppendLine();
-        b.AppendLine($"[{nameof(chain.ChainPolicy.VerificationFlags)}]");
-        b.AppendLine($"  {chain.ChainPolicy.VerificationFlags}");
+        b.AppendLine($"[{nameof(chainPolicy.VerificationFlags)}]");
+        b.AppendLine($"  {chainPolicy.VerificationFlags}");
         b.AppendLine();
-        b.AppendLine($"[{nameof(chain.ChainPolicy.VerificationTime)}]");
-        b.AppendLine($"  {chain.ChainPolicy.VerificationTime}");
+        b.AppendLine($"[{nameof(chainPolicy.VerificationTime)}]");
+        b.AppendLine($"  {chainPolicy.VerificationTime}");
         b.AppendLine();
-        b.AppendLine($"[Application Policy]");
-        foreach (var policy in chain.ChainPolicy.ApplicationPolicy)
+        if (chainPolicy.ApplicationPolicy.Count > 0)
         {
-            b.AppendLine($"  {policy.ToDisplayString()}");
-        }
-
-        b.AppendLine();
-        b.AppendLine($"[Certificate Policy]");
-        foreach (var policy in chain.ChainPolicy.CertificatePolicy)
-        {
-            b.AppendLine($"  {policy.ToDisplayString()}");
-        }
-
-        b.AppendLine();
-        b.AppendLine($"[Elements]");
-        foreach (var (element, index) in chain.ChainElements.Cast<X509ChainElement>().Select((element, index) => (element, index)))
-        {
-            b.AppendLine();
-            b.AppendLine($"[Element {index + 1}]");
-            b.AppendLine();
-            b.Append(element.Certificate.ToString());
-            b.AppendLine();
-            b.AppendLine($"[Status]");
-            foreach (var status in element.ChainElementStatus)
+            b.AppendLine($"[Application Policy]");
+            foreach (var policy in chainPolicy.ApplicationPolicy)
             {
-                b.AppendLine($"  {status.ToDisplayString()}");
+                b.AppendLine($"  {policy.ToDisplayString()}");
+            }
+
+            b.AppendLine();
+        }
+
+        if (chainPolicy.CertificatePolicy.Count > 0)
+        {
+            b.AppendLine($"[Certificate Policy]");
+            foreach (var policy in chainPolicy.CertificatePolicy)
+            {
+                b.AppendLine($"  {policy.ToDisplayString()}");
+            }
+
+            b.AppendLine();
+        }
+
+        var elements = chain.ChainElements.Cast<X509ChainElement>().Select((element, index) => (element, index));
+        if (elements.Any())
+        {
+            b.AppendLine($"[Elements]");
+            foreach (var (element, index) in elements)
+            {
+                b.AppendLine();
+                b.AppendLine($"[Element {index + 1}]");
+                b.AppendLine();
+                b.Append(element.Certificate.ToString());
+                b.AppendLine();
+                b.AppendLine($"[Status]");
+                foreach (var status in element.ChainElementStatus)
+                {
+                    b.AppendLine($"  {status.ToDisplayString()}");
+                }
             }
         }
 

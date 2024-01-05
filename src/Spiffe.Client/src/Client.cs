@@ -42,14 +42,14 @@ internal class Client : IWatcher<X509Context>, IWatcher<X509BundleSet>, IDisposa
 
     public Task OnUpdateAsync(X509Context update, CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("X509 SVID update:");
+        Console.WriteLine("Update:");
         Print(update);
         return Task.CompletedTask;
     }
 
     public Task OnUpdateAsync(X509BundleSet update, CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("X509 bundle update:");
+        Console.WriteLine("Update:");
         Print(update);
         return Task.CompletedTask;
     }
@@ -92,26 +92,25 @@ internal class Client : IWatcher<X509Context>, IWatcher<X509BundleSet>, IDisposa
 
     private static void Print(X509Context x509Context)
     {
-        if (x509Context.X509Svids == null)
+        var svids = x509Context.X509Svids;
+        if (svids == null)
         {
             Console.WriteLine("X509 context is empty");
             return;
         }
 
-        Console.WriteLine("[SVIDS]");
-        foreach (var svid in x509Context.X509Svids)
+        Console.WriteLine($"Received {svids.Count} svid(s)");
+        Console.WriteLine();
+        foreach (var svid in svids)
         {
-            Console.WriteLine($"Spiffe id: {svid.SpiffeId}");
+            PrintField("SPIFFE ID", svid.SpiffeId?.Id);
             if (!string.IsNullOrEmpty(svid.Hint))
             {
-                Console.WriteLine($"Hint: {svid.Hint}");
+                PrintField("Hint", svid.Hint);
             }
 
-            Console.WriteLine("X509 certificate:");
-            Console.WriteLine(svid.Certificate?.ToString(true));
-
-            Console.WriteLine("X509 certificate chain:");
-            Console.WriteLine(svid.Chain?.ToDisplayString());
+            PrintField($"Certificate", svid.Certificate?.ToString(true), false);
+            PrintField("Bundle", svid.Chain?.ToDisplayString(), false);
         }
     }
 
@@ -131,6 +130,14 @@ internal class Client : IWatcher<X509Context>, IWatcher<X509BundleSet>, IDisposa
             Console.WriteLine($"X509 certificate chain:");
             Console.WriteLine(bundle.Chain?.ToDisplayString());
         }
+    }
+
+    private static void PrintField(string key, string? value, bool indent = true)
+    {
+        var tab = indent ? "  " : string.Empty;
+        Console.WriteLine($"[{key}]");
+        Console.WriteLine($"{tab}{value}");
+        Console.WriteLine();
     }
 
     private static GrpcChannel CreateChannel(string address)
