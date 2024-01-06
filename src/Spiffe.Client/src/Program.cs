@@ -1,6 +1,27 @@
 ﻿using CommandLine;
 using Spiffe.Client;
 
+Uri u1 = new Uri("tcp://1.2.3.4:5");
+var u2 = new UriBuilder
+{
+    Host = "1.2.3.4",
+    Port = 5,
+}.ToString();
+
+Console.WriteLine(GetNamedPipeTarget("foo"));
+
+static string GetNamedPipeTarget(string pipeName)
+{
+    return @"\\.\" + Path.Join("pipe", pipeName);
+}
+
+
+// Uri u2 = new Uri("unix://foo");
+// Uri u3 = new Uri("npipe:pipe\\name");
+// Console.WriteLine(u1.Scheme);
+// Console.WriteLine(u2.Scheme);
+// Console.WriteLine(u3.Scheme);
+
 var parserResult = Parser.Default.ParseArguments<X509Command, BundleCommand>(args);
 if (parserResult.Errors.Any())
 {

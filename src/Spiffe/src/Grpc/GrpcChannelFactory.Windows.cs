@@ -12,6 +12,11 @@ namespace Spiffe.Grpc;
 /// </summary>
 public static partial class GrpcChannelFactory
 {
+    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
+    {
+
+    }
+
     /// <summary>
     /// Creates GRPC channel over unix domain socket.
     /// </summary>
@@ -50,4 +55,5 @@ public static partial class GrpcChannelFactory
         });
     }
 }
+
 #endif

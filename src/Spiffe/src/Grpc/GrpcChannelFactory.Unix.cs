@@ -17,11 +17,11 @@ public static partial class GrpcChannelFactory
     {
         _ = socketPath ?? throw new ArgumentNullException(nameof(socketPath));
 
-        var udsEndPoint = new UnixDomainSocketEndPoint(socketPath);
         var socketsHttpHandler = new SocketsHttpHandler
         {
             ConnectCallback = async (ignored, cancellationToken) =>
             {
+                var udsEndPoint = new UnixDomainSocketEndPoint(socketPath);
                 var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
                 try
                 {
@@ -42,5 +42,14 @@ public static partial class GrpcChannelFactory
             UnsafeUseInsecureChannelCallCredentials = true,
         });
     }
+
+    /// <summary>
+    /// dfdf.
+    /// </summary>
+    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
+    {
+        return new SocketsHttpHandler();
+    }
 }
+
 #endif
