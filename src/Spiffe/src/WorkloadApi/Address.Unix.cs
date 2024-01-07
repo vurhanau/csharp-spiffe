@@ -1,24 +1,34 @@
 #if !OS_WINDOWS
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Spiffe.Tests")]
 
 namespace Spiffe.WorkloadApi;
 
 /// <summary>
 /// Class to operate with Workload API address.
 /// </summary>
-public static partial class Address
+internal static partial class Address
 {
-    private const string SchemeUnixSocket = "unix";
+    internal static bool IsUnixSocket(Uri uri)
+    {
+        return "unix".Equals(uri.Scheme, StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// Parses the endpoint address and returns a gRPC Unix domain socket target.
     /// </summary>
-    private static partial string ParseNativeTarget(Uri uri)
+    internal static string ParseUnixSocketTarget(string address)
     {
-        _ = uri ?? throw new ArgumentNullException(nameof(uri));
-
-        if (!SchemeUnixSocket.Equals(uri.Scheme, StringComparison.Ordinal))
+        Uri uri = new(address);
+        if (!IsUnixSocket(uri))
         {
-            throw new ArgumentException("Workload endpoint socket URI must have a \"tcp\" or \"unix\" scheme");
+            throw new ArgumentException("Workload endpoint socket URI must have a supported scheme");
+        }
+
+        if (IsOpaque(uri))
+        {
+            throw new ArgumentException("Workload endpoint unix socket URI must not be opaque");
         }
 
         if (!string.IsNullOrEmpty(uri.UserInfo))
@@ -26,9 +36,9 @@ public static partial class Address
             throw new ArgumentException("Workload endpoint unix socket URI must not include user info");
         }
 
-        if (string.IsNullOrEmpty(uri.Host))
+        if (string.IsNullOrEmpty(uri.Host) && uri.PathAndQuery == "/")
         {
-            throw new ArgumentException("Workload endpoint unix socket URI must include a host");
+            throw new ArgumentException("Workload endpoint unix socket URI must include a path");
         }
 
         if (!string.IsNullOrEmpty(uri.Query))
@@ -41,7 +51,7 @@ public static partial class Address
             throw new ArgumentException("Workload endpoint unix socket URI must not include a fragment");
         }
 
-        return uri.ToString();
+        return TrimScheme(uri);
     }
 }
 

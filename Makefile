@@ -23,7 +23,7 @@ build:
 	@dotnet build
 
 run:
-	@dotnet run --project src/Spiffe.Client/ -s /tmp/spire-agent/public/api.sock
+	@dotnet run --project src/Spiffe.Client/ --address unix:///tmp/spire-agent/public/api.sock
 
 test:
 	@dotnet test

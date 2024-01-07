@@ -1,27 +1,31 @@
 #if OS_WINDOWS
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Spiffe.Tests")]
 
 namespace Spiffe.WorkloadApi;
 
 /// <summary>
 /// Class to operate with Workload API address.
 /// </summary>
-public static partial class Address
+internal static partial class Address
 {
-    private const string SchemeNamedPipe = "npipe";
+    internal static bool IsNamedPipe(Uri uri)
+    {
+        return "npipe".Equals(uri.Scheme, StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// Parses the endpoint address and returns a gRPC named pipe target.
     /// </summary>
-    private static partial string ParseNativeTarget(Uri uri)
+    internal static string ParseNamedPipeTarget(string address)
     {
-        _ = uri ?? throw new ArgumentNullException(nameof(uri));
-
-        if (!SchemeNamedPipe.Equals(uri.Scheme, StringComparison.Ordinal))
+        Uri uri = new(address);
+        if (!IsNamedPipe(uri))
         {
-            throw new ArgumentException("Workload endpoint socket URI must have a \"tcp\" or \"npipe\" scheme");
+            throw new ArgumentException("Workload endpoint socket URI must have a supported scheme");
         }
 
-        // https://pkg.go.dev/net/url#URL.Opaque
         if (!string.IsNullOrEmpty(uri.Host))
         {
             throw new ArgumentException("Workload endpoint named pipe URI must be opaque");
@@ -42,12 +46,12 @@ public static partial class Address
             throw new ArgumentException("Workload endpoint named pipe URI must not include a fragment");
         }
 
-        return GetNamedPipeTarget(uri.ToString());
+        return GetNamedPipeTarget(TrimScheme(uri));
     }
 
     private static string GetNamedPipeTarget(string pipeName)
     {
-        return @"\\.\" + Path.Join("pipe", pipeName);
+        return @"\\.\" + Path.Combine("pipe", pipeName);
     }
 }
 

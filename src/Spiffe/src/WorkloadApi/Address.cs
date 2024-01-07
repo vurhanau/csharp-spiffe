@@ -1,107 +1,39 @@
-using System.Net;
-
 namespace Spiffe.WorkloadApi;
 
 /// <summary>
 /// Class to operate with Workload API address.
 /// </summary>
-public static partial class Address
+internal static partial class Address
 {
-    private const string SchemeTcp = "tcp";
-
-    /// <summary>
-    /// ValidateAddress validates that the provided address
-    /// can be parsed to a gRPC target string for dialing
-    /// a Workload API endpoint exposed as either a Unix
-    /// Domain Socket or TCP socket.
-    /// </summary>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="address"/> is null</exception>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="address"/> is not a valid GRPC target</exception>
-    public static void Validate(string address)
+    internal static bool IsHttpOrHttps(string address)
     {
-        _ = ParseTarget(address);
+        return IsHttpOrHttps(new Uri(address));
+    }
+
+    internal static bool IsHttpOrHttps(Uri uri)
+    {
+        return Uri.UriSchemeHttps.Equals(uri.Scheme, StringComparison.Ordinal) ||
+                Uri.UriSchemeHttp.Equals(uri.Scheme, StringComparison.Ordinal);
     }
 
     /// <summary>
-    /// Parses the endpoint address and returns a gRPC target string for dialing.
-    /// <br/>
+    /// Tells whether or not this URI is opaque.
+    ///
+    /// <p> A URI is opaque if, and only if, it is absolute and its
+    /// scheme-specific part does not begin with a slash character ('/').
+    /// An opaque URI has a scheme, a scheme-specific part, and possibly
+    /// a fragment; all other components are undefined. </p>
+    /// See <seealso href="https://pkg.go.dev/net/url#URL.Opaque"/> and
+    /// <seealso href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html#isOpaque()"/>
     /// </summary>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="address"/> is null</exception>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="address"/> is not a valid GRPC target</exception>
-    internal static string ParseTarget(string address)
+    /// <returns>True if, and only if, this URI is opaque</returns>
+    private static bool IsOpaque(Uri uri)
     {
-        _ = address ?? throw new ArgumentNullException(nameof(address));
-
-        Uri uri;
-        try
-        {
-            uri = new(address);
-        }
-        catch (UriFormatException e)
-        {
-            throw new ArgumentException("Workload endpoint tcp socket URI format could not be determined", e);
-        }
-
-        if (!SchemeTcp.Equals(uri.Scheme, StringComparison.Ordinal))
-        {
-            return ParseNativeTarget(uri);
-        }
-
-        if (!string.IsNullOrEmpty(uri.UserInfo))
-        {
-            throw new ArgumentException("Workload endpoint tcp socket URI must not include user info");
-        }
-
-        if (string.IsNullOrEmpty(uri.Host))
-        {
-            throw new ArgumentException("Workload endpoint tcp socket URI must include a host");
-        }
-
-        if (!string.IsNullOrEmpty(uri.PathAndQuery) && uri.PathAndQuery != "/")
-        {
-            throw new ArgumentException("Workload endpoint tcp socket URI must not include path and query values");
-        }
-
-        if (!string.IsNullOrEmpty(uri.Fragment))
-        {
-            throw new ArgumentException("Workload endpoint tcp socket URI must not include a fragment");
-        }
-
-        bool isValidIp = IPAddress.TryParse(uri.Host, out IPAddress? ip);
-        if (!isValidIp)
-        {
-            throw new ArgumentException("Workload endpoint tcp socket URI host component must be an IP:port");
-        }
-
-        int port = uri.Port;
-        if (port == -1)
-        {
-            throw new ArgumentException("Workload endpoint tcp socket URI host component must include a port");
-        }
-
-        return JoinHostPort(ip!.ToString(), port);
+        return string.IsNullOrEmpty(uri.Host) && !uri.PathAndQuery.StartsWith('/');
     }
 
-    /// <summary>
-    /// Parses the endpoint address and returns a gRPC OS specific target.
-    /// </summary>
-    private static partial string ParseNativeTarget(Uri uri);
-
-    /// <summary>
-    /// JoinHostPort combines host and port into a network address of the
-    /// form "host:port". If host contains a colon, as found in literal
-    /// IPv6 addresses, then JoinHostPort returns "[host]:port".
-    /// <br/>
-    /// See <seealso href="https://github.com/golang/go/blob/1fde99cd6eff725f5cc13748a43b4aef3de557c8/src/net/ipsock.go#L235"/>
-    /// </summary>
-    private static string JoinHostPort(string host, int port)
+    private static string TrimScheme(Uri uri)
     {
-        // Assuming that host is a literal IPv6 address if host has colons.
-        if (host.Contains(':'))
-        {
-            return "[" + host + "]:" + port;
-        }
-
-        return host + ":" + port;
+        return Uri.UnescapeDataString((uri.Host + uri.AbsolutePath).TrimEnd('/'));
     }
 }

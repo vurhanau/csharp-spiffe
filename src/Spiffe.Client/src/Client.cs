@@ -10,7 +10,7 @@ internal static class Client
 {
     public static async Task Run(string address, bool streaming = false, CancellationToken cancellationToken = default)
     {
-        using GrpcChannel ch = CreateChannel(address);
+        using GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
         SpiffeWorkloadAPIClient c = new(ch);
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -39,14 +39,5 @@ internal static class Client
                 Thread.Sleep(5000);
             }
         }
-    }
-
-    private static GrpcChannel CreateChannel(string address)
-    {
-#if OS_WINDOWS
-        return GrpcChannelFactory.CreateNamedPipeChannel(address);
-#else
-        return GrpcChannelFactory.CreateUnixSocketChannel(address);
-#endif
     }
 }

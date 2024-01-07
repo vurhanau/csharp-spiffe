@@ -4,6 +4,6 @@ namespace Spiffe.Client;
 
 public class Options
 {
-    [Option('s', "socket-path", Required = false, HelpText = "Agent unix socket path.")]
-    public string? SocketPath { get; set; }
+    [Option("address", Required = false, HelpText = "Agent API address.")]
+    public string? Address { get; set; }
 }
