@@ -11,11 +11,6 @@ namespace Spiffe.Grpc;
 /// </summary>
 public static partial class GrpcChannelFactory
 {
-    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
-    {
-
-    }
-
     /// <summary>
     /// Creates a socket handler backed by Windows named pipe.
     /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-namedpipes?view=aspnetcore-8.0"/>

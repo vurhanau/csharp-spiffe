@@ -27,6 +27,10 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private static readonly X509BundlesRequest X509BundlesRequest = new();
 
+    private static readonly X509Context X509EmptyContext = new([], new([]));
+
+    private static readonly X509BundleSet X509EmptyBundleSet = new([]);
+
     private WorkloadApiClient(GrpcChannel channel,
                               SpiffeWorkloadAPIClient client,
                               bool disposeChannel)
@@ -50,11 +54,11 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task<X509Context> FetchX509ContextAsync(CancellationToken cancellationToken = default)
     {
-        return await FetchAsync(FetchX509Svids, Helper.ToX509Context, X509Context.Empty, cancellationToken);
+        return await FetchAsync(FetchX509Svids, Helper.ToX509Context, X509EmptyContext, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task WatchX509ContextAsync(IWatcher<X509Context> watcher, CancellationToken cancellationToken = default)
+    public async Task WatchX509ContextAsync(Action<X509Context, CancellationToken> watcher, CancellationToken cancellationToken = default)
     {
         await WatchAsync(FetchX509Svids, Helper.ToX509Context, watcher, cancellationToken);
     }
@@ -62,11 +66,11 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default)
     {
-        return await FetchAsync(FetchX509Bundles, Helper.ToX509BundleSet, X509BundleSet.Empty, cancellationToken);
+        return await FetchAsync(FetchX509Bundles, Helper.ToX509BundleSet, X509EmptyBundleSet, cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default)
+    public async Task WatchX509BundlesAsync(Action<X509BundleSet, CancellationToken> watcher, CancellationToken cancellationToken = default)
     {
         await WatchAsync(FetchX509Bundles, Helper.ToX509BundleSet, watcher, cancellationToken);
     }
@@ -133,23 +137,16 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private static async Task WatchAsync<TFrom, TResult>(Func<CancellationToken, IAsyncEnumerable<TFrom>> streamFunc,
                                                          Func<TFrom, TResult> mapperFunc,
-                                                         IWatcher<TResult> watcher,
+                                                         Action<TResult, CancellationToken> watcher,
                                                          CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            try
+            IAsyncEnumerable<TFrom> stream = streamFunc(cancellationToken);
+            await foreach (TFrom response in stream)
             {
-                IAsyncEnumerable<TFrom> stream = streamFunc(cancellationToken);
-                await foreach (TFrom response in stream)
-                {
-                    TResult item = mapperFunc(response);
-                    await watcher.OnUpdateAsync(item, cancellationToken);
-                }
-            }
-            catch (Exception e)
-            {
-                await watcher.OnErrorAsync(e, cancellationToken);
+                TResult item = mapperFunc(response);
+                watcher(item, cancellationToken);
             }
         }
     }

@@ -30,9 +30,6 @@ x509:
 bundle:
 	$(RUN) bundle $(AGENT_SOCKET)
 
-watch:
-	$(RUN) watch $(AGENT_SOCKET)
-
 test:
 	@dotnet test
 

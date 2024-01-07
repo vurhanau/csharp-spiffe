@@ -22,11 +22,7 @@ internal static class Helper
             bundles.Add(td, ToBundleModel(td, svid));
         }
 
-        return new X509Context
-        {
-            X509Svids = svids,
-            X509BundleSet = new X509BundleSet() { Bundles = bundles },
-        };
+        return new(svids, new X509BundleSet(bundles));
     }
 
     public static X509BundleSet ToX509BundleSet(X509BundlesResponse response)
@@ -36,31 +32,18 @@ internal static class Helper
         {
             TrustDomain td = TrustDomain.FromString(bundle.Key);
             X509Chain chain = CreateChain(bundle.Value);
-            bundles[td] = new() { TrustDomain = td, Chain = chain, };
+            bundles[td] = new X509Bundle(td, chain);
         }
 
-        return new X509BundleSet { Bundles = bundles, };
+        return new(bundles);
     }
 
-    public static X509Svid ToSvidModel(X509SVID svid)
-    {
-        return new X509Svid
-        {
-            SpiffeId = SpiffeId.FromString(svid.SpiffeId),
-            Certificate = CreateCertificate(svid),
-            Chain = CreateChain(svid.Bundle),
-            Hint = svid.Hint,
-        };
-    }
+    public static X509Svid ToSvidModel(X509SVID svid ) => new(SpiffeId.FromString(svid.SpiffeId),
+                                                              CreateCertificate(svid),
+                                                              CreateChain(svid.Bundle),
+                                                              svid.Hint);
 
-    public static X509Bundle ToBundleModel(TrustDomain td, X509SVID svid)
-    {
-        return new X509Bundle
-        {
-            TrustDomain = td,
-            Chain = CreateChain(svid.Bundle),
-        };
-    }
+    public static X509Bundle ToBundleModel(TrustDomain td, X509SVID svid) => new(td, CreateChain(svid.Bundle));
 
     internal static X509Chain CreateChain(ByteString bundle)
     {

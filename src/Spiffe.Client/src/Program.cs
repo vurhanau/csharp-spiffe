@@ -1,5 +1,8 @@
 ﻿using CommandLine;
+using Spiffe.Bundle.X509;
 using Spiffe.Client;
+using Spiffe.Grpc;
+using Spiffe.WorkloadApi;
 
 var parserResult = Parser.Default.ParseArguments<X509Command, BundleCommand>(args);
 if (parserResult.Errors.Any())
@@ -10,7 +13,8 @@ if (parserResult.Errors.Any())
     return;
 }
 
-var address = (parserResult.Value as Options)?.Address;
+var opts = parserResult.Value;
+var address = (opts as Options)?.Address;
 if (string.IsNullOrEmpty(address))
 {
     Console.WriteLine($"Address must be non-empty");
@@ -18,12 +22,19 @@ if (string.IsNullOrEmpty(address))
     return;
 }
 
-using var c = Client.GetClient(address);
-
-await (parserResult.Value switch
+var channel = GrpcChannelFactory.CreateChannel(address);
+var client = WorkloadApiClient.Create(channel, true);
+if (opts is X509Command)
 {
-    X509Command => c.FetchX509Context(),
-    BundleCommand => c.FetchX509Bundles(),
-    WatchCommand => Task.WhenAll(c.WatchX509Context(), c.WatchX509Bundles()),
-    _ => throw new NotSupportedException("Unknown command"),
-});
+    X509Context x509Context = await client.FetchX509ContextAsync();
+    Printer.Print(x509Context);
+}
+else if (opts is BundleCommand)
+{
+    X509BundleSet x509Bundles = await client.FetchX509BundlesAsync();
+    Printer.Print(x509Bundles);
+}
+else
+{
+    throw new NotSupportedException("Unknown command");
+}

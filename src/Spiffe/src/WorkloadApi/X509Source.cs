@@ -16,82 +16,95 @@ namespace Spiffe.WorkloadApi;
 /// </summary>
 public sealed class X509Source : IX509Source
 {
-    private X509Svid _svid;
-
-    private X509BundleSet _bundles;
-
-    private readonly Func<List<X509Svid>, X509Svid>? _picker;
+    private readonly Func<List<X509Svid>, X509Svid?> _picker;
 
     private readonly IWorkloadApiClient _workloadApiClient;
 
-    private readonly ReaderWriterLock _svidLock;
-
-    private readonly ReaderWriterLock _bundlesLock;
+    private readonly ReaderWriterLock _lock;
 
     private readonly TimeSpan _lockTimeout;
 
-    private volatile bool _disposed;
+    private X509Svid? _svid;
 
-    private X509Source(Func<List<X509Svid>, X509Svid>? picker, IWorkloadApiClient workloadApiClient)
+    private X509BundleSet? _bundles;
+
+    /// <summary>
+    /// Constructs X509 source.
+    /// </summary>
+    internal X509Source(IWorkloadApiClient workloadApiClient, Func<List<X509Svid>, X509Svid?>? picker = default)
     {
-        _picker = picker;
         _workloadApiClient = workloadApiClient;
-        _svidLock = new ReaderWriterLock();
+        _picker = picker ?? PickDefaultSvid;
+        _lock = new ReaderWriterLock();
         _lockTimeout = TimeSpan.FromSeconds(5);
     }
 
-    /// <inheritdoc/>
-    public X509Svid X509Svid => GetSvid();
-
     /// <summary>
-    /// Instantiates X.509 source.
+    /// Subscribes to updates and gets an initial X509 context.
     /// </summary>
-    public static IX509Source Create(X509SourceOptions options)
+    public async Task ListenAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: add validation and fallbacks
-        X509Source source = new X509Source(options?.SvidPicker, options!.WorkloadApiClient!);
-        return source;
+        // check if closed
+        var watcherTask = Task.Run(
+            () => _workloadApiClient.WatchX509ContextAsync(UpdateX509Context, cancellationToken),
+            cancellationToken);
+
+        X509Context x509Context = await _workloadApiClient.FetchX509ContextAsync(cancellationToken);
+        UpdateX509Context(x509Context, cancellationToken);
+
+        await watcherTask;
     }
 
     /// <inheritdoc/>
-    public X509Bundle GetBundleForTrustDomain(TrustDomain trustDomain)
+    public X509Svid? GetX509Svid()
     {
-        if (IsClosed())
-        {
-            throw new InvalidOperationException("X.509 bundle source is closed");
-        }
-
-        _bundlesLock.AcquireReaderLock(_lockTimeout);
-        try
-        {
-            return _bundles.GetBundleForTrustDomain(trustDomain);
-        }
-        finally
-        {
-            _bundlesLock.ReleaseReaderLock();
-        }
-    }
-
-    /// <inheritdoc/>
-    public void Dispose() => throw new NotImplementedException();
-
-    private bool IsClosed() => throw new NotImplementedException();
-
-    private X509Svid GetSvid()
-    {
-        if (IsClosed())
-        {
-            throw new InvalidOperationException("X.509 SVID source is closed");
-        }
-
-        _svidLock.AcquireReaderLock(_lockTimeout);
+        // check if closed
+        _lock.AcquireReaderLock(_lockTimeout);
         try
         {
             return _svid;
         }
         finally
         {
-            _svidLock.ReleaseReaderLock();
+            _lock.ReleaseReaderLock();
         }
     }
+
+    /// <inheritdoc/>
+    public X509Bundle? GetX509Bundle(TrustDomain trustDomain)
+    {
+        // check if closed
+        _lock.AcquireReaderLock(_lockTimeout);
+        try
+        {
+            if (_bundles == null)
+            {
+                return null;
+            }
+
+            bool found = _bundles.Bundles.TryGetValue(trustDomain, out X509Bundle? bundle);
+            return found ? bundle : null;
+        }
+        finally
+        {
+            _lock.ReleaseReaderLock();
+        }
+    }
+
+    private void UpdateX509Context(X509Context x509Context, CancellationToken cancellationToken)
+    {
+        // check if closed
+        _lock.AcquireWriterLock(_lockTimeout);
+        try
+        {
+            _svid = _picker(x509Context.X509Svids);
+            _bundles = x509Context.X509Bundles;
+        }
+        finally
+        {
+            _lock.ReleaseWriterLock();
+        }
+    }
+
+    private X509Svid? PickDefaultSvid(List<X509Svid> svids) => svids.FirstOrDefault();
 }

@@ -37,14 +37,6 @@ public static partial class GrpcChannelFactory
             },
         };
     }
-
-    /// <summary>
-    /// dfdf.
-    /// </summary>
-    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
-    {
-        return new SocketsHttpHandler();
-    }
 }
 
 #endif
