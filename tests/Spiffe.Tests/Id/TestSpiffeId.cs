@@ -10,7 +10,7 @@ public class TestSpiffeId
     {
         Assert.Throws<ArgumentException>(() => SpiffeId.FromString(string.Empty));
 
-        void AssertOk(string idString, SpiffeTrustDomain expectedTd, string expectedPath)
+        void AssertOk(string idString, TrustDomain expectedTd, string expectedPath)
         {
             SpiffeId id = SpiffeId.FromString(idString);
             AssertIdEqual(id, expectedTd, expectedPath);
@@ -37,7 +37,7 @@ public class TestSpiffeId
             if (TdChars.Contains(c))
             {
                 // Allow good trustdomain char
-                AssertOk($"spiffe://trustdomain{c}/path", SpiffeTrustDomain.FromString($"trustdomain{c}"), "/path");
+                AssertOk($"spiffe://trustdomain{c}/path", TrustDomain.FromString($"trustdomain{c}"), "/path");
             }
             else
             {
@@ -144,7 +144,7 @@ public class TestSpiffeId
         spiffeId = SpiffeId.FromSegments(Td);
         Assert.True(spiffeId.MemberOf(Td));
 
-        SpiffeTrustDomain td2 = SpiffeTrustDomain.FromString("domain2.test");
+        TrustDomain td2 = TrustDomain.FromString("domain2.test");
         spiffeId = SpiffeId.FromSegments(td2, "path", "element");
         Assert.False(spiffeId.MemberOf(Td));
     }
@@ -266,7 +266,7 @@ public class TestSpiffeId
         AssertFail(string.Empty, ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
-    private static void AssertIdEqual(SpiffeId spiffeId, SpiffeTrustDomain expectedTd, string expectedPath)
+    private static void AssertIdEqual(SpiffeId spiffeId, TrustDomain expectedTd, string expectedPath)
     {
         Assert.Equal(expectedTd, spiffeId.TrustDomain);
         Assert.Equal(expectedPath, spiffeId.Path);

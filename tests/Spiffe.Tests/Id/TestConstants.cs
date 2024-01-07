@@ -4,7 +4,7 @@ namespace Tests.Spiffe.Id;
 
 internal static class TestConstants
 {
-    internal static readonly SpiffeTrustDomain Td = SpiffeTrustDomain.FromString("trustdomain");
+    internal static readonly TrustDomain Td = TrustDomain.FromString("trustdomain");
 
     internal static readonly ISet<char> LowerAlpha = new HashSet<char>()
     {
