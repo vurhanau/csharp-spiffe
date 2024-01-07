@@ -1,9 +1,8 @@
 ﻿#if OS_WINDOWS
 
 using System.IO.Pipes;
-using System.Net.Sockets;
 using System.Security.Principal;
-using Grpc.Net.Client;
+using Spiffe.WorkloadApi;
 
 namespace Spiffe.Grpc;
 
@@ -18,13 +17,13 @@ public static partial class GrpcChannelFactory
     }
 
     /// <summary>
-    /// Creates GRPC channel over unix domain socket.
+    /// Creates a socket handler backed by Windows named pipe.
+    /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-namedpipes?view=aspnetcore-8.0"/>
     /// </summary>
-    public static GrpcChannel CreateNamedPipeChannel(string pipeName)
+    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
     {
-        _ = pipeName ?? throw new ArgumentNullException(nameof(pipeName));
-
-        var socketsHttpHandler = new SocketsHttpHandler
+        string pipeName = Address.ParseNamedPipeTarget(address);
+        return new SocketsHttpHandler
         {
             ConnectCallback = async (ignored, cancellationToken) =>
             {
@@ -46,13 +45,8 @@ public static partial class GrpcChannelFactory
                     clientStream.Dispose();
                     throw;
                 }
-            }
+            },
         };
-
-        return GrpcChannel.ForAddress("http://localhost", new GrpcChannelOptions
-        {
-            HttpHandler = socketsHttpHandler
-        });
     }
 }
 

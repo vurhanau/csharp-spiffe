@@ -1,4 +1,5 @@
 ﻿using Grpc.Net.Client;
+using Spiffe.WorkloadApi;
 
 namespace Spiffe.Grpc;
 
@@ -8,19 +9,30 @@ namespace Spiffe.Grpc;
 public static partial class GrpcChannelFactory
 {
     /// <summary>
-    /// Creates GRPC channel over unix domain socket.
+    /// Creates GRPC channel.
     /// </summary>
-    public static GrpcChannel CreateChannel(string address)
+    /// <param name="address">
+    /// GRPC target address.
+    /// <br/>
+    /// <list type="bullet">
+    /// <item><description>HTTP/HTTPS (example: <a href="https://1.2.3.4:5"/>)</description></item>
+    /// <item><description>Unix domain socket (example: unix:///tmp/agent.sock)</description></item>
+    /// <item><description>Named pipe (example: npipe:pipe\agent)</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="configureOptions">GRPC channel options configurer</param>
+    public static GrpcChannel CreateChannel(string address, Action<GrpcChannelOptions>? configureOptions = null)
     {
-        _ = address ?? throw new ArgumentNullException(nameof(address));
-
-        var socketsHttpHandler = CreateNativeSocketHandler(address);
-
-        return GrpcChannel.ForAddress("http://localhost", new GrpcChannelOptions
+        GrpcChannelOptions options = new();
+        if (!Address.IsHttpOrHttps(address))
         {
-            HttpHandler = socketsHttpHandler,
-            UnsafeUseInsecureChannelCallCredentials = true,
-        });
+            options.HttpHandler = CreateNativeSocketHandler(address);
+            address = "http://localhost";
+        }
+
+        configureOptions?.Invoke(options);
+
+        return GrpcChannel.ForAddress(address, options);
     }
 
     /// <summary>

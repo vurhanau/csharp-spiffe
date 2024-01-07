@@ -5,8 +5,8 @@ namespace Spiffe.Client;
 
 internal class Options
 {
-    [Option('s', "socket", Required = false, HelpText = "Agent socket path.")]
-    public string? Socket { get; set; }
+    [Option("address", Required = false, HelpText = "Agent API address.")]
+    public string? Address { get; set; }
 }
 
 [Verb("x509", HelpText = "Command to fetch X509 SVID from Workload API.")]

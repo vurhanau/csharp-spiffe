@@ -139,13 +139,4 @@ internal class Client : IWatcher<X509Context>, IWatcher<X509BundleSet>, IDisposa
         Console.WriteLine($"{tab}{value}");
         Console.WriteLine();
     }
-
-    private static GrpcChannel CreateChannel(string address)
-    {
-#if OS_WINDOWS
-        return GrpcChannelFactory.CreateNamedPipeChannel(address);
-#else
-        return GrpcChannelFactory.CreateUnixSocketChannel(address);
-#endif
-    }
 }

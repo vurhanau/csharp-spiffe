@@ -71,6 +71,7 @@ dotnet_code_quality_unused_parameters = non_public:suggestion
 
 # StyleCop.Analyzers
 dotnet_diagnostic.SA0001.severity = none # XML comment analysis is disabled due to project configuration.
+dotnet_diagnostic.SA1009.severity = none # Closing parenthesis should not be preceded by a space
 dotnet_diagnostic.SA1101.severity = none # A call to an instance member of the local class or a base class is not prefixed with 'this.'
 dotnet_diagnostic.SA1116.severity = none # The parameters to a C# method or indexer call or declaration span across multiple lines, but the first parameter does not start on the line after the opening bracket.
 dotnet_diagnostic.SA1204.severity = none # A static element is positioned beneath an instance element of the same type.

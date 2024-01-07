@@ -1,5 +1,5 @@
 SPIRE_DIR := $(HOME)/Projects/spiffe/spire
-AGENT_SOCKET := /tmp/spire-agent/public/api.sock
+AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
 RUN := @dotnet run --project src/Spiffe.Client/
 
 server:
@@ -25,13 +25,13 @@ build:
 	@dotnet build
 
 x509:
-	$(RUN) x509 -s $(AGENT_SOCKET)
+	$(RUN) x509 $(AGENT_SOCKET)
 
 bundle:
-	$(RUN) bundle -s $(AGENT_SOCKET)
+	$(RUN) bundle $(AGENT_SOCKET)
 
 watch:
-	$(RUN) watch -s $(AGENT_SOCKET)
+	$(RUN) watch $(AGENT_SOCKET)
 
 test:
 	@dotnet test
