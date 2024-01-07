@@ -3,7 +3,7 @@ using static Tests.Spiffe.Id.TestConstants;
 
 namespace Tests.Spiffe.Id;
 
-public class TestSpiffeTrustDomain
+public class TestTrustDomain
 {
     [Fact]
     public void TestFromString()
