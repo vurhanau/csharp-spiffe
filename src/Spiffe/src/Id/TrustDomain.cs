@@ -3,9 +3,9 @@
 /// <summary>
 /// Represents the name of a SPIFFE trust domain (e.g. 'example.org').
 /// </summary>
-public class SpiffeTrustDomain
+public class TrustDomain
 {
-    internal SpiffeTrustDomain(string name)
+    internal TrustDomain(string name)
     {
         Name = name;
     }
@@ -26,7 +26,7 @@ public class SpiffeTrustDomain
     /// URI (e.g. spiffe://example.org), otherwise an error is returned.
     /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#21-trust-domain"/>.
     /// </summary>
-    public static SpiffeTrustDomain FromString(string idOrName)
+    public static TrustDomain FromString(string idOrName)
     {
         if (string.IsNullOrEmpty(idOrName))
         {
@@ -58,7 +58,7 @@ public class SpiffeTrustDomain
     /// The URI must be a valid SPIFFE ID.
     /// The trust domain is extracted from the host field.
     /// </summary>
-    public static SpiffeTrustDomain FromUri(Uri uri)
+    public static TrustDomain FromUri(Uri uri)
     {
         _ = uri ?? throw new ArgumentNullException(nameof(uri));
 
@@ -69,12 +69,12 @@ public class SpiffeTrustDomain
     /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
-        if (obj is not SpiffeTrustDomain)
+        if (obj is not TrustDomain)
         {
             return false;
         }
 
-        string objName = (obj as SpiffeTrustDomain)!.Name;
+        string objName = (obj as TrustDomain)!.Name;
         return string.Equals(Name, objName, StringComparison.Ordinal);
     }
 
