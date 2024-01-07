@@ -8,7 +8,7 @@ if (!parserResult.Errors.Any() && parserResult.Value != null)
     Options options = parserResult.Value;
     LogOptions(options);
 
-    await Client.Run(options.SocketPath!);
+    await Client.Run(options.Address!);
 }
 
 static void LogOptions(Options options)

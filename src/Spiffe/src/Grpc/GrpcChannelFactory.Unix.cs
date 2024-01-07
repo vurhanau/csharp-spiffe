@@ -1,7 +1,7 @@
 ﻿#if !OS_WINDOWS
 
 using System.Net.Sockets;
-using Grpc.Net.Client;
+using Spiffe.WorkloadApi;
 
 namespace Spiffe.Grpc;
 
@@ -11,18 +11,19 @@ namespace Spiffe.Grpc;
 public static partial class GrpcChannelFactory
 {
     /// <summary>
-    /// Creates GRPC channel over unix domain socket.
+    /// Creates a socket handler backed by Unix domain socket.
+    /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-uds?view=aspnetcore-8.0"/>
     /// </summary>
-    public static GrpcChannel CreateUnixSocketChannel(string socketPath)
+    /// <param name="address">Socket path URI (ex: unix:///tmp/api.sock)</param>
+    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
     {
-        _ = socketPath ?? throw new ArgumentNullException(nameof(socketPath));
-
-        var udsEndPoint = new UnixDomainSocketEndPoint(socketPath);
-        var socketsHttpHandler = new SocketsHttpHandler
+        string socketPath = Address.ParseUnixSocketTarget(address);
+        return new SocketsHttpHandler
         {
             ConnectCallback = async (ignored, cancellationToken) =>
             {
-                var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+                UnixDomainSocketEndPoint udsEndPoint = new(socketPath);
+                Socket socket = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
                 try
                 {
                     await socket.ConnectAsync(udsEndPoint, cancellationToken).ConfigureAwait(false);
@@ -35,12 +36,7 @@ public static partial class GrpcChannelFactory
                 }
             },
         };
-
-        return GrpcChannel.ForAddress("http://localhost", new GrpcChannelOptions
-        {
-            HttpHandler = socketsHttpHandler,
-            UnsafeUseInsecureChannelCallCredentials = true,
-        });
     }
 }
+
 #endif
