@@ -1,6 +1,4 @@
-using Spiffe.WorkloadApi;
-
-namespace Tests.Spiffe.WorkloadApi;
+﻿namespace Tests.Spiffe.WorkloadApi;
 
 /// <summary>
 /// Test GRPC target validation.

@@ -18,14 +18,16 @@ policy:
 	cd $(SPIRE_DIR) && ./spire-server entry create -parentID spiffe://example.org/myagent \
     -spiffeID spiffe://example.org/myservice -selector unix:uid:$$(id -u)
 
-build:
+restore:
 	@dotnet restore --locked-mode --force-evaluate
+
+build: restore
 	@dotnet build
 
 run:
 	@dotnet run --project src/Spiffe.Client/ --address unix:///tmp/spire-agent/public/api.sock
 
-test:
+test: restore
 	@dotnet test
 
 coverage:
