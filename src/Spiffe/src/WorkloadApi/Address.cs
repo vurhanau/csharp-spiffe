@@ -10,7 +10,7 @@ internal static partial class Address
         return IsHttpOrHttps(new Uri(address));
     }
 
-    internal static bool IsHttpOrHttps(Uri uri)
+    private static bool IsHttpOrHttps(Uri uri)
     {
         return Uri.UriSchemeHttps.Equals(uri.Scheme, StringComparison.Ordinal) ||
                 Uri.UriSchemeHttp.Equals(uri.Scheme, StringComparison.Ordinal);

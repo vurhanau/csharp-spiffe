@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Tests.Spiffe.Util;
+namespace Spiffe.Tests.Util;
 
 internal static class TestData
 {
@@ -22,22 +22,6 @@ internal static class TestData
         return c;
     }
 
-    internal static RSA LoadRsaKey(string pemFile)
-    {
-        RSA rsa = RSA.Create();
-        string pem = File.ReadAllText(pemFile);
-        rsa.ImportFromPem(pem);
-        return rsa;
-    }
-
-    internal static ECDsa LoadEcdsaKey(string pemFile)
-    {
-        ECDsa ecdsa = ECDsa.Create();
-        string pem = File.ReadAllText(pemFile);
-        ecdsa.ImportFromPem(pem);
-        return ecdsa;
-    }
-
     internal static byte[] LoadRawRsaKey(string pemFile)
     {
         return LoadRsaKey(pemFile).ExportPkcs8PrivateKey();
@@ -46,5 +30,21 @@ internal static class TestData
     internal static byte[] LoadRawEcdsaKey(string pemFile)
     {
         return LoadEcdsaKey(pemFile).ExportPkcs8PrivateKey();
+    }
+
+    private static RSA LoadRsaKey(string pemFile)
+    {
+        RSA rsa = RSA.Create();
+        string pem = File.ReadAllText(pemFile);
+        rsa.ImportFromPem(pem);
+        return rsa;
+    }
+
+    private static ECDsa LoadEcdsaKey(string pemFile)
+    {
+        ECDsa ecdsa = ECDsa.Create();
+        string pem = File.ReadAllText(pemFile);
+        ecdsa.ImportFromPem(pem);
+        return ecdsa;
     }
 }

@@ -38,5 +38,5 @@ public static partial class GrpcChannelFactory
     /// <summary>
     /// Creates a platform specific socket handler.
     /// </summary>
-    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address);
+    private static partial SocketsHttpHandler CreateNativeSocketHandler(string address);
 }

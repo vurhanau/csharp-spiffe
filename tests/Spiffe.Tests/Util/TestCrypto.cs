@@ -1,8 +1,7 @@
 ﻿using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using FluentAssertions;
 using Spiffe.Util;
-using static Tests.Spiffe.Util.TestData;
+using static Spiffe.Tests.Util.TestData;
 using CertWithPrivateKeyCase = (
     string Name,
     string KeyPath,
@@ -13,7 +12,7 @@ using CertWithPrivateKeyCase = (
     bool Err
 );
 
-namespace Tests.Spiffe.Util;
+namespace Spiffe.Tests.Util;
 
 public class TestCrypto
 {
@@ -60,8 +59,8 @@ public class TestCrypto
                 Name: "certificate bytes are not DER encoded must fail",
                 KeyPath: string.Empty,
                 CertsPath: string.Empty,
-                PrivateKeyFunc: cert => [],
-                RawCert: Encoding.ASCII.GetBytes("not-DER-encoded"),
+                PrivateKeyFunc: _ => [],
+                RawCert: "not-DER-encoded"u8.ToArray(),
                 RawKey: LoadRawRsaKey(KeyRsa),
                 Err: true
             ),
@@ -69,9 +68,9 @@ public class TestCrypto
                 Name: "key bytes are not DER encoded must fail",
                 KeyPath: string.Empty,
                 CertsPath: string.Empty,
-                PrivateKeyFunc: cert => [],
+                PrivateKeyFunc: _ => [],
                 RawCert: LoadRawCert(CertRsa),
-                RawKey: Encoding.ASCII.GetBytes("not-DER-encoded"),
+                RawKey: "not-DER-encoded"u8.ToArray(),
                 Err: true
             ),
         ];

@@ -2,7 +2,7 @@
 
 using Spiffe.WorkloadApi;
 
-namespace Tests.Spiffe.WorkloadApi;
+namespace Spiffe.Tests.WorkloadApi;
 
 /// <summary>
 /// Test Windows native target URI validation.

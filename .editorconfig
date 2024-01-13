@@ -71,15 +71,17 @@ dotnet_code_quality_unused_parameters = non_public:suggestion
 
 # StyleCop.Analyzers
 dotnet_diagnostic.SA0001.severity = none # XML comment analysis is disabled due to project configuration.
-dotnet_diagnostic.SA1009.severity = none # Closing parenthesis should not be preceded by a space
+dotnet_diagnostic.SA1009.severity = none # Closing parenthesis should not be preceded by a space.
 dotnet_diagnostic.SA1101.severity = none # A call to an instance member of the local class or a base class is not prefixed with 'this.'
 dotnet_diagnostic.SA1204.severity = none # A static element is positioned beneath an instance element of the same type.
-dotnet_diagnostic.SA1309.severity = none # A field name in C# begins with an underscore
-dotnet_diagnostic.SA1600.severity = none # XML comment analysis disabled
+dotnet_diagnostic.SA1308.severity = none # Field should not begin with the prefix 's_'.
+dotnet_diagnostic.SA1309.severity = none # A field name in C# begins with an underscore.
+dotnet_diagnostic.SA1311.severity = none # Static readonly fields should begin with upper-case letter.
+dotnet_diagnostic.SA1600.severity = none # XML comment analysis disabled.
 dotnet_diagnostic.SA1611.severity = none # A C# element is missing documentation for its return value.
 dotnet_diagnostic.SA1615.severity = none # A C# method, constructor, delegate or indexer element is missing documentation for one or more of its parameters.
 dotnet_diagnostic.SA1629.severity = none # A section of the Xml header documentation for a C# element does not end with a period (also known as a full stop).
-dotnet_diagnostic.SA1633.severity = none # A C# code file is missing a standard file header
+dotnet_diagnostic.SA1633.severity = none # A C# code file is missing a standard file header.
 
 # IDE code style
 dotnet_diagnostic.IDE1006.severity = silent # Naming rule violation: Missing prefix: 's_' for static fiels

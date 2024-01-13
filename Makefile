@@ -24,7 +24,7 @@ restore:
 build: restore
 	@dotnet build
 
-run:
+run: restore
 	@dotnet run --project src/Spiffe.Client/ --address unix:///tmp/spire-agent/public/api.sock
 
 test: restore
@@ -40,8 +40,16 @@ coverage-report:
 		-reporttypes:Html
 
 fmt:
-	@dotnet format ./Spiffe.sln
+	@dotnet format Spiffe.sln
 
-# dotnet tool install -g dependadotnet
+lint:
+	@jb inspectcode Spiffe.sln -o=jb.xml --build
+# 	@jb cleanupcode Spiffe.sln
+
 dependabot:
-	dependadotnet . > .github/dependabot.yml
+	@dependadotnet . > .github/dependabot.yml
+
+toolchain:
+	@dotnet tool install -g dependadotnet
+	@dotnet tool install -g dotnet-reportgenerator-globaltool
+	@dotnet tool install -g JetBrains.ReSharper.GlobalTools

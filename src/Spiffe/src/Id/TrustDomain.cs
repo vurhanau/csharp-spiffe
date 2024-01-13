@@ -42,9 +42,9 @@ public class TrustDomain
             return id.TrustDomain;
         }
 
-        for (int i = 0; i < idOrName.Length; i++)
+        foreach (char c in idOrName)
         {
-            if (!IsValidTrustDomainChar(idOrName[i]))
+            if (!IsValidTrustDomainChar(c))
             {
                 throw new ArgumentException(Errors.BadTrustDomainChar, nameof(idOrName));
             }
@@ -69,13 +69,7 @@ public class TrustDomain
     /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
-        if (obj is not TrustDomain)
-        {
-            return false;
-        }
-
-        string objName = (obj as TrustDomain)!.Name;
-        return string.Equals(Name, objName, StringComparison.Ordinal);
+        return obj is TrustDomain td && string.Equals(Name, td.Name, StringComparison.Ordinal);
     }
 
     /// <inheritdoc/>
@@ -88,21 +82,12 @@ public class TrustDomain
 
     internal static bool IsValidTrustDomainChar(char c)
     {
-        if (c >= 'a' && c <= 'z')
+        return c switch
         {
-            return true;
-        }
-
-        if (c >= '0' && c <= '9')
-        {
-            return true;
-        }
-
-        if (c == '-' || c == '.' || c == '_')
-        {
-            return true;
-        }
-
-        return false;
+            >= 'a' and <= 'z' => true,
+            >= '0' and <= '9' => true,
+            '-' or '.' or '_' => true,
+            _ => false,
+        };
     }
 }

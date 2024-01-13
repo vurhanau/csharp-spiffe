@@ -1,7 +1,7 @@
 ﻿using Spiffe.Id;
-using static Tests.Spiffe.Id.TestConstants;
+using static Spiffe.Tests.Id.TestConstants;
 
-namespace Tests.Spiffe.Id;
+namespace Spiffe.Tests.Id;
 
 public class TestTrustDomain
 {

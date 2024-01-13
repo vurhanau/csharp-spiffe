@@ -1,4 +1,4 @@
-﻿namespace Tests.Spiffe.WorkloadApi;
+﻿namespace Spiffe.Tests.WorkloadApi;
 
 /// <summary>
 /// Test GRPC target validation.
@@ -17,7 +17,7 @@ public partial class TestAddress
             }
             else
             {
-                Exception e = Record.Exception(() => parseFunc(addr));
+                Exception? e = Record.Exception(() => parseFunc(addr));
                 Assert.True(e != null, $"No exception thrown: input='{addr}', expected='{err}'");
                 Assert.IsType<ArgumentException>(e);
                 Assert.True(e.Message.StartsWith(err), $"Error mismatch: input='{addr}' expected='{err}' actual='{e.Message}'");

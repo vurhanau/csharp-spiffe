@@ -1,9 +1,10 @@
 ﻿using Spiffe.Id;
 
-namespace Tests.Spiffe.Id;
+namespace Spiffe.Tests.Id;
 
 public class TestSpiffePath
 {
+    [Fact]
     public void TestJoinPathSegments()
     {
         void AssertBad(string expectedErr, params string[] segments)
@@ -26,6 +27,7 @@ public class TestSpiffePath
         AssertOk("/a/b", "a", "b");
     }
 
+    [Fact]
     public void TestValidatePathSegment()
     {
         void AssertFail(string expectedErr, string input)
