@@ -1,4 +1,4 @@
-namespace Spiffe.WorkloadApi;
+﻿namespace Spiffe.WorkloadApi;
 
 /// <summary>
 /// Class to operate with Workload API address.

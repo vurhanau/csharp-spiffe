@@ -7,6 +7,7 @@
         <TestSdkVersion>17.6.0</TestSdkVersion>
         <XunitVersion>2.4.2</XunitVersion>
         <XunitRunnerVersion>2.4.5</XunitRunnerVersion>
+        <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
         <CoverletVersion>6.0.0</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
@@ -26,6 +27,7 @@
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
         <PackageVersion Include="xunit" Version="$(XunitVersion)" />
         <PackageVersion Include="xunit.runner.visualstudio" Version="$(XunitRunnerVersion)" />
+        <PackageVersion Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
         <PackageVersion Include="coverlet.msbuild" Version="$(CoverletVersion)" />
         <PackageVersion Include="coverlet.collector" Version="$(CoverletVersion)" />
 
