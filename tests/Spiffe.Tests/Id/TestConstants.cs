@@ -1,6 +1,6 @@
 ﻿using Spiffe.Id;
 
-namespace Tests.Spiffe.Id;
+namespace Spiffe.Tests.Id;
 
 internal static class TestConstants
 {

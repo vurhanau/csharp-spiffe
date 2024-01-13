@@ -11,7 +11,7 @@ public class SpiffeId
 {
     private const string SchemePrefix = "spiffe://";
 
-    private static readonly int SchemePrefixLength = SchemePrefix.Length;
+    private static readonly int s_schemePrefixLength = SchemePrefix.Length;
 
     // pathIndex tracks the index to the beginning of the path inside of id. This
     // is used when extracting the trust domain or path portions of the id.
@@ -32,7 +32,7 @@ public class SpiffeId
     /// <summary>
     /// Gets the trust domain of the SPIFFE ID.
     /// </summary>
-    public TrustDomain TrustDomain => new(Id[SchemePrefixLength.._pathIndex]);
+    public TrustDomain TrustDomain => new(Id[s_schemePrefixLength.._pathIndex]);
 
     /// <summary>
     /// Gets the path of the SPIFFE ID inside the trust domain.
@@ -97,13 +97,7 @@ public class SpiffeId
     /// <inheritdoc/>
     public override bool Equals(object? obj)
     {
-        if (obj is not SpiffeId)
-        {
-            return false;
-        }
-
-        string objId = (obj as SpiffeId)!.Id;
-        return string.Equals(Id, objId, StringComparison.Ordinal);
+        return obj is SpiffeId spiffeId && string.Equals(Id, spiffeId.Id, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -163,7 +157,7 @@ public class SpiffeId
             throw new ArgumentException(Errors.WrongScheme, nameof(id));
         }
 
-        int pathIndex = SchemePrefixLength;
+        int pathIndex = s_schemePrefixLength;
         for (; pathIndex < id.Length; pathIndex++)
         {
             char c = id[pathIndex];
@@ -178,7 +172,7 @@ public class SpiffeId
             }
         }
 
-        if (pathIndex == SchemePrefixLength)
+        if (pathIndex == s_schemePrefixLength)
         {
             throw new ArgumentException(Errors.MissingTrustDomain, nameof(id));
         }
@@ -207,7 +201,7 @@ public class SpiffeId
         }
 
         string id = SchemePrefix + td.Name + path;
-        int pathIndex = SchemePrefixLength + td.Name.Length;
+        int pathIndex = s_schemePrefixLength + td.Name.Length;
         return new SpiffeId(id, pathIndex);
     }
 }

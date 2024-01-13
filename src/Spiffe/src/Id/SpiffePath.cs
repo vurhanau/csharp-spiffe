@@ -103,9 +103,9 @@ public static class SpiffePath
             throw new ArgumentException(Errors.DotSegment, nameof(segment));
         }
 
-        for (int i = 0; i < segment.Length; i++)
+        foreach (char c in segment)
         {
-            if (!IsValidPathSegmentChar(segment[i]))
+            if (!IsValidPathSegmentChar(c))
             {
                 throw new ArgumentException(Errors.BadPathSegmentChar, nameof(segment));
             }
@@ -114,26 +114,13 @@ public static class SpiffePath
 
     private static bool IsValidPathSegmentChar(char c)
     {
-        if (c >= 'a' && c <= 'z')
+        return c switch
         {
-            return true;
-        }
-
-        if (c >= 'A' && c <= 'Z')
-        {
-            return true;
-        }
-
-        if (c >= '0' && c <= '9')
-        {
-            return true;
-        }
-
-        if (c == '-' || c == '.' || c == '_')
-        {
-            return true;
-        }
-
-        return false;
+            >= 'a' and <= 'z' => true,
+            >= 'A' and <= 'Z' => true,
+            >= '0' and <= '9' => true,
+            '-' or '.' or '_' => true,
+            _ => false,
+        };
     }
 }
