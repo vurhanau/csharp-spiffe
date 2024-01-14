@@ -42,7 +42,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     public async Task<X509Context> FetchX509ContextAsync(CancellationToken cancellationToken = default)
     {
         return await FetchAsync(
-            opts => _client.FetchX509SVID(X509SvidRequest, GetCallOptions(cancellationToken)),
+            opts => _client.FetchX509SVID(X509SvidRequest, opts),
             Helper.ToX509Context,
             cancellationToken);
     }
@@ -61,7 +61,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     public async Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default)
     {
         return await FetchAsync(
-            opts => _client.FetchX509Bundles(X509BundlesRequest, GetCallOptions(cancellationToken)),
+            opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
             Helper.ToX509BundleSet,
             cancellationToken);
     }
