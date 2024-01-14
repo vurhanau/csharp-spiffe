@@ -5,12 +5,12 @@ namespace Spiffe.WorkloadApi;
 /// <summary>
 /// Represents a client to interact with the Workload API.
 /// <br/>
-/// Supports one-shot calls and watch updates for X.509 and JWT SVIDs and bundles.
+/// Supports one-time calls and watch updates for X.509 and JWT SVIDs and bundles.
 /// </summary>
-public interface IWorkloadApiClient : IDisposable
+public interface IWorkloadApiClient
 {
     /// <summary>
-    /// Fetches an X.509 context on a one-shot call.
+    /// Fetches an X.509 context on a one-time call.
     /// </summary>
     Task<X509Context> FetchX509ContextAsync(CancellationToken cancellationToken = default);
 
@@ -24,7 +24,7 @@ public interface IWorkloadApiClient : IDisposable
     Task WatchX509ContextAsync(Action<X509Context, CancellationToken> watcher, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Fetches the X.509 bundles on a one-shot call.
+    /// Fetches the X.509 bundles on a one-time call.
     /// </summary>
     Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default);
 

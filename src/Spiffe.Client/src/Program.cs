@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Grpc.Net.Client;
 using Spiffe.Bundle.X509;
 using Spiffe.Client;
 using Spiffe.Grpc;
@@ -22,8 +23,8 @@ if (string.IsNullOrEmpty(address))
     return;
 }
 
-var channel = GrpcChannelFactory.CreateChannel(address);
-var client = WorkloadApiClient.Create(channel, true);
+using GrpcChannel channel = GrpcChannelFactory.CreateChannel(address);
+IWorkloadApiClient client = WorkloadApiClient.Create(channel);
 if (opts is X509Command)
 {
     X509Context x509Context = await client.FetchX509ContextAsync();

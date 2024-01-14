@@ -9,24 +9,30 @@ namespace Spiffe.Svid.X509;
 /// Contains a SPIFFE ID, a private key and a chain of X.509 certificates.
 /// </summary>
 public class X509Svid(SpiffeId spiffeId,
-                      X509Certificate2 certificate,
-                      X509Chain chain,
+                      X509Certificate2 rootCertificate,
+                      X509Certificate2Collection intermediatesCertificates,
+                      X509Certificate2 leafCertificate,
                       string hint)
 {
     /// <summary>
-    /// Gets SVID SPIFFE id
+    /// Gets SVID SPIFFE id.
     /// </summary>
     public SpiffeId SpiffeId { get; } = spiffeId;
 
     /// <summary>
-    /// Gets the X.509-SVID certificate chain back to an X.509 root for the trust domain.
+    /// X.509 root for the trust domain.
     /// </summary>
-    public X509Chain Chain { get; } = chain;
+    public X509Certificate2 RootCertificate { get; } = rootCertificate;
 
     /// <summary>
-    /// Gets the X.509 certificate of the X.509-SVID.
+    /// X.509 intermediate certificates of the X509-SVID.
     /// </summary>
-    public X509Certificate2 Certificate { get; } = certificate;
+    public X509Certificate2Collection IntermediateCertificates { get; } = intermediatesCertificates;
+
+    /// <summary>
+    /// Gets the X.509-SVID leaf certificate with a private key.
+    /// </summary>
+    public X509Certificate2 LeafCertificate { get; } = leafCertificate;
 
     /// <summary>
     /// Gets an operator-specified string used to provide guidance on how this

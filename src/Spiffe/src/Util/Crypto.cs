@@ -93,14 +93,14 @@ internal static class Crypto
     /// The certificates must be concatenated with no intermediate padding.
     /// See <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/parser.go#L1001C1-L1014C2"/>
     /// </summary>
-    internal static X509Certificate2Collection ParseCertificates(Span<byte> der)
+    internal static X509Certificate2Collection ParseCertificates(ReadOnlySpan<byte> der)
     {
         X509Certificate2Collection certs = [];
         for (int offset = 0; offset < der.Length;)
         {
             // If there are multiple certs are in blob - this code fails on MacOS for < .NET8.
             // https://github.com/dotnet/runtime/issues/82682
-            Span<byte> data = der[offset..];
+            ReadOnlySpan<byte> data = der[offset..];
             X509Certificate2 cert = new(data);
             certs.Add(cert);
             offset += cert.RawData.Length;

@@ -1,5 +1,4 @@
 ﻿using Spiffe.Bundle.X509;
-using Spiffe.Id;
 using Spiffe.Svid.X509;
 
 namespace Spiffe.WorkloadApi;

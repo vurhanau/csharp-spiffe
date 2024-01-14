@@ -1,9 +1,9 @@
-﻿using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using Google.Protobuf;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
+using Spiffe.Util;
 
 namespace Spiffe.WorkloadApi;
 
@@ -38,36 +38,15 @@ internal static class Helper
         return new(bundles);
     }
 
-    public static X509Svid ToSvidModel(X509SVID svid ) => new(SpiffeId.FromString(svid.SpiffeId),
-                                                              CreateCertificate(svid),
-                                                              CreateChain(svid.Bundle),
-                                                              svid.Hint);
+    public static X509Svid ToSvidModel(X509SVID svid)
+    {
+        SpiffeId id = SpiffeId.FromString(svid.SpiffeId);
+        X509Certificate2 root = new(svid.Bundle.Span);
+        X509Certificate2Collection intermediateAndLeaf = Crypto.ParseCertificates(svid.X509Svid.Span);
+        X509Certificate2 leaf = Crypto.GetCertificateWithPrivateKey(svid.X509Svid.Span, svid.X509SvidKey.Span);
+
+        return new(id, root, intermediateAndLeaf, leaf, svid.Hint);
+    }
 
     public static X509Bundle ToBundleModel(TrustDomain td, X509SVID svid) => new(td, CreateChain(svid.Bundle));
-
-    internal static X509Chain CreateChain(ByteString bundle)
-    {
-        byte[] bytes = bundle.ToByteArray();
-        var rootCertificate = new X509Certificate2(bytes);
-        var chain = new X509Chain();
-        X509ChainPolicy chainPolicy = chain.ChainPolicy;
-        chainPolicy.CustomTrustStore.Add(rootCertificate);
-        chainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-        chainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-        chainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
-        chainPolicy.DisableCertificateDownloads = true;
-
-        return chain;
-    }
-
-    internal static X509Certificate2 CreateCertificate(X509SVID svid)
-    {
-        var publicKey = svid.X509Svid.ToByteArray();
-        var privateKey = svid.X509SvidKey.ToByteArray();
-        using var cert = new X509Certificate2(publicKey);
-        using var ecdsa = ECDsa.Create();
-        ecdsa.ImportPkcs8PrivateKey(privateKey, out int _);
-
-        return cert.CopyWithPrivateKey(ecdsa);
-    }
 }

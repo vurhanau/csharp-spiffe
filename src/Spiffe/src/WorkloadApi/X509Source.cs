@@ -18,8 +18,6 @@ public sealed class X509Source : IX509Source
 {
     private readonly Func<List<X509Svid>, X509Svid?> _picker;
 
-    private readonly IWorkloadApiClient _workloadApiClient;
-
     private readonly ReaderWriterLock _lock;
 
     private readonly TimeSpan _lockTimeout;
@@ -31,28 +29,52 @@ public sealed class X509Source : IX509Source
     /// <summary>
     /// Constructs X509 source.
     /// </summary>
-    internal X509Source(IWorkloadApiClient workloadApiClient, Func<List<X509Svid>, X509Svid?>? picker = default)
+    internal X509Source(Func<List<X509Svid>, X509Svid?> picker)
     {
-        _workloadApiClient = workloadApiClient;
-        _picker = picker ?? PickDefaultSvid;
+        _picker = picker;
         _lock = new ReaderWriterLock();
         _lockTimeout = TimeSpan.FromSeconds(5);
     }
 
     /// <summary>
-    /// Subscribes to updates and gets an initial X509 context.
+    /// Blocks to get an initial X509 context and then listens to updates.
     /// </summary>
-    public async Task ListenAsync(CancellationToken cancellationToken = default)
+    public static Task StartAsync(IWorkloadApiClient client,
+                                  Func<List<X509Svid>, X509Svid?>? picker = null,
+                                  CancellationToken cancellationToken = default)
     {
-        // check if closed
-        var watcherTask = Task.Run(
-            () => _workloadApiClient.WatchX509ContextAsync(UpdateX509Context, cancellationToken),
+        _ = client ?? throw new ArgumentNullException(nameof(client));
+        picker ??= svids => svids.FirstOrDefault();
+
+        CountdownEvent countdown = new(1);
+        X509Source source = new(picker);
+        Task watchTask = Task.Run(
+            async () =>
+            {
+                bool stop = false;
+                while (!cancellationToken.IsCancellationRequested && !stop)
+                {
+                    try
+                    {
+                        await client.WatchX509ContextAsync(
+                            (x509Context, _) =>
+                            {
+                                source.UpdateX509Context(x509Context);
+                                countdown.Signal();
+                            },
+                            cancellationToken);
+                    }
+                    catch
+                    {
+                        stop = true;
+                    }
+                }
+            },
             cancellationToken);
 
-        X509Context x509Context = await _workloadApiClient.FetchX509ContextAsync(cancellationToken);
-        UpdateX509Context(x509Context, cancellationToken);
+        countdown.Wait(cancellationToken);
 
-        await watcherTask;
+        return watchTask;
     }
 
     /// <inheritdoc/>
@@ -91,7 +113,7 @@ public sealed class X509Source : IX509Source
         }
     }
 
-    private void UpdateX509Context(X509Context x509Context, CancellationToken cancellationToken)
+    private void UpdateX509Context(X509Context x509Context)
     {
         // check if closed
         _lock.AcquireWriterLock(_lockTimeout);
@@ -105,6 +127,4 @@ public sealed class X509Source : IX509Source
             _lock.ReleaseWriterLock();
         }
     }
-
-    private X509Svid? PickDefaultSvid(List<X509Svid> svids) => svids.FirstOrDefault();
 }
