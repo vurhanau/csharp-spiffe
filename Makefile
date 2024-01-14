@@ -20,17 +20,19 @@ policy:
 		-spiffeID spiffe://example.org/myservice \
 		-selector unix:uid:$$(id -u)
 
-build:
+restore:
 	@dotnet restore --locked-mode --force-evaluate
+
+build: restore
 	@dotnet build
 
-x509:
+x509: restore
 	$(RUN) x509 $(AGENT_SOCKET)
 
-bundle:
+bundle: restore
 	$(RUN) bundle $(AGENT_SOCKET)
 
-test:
+test: restore
 	@dotnet test
 
 coverage:
@@ -43,8 +45,16 @@ coverage-report:
 		-reporttypes:Html
 
 fmt:
-	@dotnet format ./Spiffe.sln
+	@dotnet format Spiffe.sln
 
-# dotnet tool install -g dependadotnet
+lint:
+	@jb inspectcode Spiffe.sln -o=jb.xml --build
+# 	@jb cleanupcode Spiffe.sln
+
 dependabot:
-	dependadotnet . > .github/dependabot.yml
+	@dependadotnet . > .github/dependabot.yml
+
+toolchain:
+	@dotnet tool install -g dependadotnet
+	@dotnet tool install -g dotnet-reportgenerator-globaltool
+	@dotnet tool install -g JetBrains.ReSharper.GlobalTools

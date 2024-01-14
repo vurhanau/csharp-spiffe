@@ -1,8 +1,8 @@
-#if !OS_WINDOWS
+﻿#if !OS_WINDOWS
 
 using Spiffe.WorkloadApi;
 
-namespace Tests.Spiffe.WorkloadApi;
+namespace Spiffe.Tests.WorkloadApi;
 
 /// <summary>
 /// Test Unix native target URI validation.

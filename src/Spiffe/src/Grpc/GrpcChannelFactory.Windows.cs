@@ -15,7 +15,7 @@ public static partial class GrpcChannelFactory
     /// Creates a socket handler backed by Windows named pipe.
     /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-namedpipes?view=aspnetcore-8.0"/>
     /// </summary>
-    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
+    private static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
     {
         string pipeName = Address.ParseNamedPipeTarget(address);
         return new SocketsHttpHandler

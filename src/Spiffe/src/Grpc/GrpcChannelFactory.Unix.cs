@@ -15,12 +15,12 @@ public static partial class GrpcChannelFactory
     /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-uds?view=aspnetcore-8.0"/>
     /// </summary>
     /// <param name="address">Socket path URI (ex: unix:///tmp/api.sock)</param>
-    internal static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
+    private static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
     {
         string socketPath = Address.ParseUnixSocketTarget(address);
         return new SocketsHttpHandler
         {
-            ConnectCallback = async (ignored, cancellationToken) =>
+            ConnectCallback = async (_, cancellationToken) =>
             {
                 UnixDomainSocketEndPoint udsEndPoint = new(socketPath);
                 Socket socket = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);

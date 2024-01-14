@@ -1,4 +1,4 @@
-#if !OS_WINDOWS
+﻿#if !OS_WINDOWS
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Spiffe.Tests")]
@@ -10,11 +10,6 @@ namespace Spiffe.WorkloadApi;
 /// </summary>
 internal static partial class Address
 {
-    internal static bool IsUnixSocket(Uri uri)
-    {
-        return "unix".Equals(uri.Scheme, StringComparison.Ordinal);
-    }
-
     /// <summary>
     /// Parses the endpoint address and returns a gRPC Unix domain socket target.
     /// </summary>
@@ -52,6 +47,11 @@ internal static partial class Address
         }
 
         return TrimScheme(uri);
+    }
+
+    private static bool IsUnixSocket(Uri uri)
+    {
+        return "unix".Equals(uri.Scheme, StringComparison.Ordinal);
     }
 }
 
