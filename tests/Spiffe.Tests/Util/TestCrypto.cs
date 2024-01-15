@@ -2,26 +2,11 @@
 using FluentAssertions;
 using Spiffe.Util;
 using static Spiffe.Tests.Util.TestData;
-using CertWithPrivateKeyCase = (
-    string Name,
-    string KeyPath,
-    string CertsPath,
-    System.Func<System.Security.Cryptography.X509Certificates.X509Certificate2, byte[]> PrivateKeyFunc,
-    byte[] RawCert,
-    byte[] RawKey,
-    bool Err
-);
 
 namespace Spiffe.Tests.Util;
 
 public class TestCrypto
 {
-    private const string KeyRsa = "Util/TestData/key-pkcs8-rsa.pem";
-
-    private const string CertRsa = "Util/TestData/good-leaf-only.pem";
-
-    private const string KeyEcdsa = "Util/TestData/key-pkcs8-ecdsa.pem";
-
     private const string CertAndKey = "Util/TestData/good-cert-and-key.pem";
 
     private const string CertEcdsa = "Util/TestData/good-leaf-and-intermediate.pem";
@@ -29,68 +14,43 @@ public class TestCrypto
     private const string CorruptedCert = "Util/TestData/corrupt-cert.pem";
 
     [Fact]
-    public void TestGetCertificateWithPrivateKey()
+    public void TestGetCertificateWithRsaPrivateKey()
     {
-        CertWithPrivateKeyCase[] testCases =
-        [
-            (
-                Name: "certificate and RSA key must match",
-                KeyPath: KeyRsa,
-                CertsPath: CertRsa,
-                PrivateKeyFunc: cert => cert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey(),
-                RawCert: LoadRawCert(CertRsa),
-                RawKey: LoadRawRsaKey(KeyRsa),
-                Err: false
-            ),
-#if !OS_WINDOWS
-            // TODO: This test fails on Windows.
-            // Signatures produced by these keys also don't match.
-            (
-                Name: "certificate and ECDSA key must match",
-                KeyPath: KeyEcdsa,
-                CertsPath: CertEcdsa,
-                PrivateKeyFunc: cert => cert.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey(),
-                RawCert: LoadRawCert(CertEcdsa),
-                RawKey: LoadRawEcdsaKey(KeyEcdsa),
-                Err: false
-            ),
-#endif
-            (
-                Name: "certificate bytes are not DER encoded must fail",
-                KeyPath: string.Empty,
-                CertsPath: string.Empty,
-                PrivateKeyFunc: _ => [],
-                RawCert: "not-DER-encoded"u8.ToArray(),
-                RawKey: LoadRawRsaKey(KeyRsa),
-                Err: true
-            ),
-            (
-                Name: "key bytes are not DER encoded must fail",
-                KeyPath: string.Empty,
-                CertsPath: string.Empty,
-                PrivateKeyFunc: _ => [],
-                RawCert: LoadRawCert(CertRsa),
-                RawKey: "not-DER-encoded"u8.ToArray(),
-                Err: true
-            ),
-        ];
+        string certPath = "Util/TestData/good-leaf-only.pem";
+        string keyPath = "Util/TestData/key-pkcs8-rsa.pem";
 
-        foreach (var test in testCases)
-        {
-            if (test.Err)
-            {
-                Action a = () => Crypto.GetCertificateWithPrivateKey(test.RawCert, test.RawKey);
-                a.Should().Throw<Exception>(test.Name);
-            }
-            else
-            {
-                X509Certificate2 cert = Crypto.GetCertificateWithPrivateKey(test.RawCert, test.RawKey);
-                cert.Should().NotBeNull(test.Name);
-                cert.RawData.Should().Equal(test.RawCert, test.Name);
-                byte[] privateKey = test.PrivateKeyFunc(cert);
-                privateKey.Should().Equal(test.RawKey, test.Name);
-            }
-        }
+        using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
+        byte[] rsaPrivateKey = expected.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
+        using X509Certificate2 tmp = LoadCert(certPath);
+        using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, rsaPrivateKey.AsSpan());
+
+        expected.RawData.Should().Equal(actual.RawData);
+    }
+
+    // TODO: check windows
+    [Fact]
+    public void TestGetCertificateWithEcdsaPrivateKey()
+    {
+        string certPath = "Util/TestData/good-leaf-and-intermediate.pem";
+        string keyPath = "Util/TestData/key-pkcs8-ecdsa.pem";
+
+        using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
+        byte[] ecdsaPrivateKey = expected.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey();
+        using X509Certificate2 tmp = LoadCert(certPath);
+        using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, ecdsaPrivateKey.AsSpan());
+
+        expected.RawData.Should().Equal(actual.RawData);
+    }
+
+    [Fact]
+    public void TestGetCertificateWithInvalidPrivateKey()
+    {
+        string certPath = "Util/TestData/good-leaf-only.pem";
+
+        using X509Certificate2 cert = LoadCert(certPath);
+        byte[] invalidPrivateKey = "not-DER-encoded"u8.ToArray();
+        Action a = () => Crypto.GetCertificateWithPrivateKey(cert, invalidPrivateKey.AsSpan());
+        a.Should().Throw<Exception>();
     }
 
     [Fact]

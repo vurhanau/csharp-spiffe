@@ -14,7 +14,7 @@ public class X509Bundle(TrustDomain trustDomain, X509Certificate2Collection x509
     public TrustDomain TrustDomain { get; } = trustDomain;
 
     /// <summary>
-    /// Gets a trust domain authorities.
+    /// Gets trust domain authorities.
     /// </summary>
     public X509Certificate2Collection X509Authorities { get; } = x509Authorities;
 }

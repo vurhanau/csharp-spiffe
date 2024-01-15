@@ -10,9 +10,9 @@ internal static class TestData
         return LoadCerts(pemFile)[0];
     }
 
-    internal static byte[] LoadRawCert(string pemFile)
+    internal static X509Certificate2 LoadRawCert(string pemFile)
     {
-        return LoadCert(pemFile).RawData;
+        return LoadCert(pemFile);
     }
 
     internal static X509Certificate2Collection LoadCerts(string pemFile)

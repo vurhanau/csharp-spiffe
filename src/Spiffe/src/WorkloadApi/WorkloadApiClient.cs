@@ -12,9 +12,7 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private readonly Action<CallOptions>? _configureCallOptions;
 
-    private static readonly string SpiffeHeaderKey = "workload.spiffe.io";
-
-    private static readonly string SpiffeHeaderValue = "true";
+    private static readonly (string Key, string Value) SpiffeHeader = ("workload.spiffe.io", "true");
 
     private static readonly X509SVIDRequest X509SvidRequest = new();
 
@@ -43,7 +41,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         return await FetchAsync(
             opts => _client.FetchX509SVID(X509SvidRequest, opts),
-            Helper.ToX509Context,
+            Convertor.ToX509Context,
             cancellationToken);
     }
 
@@ -52,7 +50,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         await WatchAsync(
             opts => _client.FetchX509SVID(X509SvidRequest, opts),
-            Helper.ToX509Context,
+            Convertor.ToX509Context,
             watcher,
             cancellationToken);
     }
@@ -62,7 +60,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         return await FetchAsync(
             opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
-            Helper.ToX509BundleSet,
+            Convertor.ToX509BundleSet,
             cancellationToken);
     }
 
@@ -71,7 +69,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         await WatchAsync(
             opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
-            Helper.ToX509BundleSet,
+            Convertor.ToX509BundleSet,
             watcher,
             cancellationToken);
     }
@@ -117,7 +115,7 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private CallOptions GetCallOptions(CancellationToken cancellationToken)
     {
-        CallOptions options = new(headers: [new(SpiffeHeaderKey, SpiffeHeaderValue)],
+        CallOptions options = new(headers: [new(SpiffeHeader.Key, SpiffeHeader.Value)],
                                   cancellationToken: cancellationToken);
         _configureCallOptions?.Invoke(options);
 

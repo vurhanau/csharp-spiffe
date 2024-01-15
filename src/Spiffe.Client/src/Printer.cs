@@ -24,8 +24,9 @@ internal static class Printer
                 PrintField("Hint", svid.Hint);
             }
 
-            PrintField($"Certificate", svid.Certificate?.ToString(true), false);
-            PrintField("Bundle", svid.Chain?.ToDisplayString(), false);
+            // TODO:
+            // PrintField($"Certificate", svid.Certificates?.ToString(true), false);
+            // PrintField("Bundle", svid.Chain?.ToDisplayString(), false);
         }
     }
 
@@ -43,7 +44,9 @@ internal static class Printer
             Console.WriteLine($"Trust domain: {tdBundle.Key}");
             X509Bundle bundle = tdBundle.Value;
             Console.WriteLine($"X509 certificate chain:");
-            Console.WriteLine(bundle.Chain?.ToDisplayString());
+
+            // TODO:
+            // Console.WriteLine(bundle.Chain?.ToDisplayString());
         }
     }
 
