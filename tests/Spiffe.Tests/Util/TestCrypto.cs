@@ -49,7 +49,9 @@ public class TestCrypto
     [Fact]
     public void TestParseGood()
     {
-        using X509Certificate2 expected = X509Certificate2.CreateFromPemFile("Util/TestData/good-cert-and-key.pem");
+        string certAndKeyPath = "Util/TestData/good-cert-and-key.pem";
+
+        using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certAndKeyPath);
         X509Certificate2Collection actual = Crypto.ParseCertificates(expected.RawData);
         actual.Should().ContainSingle();
         actual[0].RawData.Should().Equal(expected.RawData);
@@ -60,8 +62,9 @@ public class TestCrypto
     [Fact]
     public void TestParseGoodLeafAndIntermediate()
     {
+        string leafAndIntermediatePath = "Util/TestData/good-leaf-and-intermediate.pem";
         X509Certificate2Collection expected = [];
-        expected.ImportFromPemFile("Util/TestData/good-leaf-and-intermediate.pem");
+        expected.ImportFromPemFile(leafAndIntermediatePath);
 
         byte[] c0 = expected[0].RawData;
         byte[] c1 = expected[1].RawData;
