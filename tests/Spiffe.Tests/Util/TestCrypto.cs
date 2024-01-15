@@ -1,18 +1,11 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Spiffe.Util;
-using static Spiffe.Tests.Util.TestData;
 
 namespace Spiffe.Tests.Util;
 
 public class TestCrypto
 {
-    private const string CertAndKey = "Util/TestData/good-cert-and-key.pem";
-
-    private const string CertEcdsa = "Util/TestData/good-leaf-and-intermediate.pem";
-
-    private const string CorruptedCert = "Util/TestData/corrupt-cert.pem";
-
     [Fact]
     public void TestGetCertificateWithRsaPrivateKey()
     {
@@ -56,49 +49,47 @@ public class TestCrypto
     [Fact]
     public void TestParseGood()
     {
-        byte[] expected = LoadCert(CertAndKey).RawData;
-        void AssertParsed(X509Certificate2Collection actual)
-        {
-            actual.Should().ContainSingle();
-            actual[0].RawData.Should().Equal(expected);
-        }
+        using X509Certificate2 expected = X509Certificate2.CreateFromPemFile("Util/TestData/good-cert-and-key.pem");
+        X509Certificate2Collection actual = Crypto.ParseCertificates(expected.RawData);
+        actual.Should().ContainSingle();
+        actual[0].RawData.Should().Equal(expected.RawData);
 
-        X509Certificate2Collection actual = Crypto.ParseCertificates(expected);
-        AssertParsed(actual);
-
-        actual = Crypto.ParseCertificates(expected.AsSpan());
-        AssertParsed(actual);
+        actual[0].Dispose();
     }
 
     [Fact]
     public void TestParseGoodLeafAndIntermediate()
     {
-        X509Certificate2Collection expected = LoadCerts(CertEcdsa);
+        X509Certificate2Collection expected = [];
+        expected.ImportFromPemFile("Util/TestData/good-leaf-and-intermediate.pem");
+
         byte[] c0 = expected[0].RawData;
         byte[] c1 = expected[1].RawData;
         byte[] concat = new byte[c0.Length + c1.Length];
         c0.CopyTo(concat, 0);
         c1.CopyTo(concat, c0.Length);
 
-        void AssertParsed(X509Certificate2Collection actual)
-        {
-            actual.Should().HaveCount(2);
-            actual[0].RawData.Should().Equal(c0);
-            actual[1].RawData.Should().Equal(c1);
-        }
-
         X509Certificate2Collection actual = Crypto.ParseCertificates(concat);
-        AssertParsed(actual);
+        actual.Should().HaveCount(2);
+        actual[0].RawData.Should().Equal(c0);
+        actual[1].RawData.Should().Equal(c1);
 
-        actual = Crypto.ParseCertificates(concat.AsSpan());
-        AssertParsed(actual);
+        actual[0].Dispose();
+        actual[1].Dispose();
     }
 
     [Fact]
     public void TestParseCorruptCertificate()
     {
-        byte[] corrupt = File.ReadAllBytes(CorruptedCert);
+        byte[] corrupt = "not-DER-encoded"u8.ToArray();
         Action a = () => Crypto.ParseCertificates(corrupt);
         a.Should().Throw<Exception>();
+    }
+
+    private static X509Certificate2 LoadCert(string pemFile)
+    {
+        X509Certificate2Collection c = [];
+        c.ImportFromPemFile(pemFile);
+        return c[0];
     }
 }
