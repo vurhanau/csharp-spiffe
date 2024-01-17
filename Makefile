@@ -1,22 +1,24 @@
 SPIRE_DIR := $(HOME)/Projects/spiffe/spire
-
-.PHONY: build coverage
+AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
+RUN := @dotnet run --project src/Spiffe.Client/
 
 server:
-	cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
+	@cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
 
 jt:
-	cd $(SPIRE_DIR) && ./spire-server token generate -spiffeID spiffe://example.org/myagent
+	@cd $(SPIRE_DIR) && ./spire-server token generate -spiffeID spiffe://example.org/myagent
 
 agent:
-	cd $(SPIRE_DIR) && ./spire-agent run -config conf/agent/agent.conf -joinToken $(JT)
+	@cd $(SPIRE_DIR) && ./spire-agent run -config conf/agent/agent.conf -joinToken $(JT)
 
-x509:
-	cd $(SPIRE_DIR) && ./spire-agent api fetch x509
+fetch:
+	@cd $(SPIRE_DIR) && ./spire-agent api fetch x509
 
 policy:
-	cd $(SPIRE_DIR) && ./spire-server entry create -parentID spiffe://example.org/myagent \
-    -spiffeID spiffe://example.org/myservice -selector unix:uid:$$(id -u)
+	@cd $(SPIRE_DIR) && ./spire-server entry create \
+		-parentID spiffe://example.org/myagent \
+		-spiffeID spiffe://example.org/myservice \
+		-selector unix:uid:$$(id -u)
 
 restore:
 	@dotnet restore --locked-mode --force-evaluate
@@ -24,8 +26,11 @@ restore:
 build: restore
 	@dotnet build
 
-run: restore
-	@dotnet run --project src/Spiffe.Client/ --address unix:///tmp/spire-agent/public/api.sock
+x509: restore
+	$(RUN) x509 $(AGENT_SOCKET)
+
+bundle: restore
+	$(RUN) bundle $(AGENT_SOCKET)
 
 test: restore
 	@dotnet test

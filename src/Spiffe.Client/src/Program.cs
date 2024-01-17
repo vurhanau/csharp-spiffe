@@ -1,21 +1,41 @@
-﻿using System.Text.Json;
-using CommandLine;
+﻿using CommandLine;
+using Grpc.Net.Client;
+using Spiffe.Bundle.X509;
 using Spiffe.Client;
+using Spiffe.Grpc;
+using Spiffe.WorkloadApi;
 
-ParserResult<Options> parserResult = Parser.Default.ParseArguments<Options>(args);
-if (!parserResult.Errors.Any() && parserResult.Value != null)
+var parserResult = Parser.Default.ParseArguments<X509Command, BundleCommand>(args);
+if (parserResult.Errors.Any())
 {
-    Options options = parserResult.Value;
-    LogOptions(options);
-
-    await Client.Run(options.Address!);
+    var err = string.Join(", ", parserResult.Errors);
+    Console.WriteLine($"Failed to parse command: {err}");
+    Environment.Exit(1);
+    return;
 }
 
-static void LogOptions(Options options)
+var opts = parserResult.Value;
+var address = (opts as Options)?.Address;
+if (string.IsNullOrEmpty(address))
 {
-    string json = JsonSerializer.Serialize(options, new JsonSerializerOptions()
-    {
-        WriteIndented = true,
-    });
-    Console.WriteLine($"Options: {json}");
+    Console.WriteLine($"Address must be non-empty");
+    Environment.Exit(1);
+    return;
+}
+
+using GrpcChannel channel = GrpcChannelFactory.CreateChannel(address);
+IWorkloadApiClient client = WorkloadApiClient.Create(channel);
+if (opts is X509Command)
+{
+    X509Context x509Context = await client.FetchX509ContextAsync();
+    Printer.Print(x509Context);
+}
+else if (opts is BundleCommand)
+{
+    X509BundleSet x509Bundles = await client.FetchX509BundlesAsync();
+    Printer.Print(x509Bundles);
+}
+else
+{
+    throw new NotSupportedException("Unknown command");
 }

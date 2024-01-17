@@ -15,29 +15,12 @@ internal static class Crypto
     /// <br/>
     /// Go OID list: <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/x509.go#L462C1-L486C1"/>
     /// </summary>
-    /// <param name="certBytes">Certificate data</param>
+    /// <param name="cert">Certificate</param>
     /// <param name="keyBytes">Private key data</param>
     /// <returns>Certificate with a private key</returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="certBytes"/> has an unknown key algorithm.</exception>
-    internal static X509Certificate2 GetCertificateWithPrivateKey(byte[] certBytes, byte[] keyBytes)
+    /// <exception cref="ArgumentException">Thrown if <paramref name="keyBytes"/> has an unknown key algorithm.</exception>
+    internal static X509Certificate2 GetCertificateWithPrivateKey(X509Certificate2 cert, ReadOnlySpan<byte> keyBytes)
     {
-        return GetCertificateWithPrivateKey(certBytes.AsSpan(), keyBytes.AsSpan());
-    }
-
-    /// <summary>
-    /// Creates an X509 certificate with a private key.
-    /// <br/>
-    /// C# OID list: <seealso href="https://github.com/dotnet/runtime/blob/v8.0.1/src/libraries/Common/src/System/Security/Cryptography/Oids.cs"/>
-    /// <br/>
-    /// Go OID list: <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/x509.go#L462C1-L486C1"/>
-    /// </summary>
-    /// <param name="certBytes">Certificate data</param>
-    /// <param name="keyBytes">Private key data</param>
-    /// <returns>Certificate with a private key</returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="certBytes"/> has an unknown key algorithm.</exception>
-    internal static X509Certificate2 GetCertificateWithPrivateKey(ReadOnlySpan<byte> certBytes, ReadOnlySpan<byte> keyBytes)
-    {
-        using X509Certificate2 cert = new(certBytes);
         X509Certificate2 certWithPrivateKey;
         string ka = cert.GetKeyAlgorithm();
         switch (ka)
@@ -83,24 +66,14 @@ internal static class Crypto
     /// The certificates must be concatenated with no intermediate padding.
     /// See <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/parser.go#L1001C1-L1014C2"/>
     /// </summary>
-    internal static X509Certificate2Collection ParseCertificates(byte[] der)
-    {
-        return ParseCertificates(der.AsSpan());
-    }
-
-    /// <summary>
-    /// Parses one or more certificates from the given ASN.1 DER data.
-    /// The certificates must be concatenated with no intermediate padding.
-    /// See <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/parser.go#L1001C1-L1014C2"/>
-    /// </summary>
-    internal static X509Certificate2Collection ParseCertificates(Span<byte> der)
+    internal static X509Certificate2Collection ParseCertificates(ReadOnlySpan<byte> der)
     {
         X509Certificate2Collection certs = [];
         for (int offset = 0; offset < der.Length;)
         {
             // If there are multiple certs are in blob - this code fails on MacOS for < .NET8.
             // https://github.com/dotnet/runtime/issues/82682
-            Span<byte> data = der[offset..];
+            ReadOnlySpan<byte> data = der[offset..];
             X509Certificate2 cert = new(data);
             certs.Add(cert);
             offset += cert.RawData.Length;
