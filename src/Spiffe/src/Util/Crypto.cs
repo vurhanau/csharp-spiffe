@@ -52,6 +52,14 @@ internal static class Crypto
                     break;
                 }
 
+            // ED25519
+            // C# doesn't support it
+            // Go spiffe: https://github.com/spiffe/go-spiffe/blob/04f99837aed10405d235e658f0874f807bc81fc7/v2/svid/x509svid/svid.go#L234
+            case "1.3.101.112":
+                {
+                    throw new ArgumentException($"Unsupported key algorithm: '{ka}'");
+                }
+
             default:
                 {
                     throw new ArgumentException($"Unsupported key algorithm: '{ka}'");
