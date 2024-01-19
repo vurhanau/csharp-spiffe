@@ -1,3 +1,4 @@
+using DotNext.Threading;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
@@ -16,9 +17,11 @@ namespace Spiffe.WorkloadApi;
 /// </summary>
 public sealed class X509Source : IX509Source
 {
+    private IX509ContextWatcher _watcher;
+
     private readonly Func<List<X509Svid>, X509Svid?> _picker;
 
-    private readonly ReaderWriterLock _lock;
+    private readonly AsyncReaderWriterLock _lock;
 
     private readonly TimeSpan _lockTimeout;
 
@@ -31,73 +34,44 @@ public sealed class X509Source : IX509Source
     /// </summary>
     internal X509Source(Func<List<X509Svid>, X509Svid?> picker)
     {
+        _watcher = new Watcher();
         _picker = picker;
-        _lock = new ReaderWriterLock();
+        _lock = new AsyncReaderWriterLock();
         _lockTimeout = TimeSpan.FromSeconds(5);
     }
 
     /// <summary>
-    /// Blocks to get an initial X509 context and then listens to updates.
+    /// Creates a new X509Source. It blocks until the initial update
+    /// has been received from the Workload API. The source should be closed when
+    /// no longer in use to free underlying resources.
     /// </summary>
-    public static Task StartAsync(IWorkloadApiClient client,
-                                  Func<List<X509Svid>, X509Svid?>? picker = null,
-                                  CancellationToken cancellationToken = default)
+    public static async Task<X509Source> New(IWorkloadApiClient client,
+                                             Func<List<X509Svid>, X509Svid?>? picker = null,
+                                             CancellationToken cancellationToken = default)
     {
         _ = client ?? throw new ArgumentNullException(nameof(client));
         picker ??= svids => svids.FirstOrDefault();
 
-        CountdownEvent countdown = new(1);
         X509Source source = new(picker);
-        Task watchTask = Task.Run(
-            async () =>
-            {
-                bool stop = false;
-                while (!cancellationToken.IsCancellationRequested && !stop)
-                {
-                    try
-                    {
-                        await client.WatchX509ContextAsync(
-                            (x509Context, _) =>
-                            {
-                                source.UpdateX509Context(x509Context);
-                                countdown.Signal();
-                            },
-                            cancellationToken);
-                    }
-                    catch
-                    {
-                        stop = true;
-                    }
-                }
-            },
-            cancellationToken);
-
-        countdown.Wait(cancellationToken);
-
-        return watchTask;
+        source._watcher = new Watcher();
+        return source;
     }
 
     /// <inheritdoc/>
-    public X509Svid? GetX509Svid()
+    public async Task<X509Svid?> GetX509Svid()
     {
         // check if closed
-        _lock.AcquireReaderLock(_lockTimeout);
-        try
+        using (await _lock.AcquireReadLockAsync(_lockTimeout))
         {
             return _svid;
         }
-        finally
-        {
-            _lock.ReleaseReaderLock();
-        }
     }
 
     /// <inheritdoc/>
-    public X509Bundle? GetX509Bundle(TrustDomain trustDomain)
+    public async Task<X509Bundle?> GetX509Bundle(TrustDomain trustDomain)
     {
         // check if closed
-        _lock.AcquireReaderLock(_lockTimeout);
-        try
+        using (await _lock.AcquireReadLockAsync(_lockTimeout))
         {
             if (_bundles == null)
             {
@@ -107,24 +81,20 @@ public sealed class X509Source : IX509Source
             bool found = _bundles.Bundles.TryGetValue(trustDomain, out X509Bundle? bundle);
             return found ? bundle : null;
         }
-        finally
-        {
-            _lock.ReleaseReaderLock();
-        }
     }
 
-    private void UpdateX509Context(X509Context x509Context)
+    /// <summary>
+    /// Disposes client
+    /// </summary>
+    public async ValueTask DisposeAsync() => await _lock.DisposeAsync();
+
+    private async Task UpdateX509Context(X509Context x509Context)
     {
         // check if closed
-        _lock.AcquireWriterLock(_lockTimeout);
-        try
+        using (await _lock.AcquireWriteLockAsync(_lockTimeout))
         {
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
-        }
-        finally
-        {
-            _lock.ReleaseWriterLock();
         }
     }
 }

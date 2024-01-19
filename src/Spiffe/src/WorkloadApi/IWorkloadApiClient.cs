@@ -21,7 +21,7 @@ public interface IWorkloadApiClient
     /// updates immediately after the Stream is ready and doesn't have to wait until the Workload API dispatches
     /// the next update based on the SVIDs TTL.
     /// </summary>
-    Task WatchX509ContextAsync(Action<X509Context, CancellationToken> watcher, CancellationToken cancellationToken = default);
+    Task WatchX509ContextAsync(IX509ContextWatcher watcher, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Fetches the X.509 bundles on a one-time call.

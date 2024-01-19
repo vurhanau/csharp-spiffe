@@ -7,15 +7,15 @@ namespace Spiffe.WorkloadApi;
 /// <summary>
 /// Represents a source of X.509 SVIDs and X.509 bundles maintained via the Workload API.
 /// </summary>
-public interface IX509Source
+public interface IX509Source : IAsyncDisposable
 {
     /// <summary>
     /// Gets a default SVID.
     /// </summary>
-    X509Svid? GetX509Svid();
+    Task<X509Svid?> GetX509Svid();
 
     /// <summary>
     /// Gets a trust bundle associated with trust domain.
     /// </summary>
-    X509Bundle? GetX509Bundle(TrustDomain trustDomain);
+    Task<X509Bundle?> GetX509Bundle(TrustDomain trustDomain);
 }

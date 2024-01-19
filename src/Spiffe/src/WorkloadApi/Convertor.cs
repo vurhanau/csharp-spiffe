@@ -9,7 +9,7 @@ namespace Spiffe.WorkloadApi;
 
 internal static class Convertor
 {
-    public static X509Context ToX509Context(X509SVIDResponse response)
+    public static X509Context ParseX509Context(X509SVIDResponse response)
     {
         List<X509Svid> svids = [];
         Dictionary<TrustDomain, X509Bundle> bundles = [];
