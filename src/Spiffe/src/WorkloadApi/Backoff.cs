@@ -2,11 +2,11 @@ namespace Spiffe.WorkloadApi;
 
 internal class Backoff
 {
+    private volatile int _n;
+
     public TimeSpan InitialDelay { get; init; }
 
     public TimeSpan MaxDelay { get; init; }
-
-    private volatile int _n;
 
     public static Backoff Create()
     {

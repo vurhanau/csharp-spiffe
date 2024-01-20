@@ -2,7 +2,6 @@
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 
-        <DotNextThreadingVersion>5.0.0</DotNextThreadingVersion>
         <GoogleProtobufVersion>3.25.1</GoogleProtobufVersion>
         <GrpcNetClientVersion>2.59.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
@@ -18,7 +17,6 @@
 
     <ItemGroup>
         <!-- Spiffe -->
-        <PackageVersion Include="DotNext.Threading" Version="$(DotNextThreadingVersion)" />
         <PackageVersion Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
         <PackageVersion Include="Grpc.Net.Client" Version="$(GrpcNetClientVersion)" />
         <PackageVersion Include="Grpc.Tools" Version="$(GrpcToolsVersion)" />
