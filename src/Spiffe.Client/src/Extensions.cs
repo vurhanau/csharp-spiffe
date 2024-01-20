@@ -1,80 +1,48 @@
-﻿using System.Security.Cryptography;
+﻿using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 
 namespace Spiffe.Client;
 
 internal static class Extensions
 {
-    public static string ToDisplayString(this X509Chain chain)
+    private static readonly JsonSerializerOptions s_jsonOpts = new JsonSerializerOptions
     {
-        var b = new StringBuilder();
-        var chainPolicy = chain.ChainPolicy;
-        b.AppendLine($"[{nameof(chainPolicy.RevocationFlag)}]");
-        b.AppendLine($"  {chainPolicy.RevocationFlag}");
-        b.AppendLine();
-        b.AppendLine($"[{nameof(chainPolicy.RevocationMode)}]");
-        b.AppendLine($"  {chainPolicy.RevocationMode}");
-        b.AppendLine();
-        b.AppendLine($"[{nameof(chainPolicy.VerificationFlags)}]");
-        b.AppendLine($"  {chainPolicy.VerificationFlags}");
-        b.AppendLine();
-        b.AppendLine($"[{nameof(chainPolicy.VerificationTime)}]");
-        b.AppendLine($"  {chainPolicy.VerificationTime}");
-        b.AppendLine();
-        if (chainPolicy.ApplicationPolicy.Count > 0)
+        WriteIndented = true,
+    };
+
+    internal static string ToString(X509Certificate2? certificate)
+    {
+        return JsonSerializer.Serialize(new
         {
-            b.AppendLine($"[Application Policy]");
-            foreach (var policy in chainPolicy.ApplicationPolicy)
-            {
-                b.AppendLine($"  {policy.ToDisplayString()}");
-            }
-
-            b.AppendLine();
-        }
-
-        if (chainPolicy.CertificatePolicy.Count > 0)
-        {
-            b.AppendLine($"[Certificate Policy]");
-            foreach (var policy in chainPolicy.CertificatePolicy)
-            {
-                b.AppendLine($"  {policy.ToDisplayString()}");
-            }
-
-            b.AppendLine();
-        }
-
-        var elements = chain.ChainElements.Cast<X509ChainElement>().Select((element, index) => (element, index));
-        if (elements.Any())
-        {
-            b.AppendLine($"[Elements]");
-            foreach (var (element, index) in elements)
-            {
-                b.AppendLine();
-                b.AppendLine($"[Element {index + 1}]");
-                b.AppendLine();
-                b.Append(element.Certificate.ToString());
-                b.AppendLine();
-                b.AppendLine($"[Status]");
-                foreach (var status in element.ChainElementStatus)
-                {
-                    b.AppendLine($"  {status.ToDisplayString()}");
-                }
-            }
-        }
-
-        return b.ToString();
+            certificate?.Subject,
+            certificate?.Issuer,
+            certificate?.Thumbprint,
+            certificate?.HasPrivateKey,
+            certificate?.NotBefore,
+            certificate?.NotAfter,
+            UrlName = certificate?.GetNameInfo(X509NameType.UrlName, false),
+            KeyUsage = GetKeyUsage(certificate),
+        },
+        s_jsonOpts);
     }
 
-    public static string ToDisplayString(this Oid oid)
+    internal static string ToString(X509Certificate2Collection certificates)
     {
-        return oid.FriendlyName == oid.Value
-            ? $"{oid.Value}"
-            : $"{oid.FriendlyName}: {oid.Value}";
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"Certificate collection: {certificates.Count} item(s)");
+        for (int i = 0; i < certificates.Count; i++)
+        {
+            sb.AppendLine($"[{i + 1}]:");
+            sb.AppendLine(ToString(certificates[i]));
+        }
+
+        return sb.ToString();
     }
 
-    public static string ToDisplayString(this X509ChainStatus status)
+    private static string? GetKeyUsage(X509Certificate2? certificate)
     {
-        return $"{status.Status}: {status.StatusInformation}";
+        return certificate?.Extensions.OfType<X509KeyUsageExtension>().FirstOrDefault()?.KeyUsages.ToString();
     }
 }

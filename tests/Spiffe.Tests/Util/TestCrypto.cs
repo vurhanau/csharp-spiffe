@@ -20,7 +20,6 @@ public class TestCrypto
         expected.RawData.Should().Equal(actual.RawData);
     }
 
-    // TODO: check windows
     [Fact]
     public void TestGetCertificateWithEcdsaPrivateKey()
     {

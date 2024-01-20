@@ -14,19 +14,18 @@ internal static class Printer
             return;
         }
 
+        PrintBundles(x509Context.X509Bundles);
+
         Console.WriteLine($"Received {svids.Count} svid(s)");
-        Console.WriteLine();
         foreach (var svid in svids)
         {
-            PrintField("SPIFFE ID", svid.SpiffeId?.Id);
+            Console.WriteLine($"Spiffe ID: {svid.SpiffeId?.Id}");
             if (!string.IsNullOrEmpty(svid.Hint))
             {
-                PrintField("Hint", svid.Hint);
+                Console.WriteLine($"Hint: {svid.Hint}");
             }
 
-            // TODO:
-            // PrintField($"Certificate", svid.Certificates?.ToString(true), false);
-            // PrintField("Bundle", svid.Chain?.ToDisplayString(), false);
+            Console.WriteLine(Extensions.ToString(svid.Certificates));
         }
     }
 
@@ -38,23 +37,17 @@ internal static class Printer
             return;
         }
 
-        Console.WriteLine("[Bundles]");
-        foreach (var tdBundle in x509BundleSet.Bundles)
-        {
-            Console.WriteLine($"Trust domain: {tdBundle.Key}");
-            X509Bundle bundle = tdBundle.Value;
-            Console.WriteLine($"X509 certificate chain:");
-
-            // TODO:
-            // Console.WriteLine(bundle.Chain?.ToDisplayString());
-        }
+        PrintBundles(x509BundleSet);
     }
 
-    private static void PrintField(string key, string? value, bool indent = true)
+    private static void PrintBundles(X509BundleSet x509BundleSet)
     {
-        var tab = indent ? "  " : string.Empty;
-        Console.WriteLine($"[{key}]");
-        Console.WriteLine($"{tab}{value}");
-        Console.WriteLine();
+        Console.WriteLine($"Received {x509BundleSet.Bundles.Count} bundle(s)");
+        foreach (var bundle in from bundlePair in x509BundleSet.Bundles
+                               select bundlePair.Value)
+        {
+            Console.WriteLine($"Trust domain: {bundle.TrustDomain}");
+            Console.WriteLine(Extensions.ToString(bundle.X509Authorities));
+        }
     }
 }
