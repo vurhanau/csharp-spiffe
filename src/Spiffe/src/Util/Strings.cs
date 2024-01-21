@@ -21,6 +21,11 @@ public static class Strings
 
     private static readonly JsonFormatter s_protoJson = new JsonFormatter(JsonFormatter.Settings.Default.WithIndentation());
 
+    /// <summary>
+    /// Gets X509 context string representation.
+    /// </summary>
+    /// <param name="x509Context">Context</param>
+    /// <param name="verbose">Set if certificate output should contain detailed information.</param>
     public static string ToString(X509Context x509Context, bool verbose = false)
     {
         StringBuilder sb = new();
@@ -36,24 +41,34 @@ public static class Strings
         return sb.ToString();
     }
 
-    public static string ToString(X509Svid svid, bool verbose = false)
+    /// <summary>
+    /// Gets X509 SVID string representation.
+    /// </summary>
+    /// <param name="x509Svid">X509 SVID</param>
+    /// <param name="verbose">Set if certificate output should contain detailed information.</param>
+    public static string ToString(X509Svid x509Svid, bool verbose = false)
     {
         StringBuilder sb = new();
-        sb.AppendLine($"Spiffe ID: {svid.SpiffeId?.Id}");
-        if (!string.IsNullOrEmpty(svid.Hint))
+        sb.AppendLine($"Spiffe ID: {x509Svid.SpiffeId?.Id}");
+        if (!string.IsNullOrEmpty(x509Svid.Hint))
         {
-            sb.AppendLine($"Hint: {svid.Hint}");
+            sb.AppendLine($"Hint: {x509Svid.Hint}");
         }
 
-        sb.AppendLine(ToString(svid.Certificates, verbose));
+        sb.AppendLine(ToString(x509Svid.Certificates, verbose));
         return sb.ToString();
     }
 
-    public static string ToString(X509BundleSet set, bool verbose = false)
+    /// <summary>
+    /// Gets X509 bundle set string representation.
+    /// </summary>
+    /// <param name="x509BundleSet">X509 bundle set</param>
+    /// <param name="verbose">Set if certificate output should contain detailed information.</param>
+    public static string ToString(X509BundleSet x509BundleSet, bool verbose = false)
     {
         StringBuilder sb = new();
-        sb.AppendLine($"Received {set.Bundles.Count} bundle(s)");
-        foreach ((TrustDomain td, X509Bundle bundle) in set.Bundles)
+        sb.AppendLine($"Received {x509BundleSet.Bundles.Count} bundle(s)");
+        foreach ((TrustDomain td, X509Bundle bundle) in x509BundleSet.Bundles)
         {
             sb.AppendLine($"Trust domain: {td}");
             sb.AppendLine(ToString(bundle.X509Authorities, verbose));

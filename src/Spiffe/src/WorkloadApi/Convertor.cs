@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Google.Protobuf;
+using Google.Protobuf.Collections;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
@@ -19,9 +20,11 @@ internal static class Convertor
             svids.Add(model);
 
             TrustDomain td = model.SpiffeId!.TrustDomain!;
-            X509Bundle bundle = ToBundleModel(td, svid);
+            X509Bundle bundle = ParseBundle(td, svid.Bundle);
             bundles.Add(td, bundle);
         }
+
+        ParseBundles(response.FederatedBundles, bundles);
 
         return new(svids, new X509BundleSet(bundles));
     }
@@ -29,12 +32,7 @@ internal static class Convertor
     public static X509BundleSet ParseX509BundleSet(X509BundlesResponse response)
     {
         Dictionary<TrustDomain, X509Bundle> bundles = [];
-        foreach (KeyValuePair<string, ByteString> bundle in response.Bundles)
-        {
-            TrustDomain td = TrustDomain.FromString(bundle.Key);
-            X509Certificate2Collection authorities = Crypto.ParseCertificates(bundle.Value.Span);
-            bundles[td] = new X509Bundle(td, authorities);
-        }
+        ParseBundles(response.Bundles, bundles);
 
         return new(bundles);
     }
@@ -48,9 +46,18 @@ internal static class Convertor
         return new(spiffeId, certificates, svid.Hint);
     }
 
-    public static X509Bundle ToBundleModel(TrustDomain td, X509SVID svid)
+    public static X509Bundle ParseBundle(TrustDomain td, ByteString bundle)
     {
-        X509Certificate2Collection authorities = Crypto.ParseCertificates(svid.Bundle.Span);
+        X509Certificate2Collection authorities = Crypto.ParseCertificates(bundle.Span);
         return new X509Bundle(td, authorities);
+    }
+
+    private static void ParseBundles(MapField<string, ByteString> src, Dictionary<TrustDomain, X509Bundle> dest)
+    {
+        foreach (KeyValuePair<string, ByteString> bundle in src)
+        {
+            TrustDomain td = TrustDomain.FromString(bundle.Key);
+            dest[td] = ParseBundle(td, bundle.Value);
+        }
     }
 }
