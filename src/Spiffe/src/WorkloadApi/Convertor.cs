@@ -26,7 +26,7 @@ internal static class Convertor
         return new(svids, new X509BundleSet(bundles));
     }
 
-    public static X509BundleSet ToX509BundleSet(X509BundlesResponse response)
+    public static X509BundleSet ParseX509BundleSet(X509BundlesResponse response)
     {
         Dictionary<TrustDomain, X509Bundle> bundles = [];
         foreach (KeyValuePair<string, ByteString> bundle in response.Bundles)

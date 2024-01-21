@@ -1,4 +1,4 @@
-namespace Spiffe.WorkloadApi;
+﻿namespace Spiffe.WorkloadApi;
 
 internal class Backoff
 {
@@ -21,7 +21,7 @@ internal class Backoff
     public TimeSpan Duration()
     {
         int backoff = _n + 1;
-        double d = Math.Min(1.0f * InitialDelay.TotalSeconds * backoff, 1.0 * MaxDelay.TotalSeconds);
+        int d = (int)Math.Min(InitialDelay.TotalSeconds * backoff, MaxDelay.TotalSeconds);
         Interlocked.Increment(ref _n);
         return TimeSpan.FromSeconds(d);
     }

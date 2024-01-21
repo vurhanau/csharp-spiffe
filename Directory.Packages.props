@@ -5,6 +5,8 @@
         <GoogleProtobufVersion>3.25.1</GoogleProtobufVersion>
         <GrpcNetClientVersion>2.59.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
+        <LoggingVersion>8.0.0</LoggingVersion>
+        <ConfigurationVersion>8.0.0</ConfigurationVersion>
         <TestSdkVersion>17.6.0</TestSdkVersion>
         <XunitVersion>2.4.2</XunitVersion>
         <XunitRunnerVersion>2.4.5</XunitRunnerVersion>
@@ -22,6 +24,10 @@
         <PackageVersion Include="Grpc.Tools" Version="$(GrpcToolsVersion)" />
 
         <!-- Spiffe.Client -->
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(LoggingVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(LoggingVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="$(LoggingVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(ConfigurationVersion)" />
         <PackageVersion Include="CommandLineParser" Version="$(CommandLineParserVersion)" />
 
         <!-- Spiffe.Tests -->

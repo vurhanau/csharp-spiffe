@@ -1,4 +1,4 @@
-using Spiffe.Bundle.X509;
+﻿using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
 
@@ -10,7 +10,7 @@ namespace Spiffe.WorkloadApi;
 public interface IX509Source : IDisposable
 {
     /// <summary>
-    /// Gets a default SVID.
+    /// Gets current SVID.
     /// </summary>
     X509Svid GetX509Svid();
 

@@ -1,8 +1,10 @@
-﻿using Grpc.Core;
+﻿using System.Runtime.InteropServices.Marshalling;
+using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Spiffe.Bundle.X509;
+using Spiffe.Util;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
 namespace Spiffe.WorkloadApi;
@@ -34,13 +36,13 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <summary>
     /// Creates a new Workload API client.
     /// </summary>
-    public static IWorkloadApiClient Create(GrpcChannel channel)
+    public static IWorkloadApiClient Create(GrpcChannel channel, ILogger? logger = null)
     {
         _ = channel ?? throw new ArgumentNullException(nameof(channel));
 
         SpiffeWorkloadAPIClient client = new(channel);
         Action<CallOptions> configureCall = _ => { };
-        ILogger logger = NullLogger.Instance;
+        logger ??= NullLogger.Instance;
 
         return new WorkloadApiClient(client, configureCall, logger);
     }
@@ -55,8 +57,10 @@ public class WorkloadApiClient : IWorkloadApiClient
     }
 
     /// <inheritdoc/>
-    public async Task WatchX509ContextAsync(IX509ContextWatcher watcher, CancellationToken cancellationToken = default)
+    public async Task WatchX509ContextAsync(IWatcher<X509Context> watcher, CancellationToken cancellationToken = default)
     {
+        _logger.LogTrace("Start watching X509 context");
+
         Backoff backoff = new();
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -66,7 +70,10 @@ public class WorkloadApiClient : IWorkloadApiClient
             }
             catch (Exception e)
             {
-                watcher.OnX509ContextWatchError(e);
+                _logger.LogDebug("Watch X509 context error: {}", e);
+
+                watcher.OnError(e);
+
                 bool rethrow = await HandleWatchError(e, backoff, cancellationToken);
                 if (rethrow)
                 {
@@ -74,6 +81,8 @@ public class WorkloadApiClient : IWorkloadApiClient
                 }
             }
         }
+
+        _logger.LogTrace("Stopped watching X509 context");
     }
 
     /// <inheritdoc/>
@@ -81,7 +90,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         return await FetchAsync(
             opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
-            Convertor.ToX509BundleSet,
+            Convertor.ParseX509BundleSet,
             cancellationToken);
     }
 
@@ -90,7 +99,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         await WatchAsync(
             opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
-            Convertor.ToX509BundleSet,
+            Convertor.ParseX509BundleSet,
             watcher,
             cancellationToken);
     }
@@ -143,7 +152,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         return options;
     }
 
-    private async Task WatchX509ContextInternal(IX509ContextWatcher watcher, Backoff backoff, CancellationToken cancellationToken)
+    private async Task WatchX509ContextInternal(IWatcher<X509Context> watcher, Backoff backoff, CancellationToken cancellationToken)
     {
         CallOptions callOptions = GetCallOptions(cancellationToken);
 
@@ -155,13 +164,24 @@ public class WorkloadApiClient : IWorkloadApiClient
             try
             {
                 backoff.Reset();
+                if (_logger.IsEnabled(LogLevel.Trace))
+                {
+                    _logger.LogTrace("X509 SVID response: {}", Strings.ToString(response));
+                }
+
                 X509Context x509Context = Convertor.ParseX509Context(response);
-                watcher.OnX509ContextUpdate(x509Context);
+                if (_logger.IsEnabled(LogLevel.Trace))
+                {
+                    _logger.LogTrace("X509 SVID response: {}", Strings.ToString(x509Context, true));
+                }
+
+                watcher.OnUpdate(x509Context);
+                _logger.LogDebug("Context updated");
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, "Failed to parse X509-SVID response");
-                watcher.OnX509ContextWatchError(e);
+                _logger.LogWarning(e, "Failed to process X509-SVID response");
+                watcher.OnError(e);
             }
         }
     }
@@ -178,6 +198,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             StatusCode code = rpcException.StatusCode;
             if (code == StatusCode.Cancelled)
             {
+                _logger.LogDebug("Status code 'cancelled' - no backoff, rethrow");
                 return true;
             }
 
@@ -188,6 +209,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             }
         }
 
+        // TODO: fix retries
         _logger.LogWarning(e, "Failed to watch the Workload API");
         TimeSpan retryAfter = backoff.Duration();
         _logger.LogDebug("Retrying watch in {} seconds", retryAfter.TotalSeconds);

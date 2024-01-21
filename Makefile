@@ -32,6 +32,9 @@ x509: restore
 bundle: restore
 	$(RUN) bundle $(AGENT_SOCKET)
 
+watch: restore
+	$(RUN) watch $(AGENT_SOCKET)
+
 test: restore
 	@dotnet test
 
