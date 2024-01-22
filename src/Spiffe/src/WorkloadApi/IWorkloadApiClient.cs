@@ -35,5 +35,5 @@ public interface IWorkloadApiClient
     /// updates immediately after the Stream is ready and doesn't have to wait until the Workload API dispatches
     /// the next update.
     /// </summary>
-    Task WatchX509BundlesAsync(Action<X509BundleSet, CancellationToken> watcher, CancellationToken cancellationToken = default);
+    Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default);
 }

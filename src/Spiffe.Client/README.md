@@ -1,15 +1,18 @@
 CSharp implementation of [java-spiffe-helper](https://github.com/spiffe/java-spiffe/tree/main/java-spiffe-helper).
 
 ## Usage
-1. Install, build, run Spire ([quickstart](https://spiffe.io/docs/latest/try/getting-started-linux-macos-x/)).
-2. Run this command to get an SVID:
+Install, build, run Spire ([quickstart](https://spiffe.io/docs/latest/try/getting-started-linux-macos-x/)).
+
+Commands:
+- Fetch X509 SVID
     ```
-    dotnet run --address /tmp/spire-agent/public/api.sock
+    dotnet run x509svid --address <agent-socket-path>
     ```
-    Expected output:
+- Fetch X509 Bundles
     ```
-    Options: {
-        "Address": "/tmp/spire-agent/public/api.sock"
-    }
-    Spiffe ID: spiffe://example.org/myservice
+    dotnet run x509bundle --address <agent-socket-path>
+    ```
+- Watch X509 SVID update stream
+    ```
+    dotnet run x509watch --address <agent-socket-path>
     ```

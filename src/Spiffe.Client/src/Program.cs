@@ -19,7 +19,7 @@ using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
 });
 
 ILogger logger = loggerFactory.CreateLogger("SPIFFE");
-ParserResult<object> parserResult = Parser.Default.ParseArguments<X509Command, BundleCommand, WatchCommand>(args);
+ParserResult<object> parserResult = Parser.Default.ParseArguments<X509Command, X509BundleCommand, WatchCommand>(args);
 if (parserResult.Errors.Any())
 {
     string err = string.Join(", ", parserResult.Errors);
@@ -55,7 +55,7 @@ if (opts is X509Command)
     X509Context x509Context = await client.FetchX509ContextAsync();
     logger.LogInformation("X509 context:\n{}", Strings.ToString(x509Context));
 }
-else if (opts is BundleCommand)
+else if (opts is X509BundleCommand)
 {
     X509BundleSet x509Bundles = await client.FetchX509BundlesAsync();
     logger.LogInformation("X509 bundle:\n{}", Strings.ToString(x509Bundles));

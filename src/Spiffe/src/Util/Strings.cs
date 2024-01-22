@@ -113,9 +113,9 @@ public static class Strings
         return sb.ToString();
     }
 
-    internal static string ToString(X509SVIDResponse x509SVIDResponse)
+    internal static string ToString(IMessage proto)
     {
-        return s_protoJson.Format(x509SVIDResponse);
+        return s_protoJson.Format(proto);
     }
 
     private static string? GetKeyUsage(X509Certificate2? certificate)

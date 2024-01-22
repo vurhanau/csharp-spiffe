@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using Google.Protobuf;
+using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -49,7 +50,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task<X509Context> FetchX509ContextAsync(CancellationToken cancellationToken = default)
     {
-        return await FetchAsync(
+        return await FetchX509(
             opts => _client.FetchX509SVID(X509SvidRequest, opts),
             Convertor.ParseX509Context,
             cancellationToken);
@@ -58,54 +59,27 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task WatchX509ContextAsync(IWatcher<X509Context> watcher, CancellationToken cancellationToken = default)
     {
-        _logger.LogTrace("Start watching X509 context");
-
-        Backoff backoff = Backoff.Create();
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                await WatchX509ContextInternal(watcher, backoff, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogDebug("Watch X509 context error: {}", e);
-
-                watcher.OnError(e);
-
-                bool rethrow = await HandleWatchError(e, backoff, cancellationToken);
-                if (rethrow)
-                {
-                    throw;
-                }
-            }
-        }
-
-        _logger.LogTrace("Stopped watching X509 context");
+        await WatchX509(watcher, WatchX509ContextInternal, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default)
     {
-        return await FetchAsync(
+        return await FetchX509(
             opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
             Convertor.ParseX509BundleSet,
             cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task WatchX509BundlesAsync(Action<X509BundleSet, CancellationToken> watcher, CancellationToken cancellationToken = default)
+    public async Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default)
     {
-        await WatchAsync(
-            opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
-            Convertor.ParseX509BundleSet,
-            watcher,
-            cancellationToken);
+        await WatchX509(watcher, WatchX509BundlesInternal, cancellationToken);
     }
 
-    private async Task<TResult> FetchAsync<TFrom, TResult>(Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
-                                                           Func<TFrom, TResult> mapperFunc,
-                                                           CancellationToken cancellationToken)
+    private async Task<TResult> FetchX509<TFrom, TResult>(Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
+                                                          Func<TFrom, TResult> mapperFunc,
+                                                          CancellationToken cancellationToken)
     {
         CallOptions callOptions = GetCallOptions(cancellationToken);
         using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
@@ -127,62 +101,104 @@ public class WorkloadApiClient : IWorkloadApiClient
         }
     }
 
-    private async Task WatchAsync<TFrom, TResult>(Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
-                                                  Func<TFrom, TResult> mapperFunc,
-                                                  Action<TResult, CancellationToken> watcher,
-                                                  CancellationToken cancellationToken)
+    private async Task WatchX509ContextInternal(IWatcher<X509Context> watcher,
+                                                Backoff backoff,
+                                                CancellationToken cancellationToken)
     {
-        CallOptions callOptions = GetCallOptions(cancellationToken);
-        using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
-        IAsyncEnumerable<TFrom> stream = call.ResponseStream.ReadAllAsync(cancellationToken);
-        await foreach (TFrom response in stream)
+        await WatchX509Internal<X509SVIDResponse, X509Context>(
+            watcher,
+            opts => _client.FetchX509SVID(X509SvidRequest, opts),
+            Convertor.ParseX509Context,
+            Strings.ToString,
+            backoff,
+            cancellationToken);
+    }
+
+    private async Task WatchX509BundlesInternal(IWatcher<X509BundleSet> watcher,
+                                                Backoff backoff,
+                                                CancellationToken cancellationToken)
+    {
+        await WatchX509Internal<X509BundlesResponse, X509BundleSet>(
+            watcher,
+            opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
+            Convertor.ParseX509BundleSet,
+            Strings.ToString,
+            backoff,
+            cancellationToken);
+    }
+
+    private async Task WatchX509<T>(IWatcher<T> watcher,
+                                    Func<IWatcher<T>, Backoff, CancellationToken, Task> watchInternalFunc,
+                                    CancellationToken cancellationToken)
+    {
+        string ty = typeof(T).Name;
+        _logger.LogTrace("Start watching {}", ty);
+
+        Backoff backoff = Backoff.Create();
+        while (!cancellationToken.IsCancellationRequested)
         {
-            TResult item = mapperFunc(response);
-            watcher?.Invoke(item, cancellationToken);
+            try
+            {
+                await watchInternalFunc(watcher, backoff, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogDebug("Watch {ty} error: {}", ty, e);
+
+                watcher.OnError(e);
+
+                bool rethrow = await HandleWatchError(e, backoff, cancellationToken);
+                if (rethrow)
+                {
+                    throw;
+                }
+            }
         }
+
+        _logger.LogTrace("Stopped watching {}", ty);
     }
 
-    private CallOptions GetCallOptions(CancellationToken cancellationToken)
+    private async Task WatchX509Internal<TFrom, TResult>(IWatcher<TResult> watcher,
+                                                         Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
+                                                         Func<TFrom, TResult> parserFunc,
+                                                         Func<TResult, bool, string> stringFunc,
+                                                         Backoff backoff,
+                                                         CancellationToken cancellationToken)
+                                                         where TFrom : IMessage
     {
-        CallOptions options = new(headers: [new(SpiffeHeader.Key, SpiffeHeader.Value)],
-                                  cancellationToken: cancellationToken);
-        _configureCall?.Invoke(options);
+        string fty = typeof(TFrom).Name;
+        string rty = typeof(TResult).Name;
 
-        return options;
-    }
-
-    private async Task WatchX509ContextInternal(IWatcher<X509Context> watcher, Backoff backoff, CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Watching X509 contexts");
+        _logger.LogDebug("Watching {}", fty);
 
         CallOptions callOptions = GetCallOptions(cancellationToken);
         try
         {
-            using AsyncServerStreamingCall<X509SVIDResponse> call = _client.FetchX509SVID(X509SvidRequest, callOptions);
-            IAsyncEnumerable<X509SVIDResponse> stream = call.ResponseStream.ReadAllAsync(cancellationToken);
-            await foreach (X509SVIDResponse response in stream)
+            using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
+            IAsyncEnumerable<TFrom> stream = call.ResponseStream.ReadAllAsync(cancellationToken);
+            await foreach (TFrom response in stream)
             {
                 backoff.Reset();
                 _logger.LogDebug("Backoff reset");
 
                 if (_logger.IsEnabled(LogLevel.Trace))
                 {
-                    _logger.LogTrace("X509 SVID response: {}", Strings.ToString(response));
+                    _logger.LogTrace("{} response: {}", fty, Strings.ToString(response));
                 }
 
-                X509Context x509Context = Convertor.ParseX509Context(response);
+                TResult parsed = parserFunc(response);
                 if (_logger.IsEnabled(LogLevel.Trace))
                 {
-                    _logger.LogTrace("X509 SVID response: {}", Strings.ToString(x509Context, true));
+                    _logger.LogTrace("{} parsed response: {}", rty, stringFunc(parsed, true));
                 }
 
-                watcher.OnUpdate(x509Context);
-                _logger.LogDebug("Context updated");
+                watcher.OnUpdate(parsed);
+                _logger.LogDebug("{} updated", rty);
             }
         }
         catch (Exception e)
         {
-            _logger.LogTrace(e, "Failed to process X509-SVID response");
+            _logger.LogTrace(e, "Failed to process {} response", fty);
             watcher.OnError(e);
             throw;
         }
@@ -219,5 +235,14 @@ public class WorkloadApiClient : IWorkloadApiClient
         cancellationToken.ThrowIfCancellationRequested();
 
         return false;
+    }
+
+    private CallOptions GetCallOptions(CancellationToken cancellationToken)
+    {
+        CallOptions options = new(headers: [new(SpiffeHeader.Key, SpiffeHeader.Value)],
+                                  cancellationToken: cancellationToken);
+        _configureCall?.Invoke(options);
+
+        return options;
     }
 }
