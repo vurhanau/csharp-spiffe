@@ -1,5 +1,4 @@
-﻿#pragma warning disable SA1402 // File may only contain a single type
-using CommandLine;
+﻿using CommandLine;
 
 namespace Spiffe.Client;
 
@@ -23,4 +22,3 @@ internal class X509BundleCommand : Options
 internal class WatchCommand : Options
 {
 }
-#pragma warning restore SA1402 // File may only contain a single type
