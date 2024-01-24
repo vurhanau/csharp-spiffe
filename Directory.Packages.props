@@ -11,7 +11,7 @@
         <CoverletVersion>6.0.0</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>9.16.0.82469</SonarVersion>
+        <SonarVersion>9.17.0.82934</SonarVersion>
     </PropertyGroup>
 
     <ItemGroup>
