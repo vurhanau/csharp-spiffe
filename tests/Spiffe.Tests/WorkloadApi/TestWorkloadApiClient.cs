@@ -15,45 +15,71 @@ namespace Spiffe.Test.WorkloadApi;
 
 public class TestWorkloadApiClient
 {
-    private static readonly string TrustDomainString = "example.org";
-
-    private static readonly TrustDomain TrustDomain = TrustDomain.FromString(TrustDomainString);
-
-    private static readonly string WorkloadSpiffeId = $"spiffe://${TrustDomainString}/myworkload";
-
-    private static readonly byte[] s_bundleCertBytes =
-        CertLoader.FromPemFile(Path.Join("TestData", "good-leaf-only.pem")).RawData;
-
-    private static readonly ByteString s_bundleCertBytesString = ByteString.CopyFrom(s_bundleCertBytes);
-
-    private static readonly X509Certificate2 s_workloadCert = CertLoader.FromPemFile(Path.Join("TestData", "good-cert-and-key.pem"));
+    private static readonly TrustDomain TrustDomain = TrustDomain.FromString("example.org");
 
     [Fact]
     public async Task TestFetchX509Bundles()
     {
+        using X509Certificate2 cert = CertLoader.FirstFromPemFile("TestData/good-leaf-only.pem");
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         var resp = new X509BundlesResponse();
-        resp.Bundles.Add(TrustDomain.Name, s_bundleCertBytesString);
+        resp.Bundles.Add(TrustDomain.Name, ByteString.CopyFrom(cert.RawData));
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
                       .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         var b = await c.FetchX509BundlesAsync();
-        VerifyX509BundleSet(b);
+        VerifyX509BundleSet(b, cert.RawData);
     }
 
-    // [Fact] TODO: fix
+    // [Fact]
+    // public async Task TestWatchX509Bundles()
+    // {
+    //     using X509Certificate2 first = CertLoader.FirstFromPemFile("TestData/good-leaf-only.pem");
+    //     using X509Certificate2 second = CertLoader.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
+    //     static X509BundlesResponse Resp(X509Certificate2 cert)
+    //     {
+    //         var r = new X509BundlesResponse();
+    //         r.Bundles.Add(TrustDomain.Name, ByteString.CopyFrom(cert.RawData));
+    //         return r;
+    //     }
+
+    //     var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+    //     mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
+    //                   .Returns(CallHelpers.CreateAsyncServerStreamingCall(
+    //                                             Resp(first),
+    //                                             Resp(second)));
+
+    //     var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+    //     var watcher = new Mock<IWatcher<X509BundleSet>>();
+    //     watcher
+    //         .Setup(w => w.OnUpdate(It.IsAny<X509BundleSet>()))
+    //         .Verifiable();
+
+    //     using CancellationTokenSource cts = new();
+    //     await c.WatchX509BundlesAsync(watcher.Object, cts.Token);
+
+    //     watcher.Verify(w => w.OnUpdate(It.IsAny<X509BundleSet>()), Times.Exactly(2));
+    //     cts.Cancel();
+    // }
+
+    [Fact]
     public async Task TestFetchX509Svids()
     {
+        using X509Certificate2 bundleCert = CertLoader.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
+        using X509Certificate2 cert = X509Certificate2.CreateFromPemFile(
+            "TestData/good-leaf-only.pem",
+            "TestData/key-pkcs8-rsa.pem");
+        byte[] key = cert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
+
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         var resp = new X509SVIDResponse();
         var svid = new X509SVID
         {
-            Bundle = s_bundleCertBytesString,
-            SpiffeId = WorkloadSpiffeId,
-            X509Svid = ByteString.CopyFrom(s_workloadCert.GetPublicKey()),
-            // TODO: fix NPE
-            X509SvidKey = ByteString.CopyFrom(s_workloadCert.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey()),
+            Bundle = ByteString.CopyFrom(bundleCert.RawData),
+            SpiffeId = "spiffe://example.org/myworkload",
+            X509Svid = ByteString.CopyFrom(cert.RawData),
+            X509SvidKey = ByteString.CopyFrom(key),
         };
         resp.Svids.Add(svid);
 
@@ -62,21 +88,22 @@ public class TestWorkloadApiClient
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         var r = await c.FetchX509ContextAsync();
-        VerifyX509BundleSet(r.X509Bundles);
+        VerifyX509BundleSet(r.X509Bundles, bundleCert.RawData);
 
         r.X509Svids.Should().ContainSingle();
         X509Certificate2Collection certs = r.X509Svids[0].Certificates;
         certs.Should().ContainSingle();
-        certs[0].RawData.Should().Equal(s_workloadCert.RawData);
+        certs[0].RawData.Should().Equal(cert.RawData);
+        certs[0].GetRSAPrivateKey()?.ExportPkcs8PrivateKey().Should().Equal(key);
     }
 
-    private static void VerifyX509BundleSet(X509BundleSet s)
+    private static void VerifyX509BundleSet(X509BundleSet s, byte[] expectedBundle)
     {
         s.Bundles.Should().ContainSingle();
         s.Bundles.Should().ContainKey(TrustDomain);
         var bundle = s.GetBundleForTrustDomain(TrustDomain);
         bundle.TrustDomain.Should().Be(TrustDomain);
         bundle.X509Authorities.Should().ContainSingle();
-        bundle.X509Authorities[0].RawData.Should().Equal(s_bundleCertBytes);
+        bundle.X509Authorities[0].RawData.Should().Equal(expectedBundle);
     }
 }

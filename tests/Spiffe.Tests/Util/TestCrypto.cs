@@ -15,7 +15,7 @@ public class TestCrypto
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         byte[] rsaPrivateKey = expected.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
-        using X509Certificate2 tmp = FromPemFile(certPath);
+        using X509Certificate2 tmp = FirstFromPemFile(certPath);
         using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, rsaPrivateKey.AsSpan());
 
         expected.RawData.Should().Equal(actual.RawData);
@@ -29,7 +29,7 @@ public class TestCrypto
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         byte[] ecdsaPrivateKey = expected.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey();
-        using X509Certificate2 tmp = FromPemFile(certPath);
+        using X509Certificate2 tmp = FirstFromPemFile(certPath);
         using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, ecdsaPrivateKey.AsSpan());
 
         expected.RawData.Should().Equal(actual.RawData);
@@ -40,7 +40,7 @@ public class TestCrypto
     {
         string certPath = "TestData/good-leaf-only.pem";
 
-        using X509Certificate2 cert = FromPemFile(certPath);
+        using X509Certificate2 cert = FirstFromPemFile(certPath);
         byte[] invalidPrivateKey = "not-DER-encoded"u8.ToArray();
         Action a = () => Crypto.GetCertificateWithPrivateKey(cert, invalidPrivateKey.AsSpan());
         a.Should().Throw<Exception>();
