@@ -61,9 +61,9 @@
       },
       "xunit.runner.visualstudio": {
         "type": "Direct",
-        "requested": "[2.4.5, )",
-        "resolved": "2.4.5",
-        "contentHash": "OwHamvBdUKgqsXfBzWiCW/O98BTx81UKzx2bieIOQI7CZFE5NEQZGi8PBQGIKawDW96xeRffiNf20SjfC0x9hw=="
+        "requested": "[2.5.6, )",
+        "resolved": "2.5.6",
+        "contentHash": "CW6uhMXNaQQNMSG1IWhHkBT+V5eqHqn7MP0zfNMhU9wS/sgKX7FGL3rzoaUgt26wkY3bpf7pDVw3IjXhwfiP4w=="
       },
       "Grpc.Core.Api": {
         "type": "Transitive",
