@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <GoogleProtobufVersion>3.25.1</GoogleProtobufVersion>
+        <GoogleProtobufVersion>3.25.2</GoogleProtobufVersion>
         <GrpcNetClientVersion>2.60.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
         <TestSdkVersion>17.6.0</TestSdkVersion>
