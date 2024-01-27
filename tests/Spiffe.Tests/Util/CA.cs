@@ -55,41 +55,11 @@ internal static class CA
 
         if (parent != null)
         {
-            // set the AuthorityKeyIdentifier. There is no built-in
-            // support, so it needs to be copied from the Subject Key
-            // Identifier of the signing certificate and massaged slightly.
-            // AuthorityKeyIdentifier is "KeyID=<subject key identifier>"
-            byte[] issuerSubjectKey = parent.Extensions["Subject Key Identifier"]!.RawData;
-            ArraySegment<byte> segment = new(issuerSubjectKey, 2, issuerSubjectKey.Length - 2);
-            byte[] authorityKeyIdentifier = new byte[segment.Count + 4];
-
-            // these bytes define the "KeyID" part of the AuthorityKeyIdentifer
-            authorityKeyIdentifier[0] = 0x30;
-            authorityKeyIdentifier[1] = 0x16;
-            authorityKeyIdentifier[2] = 0x80;
-            authorityKeyIdentifier[3] = 0x14;
-            segment.CopyTo(authorityKeyIdentifier, 4);
-            csr.CertificateExtensions.Add(new X509Extension("2.5.29.35", authorityKeyIdentifier, false));
+            X509Extension authorityKeyIdentifier = GetAuthorityKeyIdentifier(parent);
+            csr.CertificateExtensions.Add(authorityKeyIdentifier);
         }
 
-        // Create certs with SAN name in addition to the subject name
-        // SubjectAlternativeNameBuilder sanBuilder = new();
-        // sanBuilder.AddDnsName(subjectName);
-        // X509Extension sanExtension = sanBuilder.Build();
-        // csr.CertificateExtensions.Add(sanExtension);
-
-        // Enhanced key usages
-        // csr.CertificateExtensions.Add(
-        //     new X509EnhancedKeyUsageExtension(
-        //         [
-        //             new Oid("1.3.6.1.5.5.7.3.2"), // TLS Client auth
-        //             new Oid("1.3.6.1.5.5.7.3.1"), // TLS Server auth
-        //         ],
-        //         false));
-
-        // add this subject key identifier
-        csr.CertificateExtensions.Add(
-            new X509SubjectKeyIdentifierExtension(csr.PublicKey, false));
+        csr.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(csr.PublicKey, false));
 
         DateTimeOffset notBefore = DateTimeOffset.UtcNow;
         DateTimeOffset notAfter = DateTimeOffset.UtcNow.AddHours(1);
@@ -131,26 +101,10 @@ internal static class CA
                 keyUsages: keyUsageFlags,
                 critical: true));
 
-        // set the AuthorityKeyIdentifier. There is no built-in
-        // support, so it needs to be copied from the Subject Key
-        // Identifier of the signing certificate and massaged slightly.
-        // AuthorityKeyIdentifier is "KeyID=<subject key identifier>"
-        byte[] issuerSubjectKey = parent.Extensions["X509v3 Subject Key Identifier"]!.RawData;
-        ArraySegment<byte> segment = new(issuerSubjectKey, 2, issuerSubjectKey.Length - 2);
-        byte[] authorityKeyIdentifer = new byte[segment.Count + 4];
+        X509Extension authorityKeyIdentifier = GetAuthorityKeyIdentifier(parent);
+        request.CertificateExtensions.Add(authorityKeyIdentifier);
 
-        // these bytes define the "KeyID" part of the AuthorityKeyIdentifer
-        authorityKeyIdentifer[0] = 0x30;
-        authorityKeyIdentifer[1] = 0x16;
-        authorityKeyIdentifer[2] = 0x80;
-        authorityKeyIdentifer[3] = 0x14;
-        segment.CopyTo(authorityKeyIdentifer, 4);
-        request.CertificateExtensions.Add(new X509Extension(
-            oid: "2.5.29.35",
-            rawData: authorityKeyIdentifer,
-            critical: false));
-
-        // Create certs with a SAN name in addition to the subject name
+        // create certs with a SAN name in addition to the subject name
         if (options?.SubjectAlternateName != null)
         {
             SubjectAlternativeNameBuilder sanBuilder = new();
@@ -189,5 +143,26 @@ internal static class CA
             KeyUsage = X509KeyUsageFlags.DigitalSignature,
             SubjectAlternateName = id.ToUri(),
         });
+    }
+
+    internal static X509Extension GetAuthorityKeyIdentifier(X509Certificate2 cert)
+    {
+        // There is no built-in support, so it needs to be copied from the
+        // Subject Key Identifier of the signing certificate.
+        // AuthorityKeyIdentifier is "KeyID=<subject key identifier>"
+        byte[] issuerSubjectKey = cert.Extensions["X509v3 Subject Key Identifier"]!.RawData;
+        ArraySegment<byte> segment = new(issuerSubjectKey, 2, issuerSubjectKey.Length - 2);
+        byte[] authorityKeyIdentifer = new byte[segment.Count + 4];
+
+        // these bytes define the "KeyID" part of the AuthorityKeyIdentifer
+        authorityKeyIdentifer[0] = 0x30;
+        authorityKeyIdentifer[1] = 0x16;
+        authorityKeyIdentifer[2] = 0x80;
+        authorityKeyIdentifer[3] = 0x14;
+        segment.CopyTo(authorityKeyIdentifer, 4);
+        return new X509Extension(
+            oid: "2.5.29.35",
+            rawData: authorityKeyIdentifer,
+            critical: false);
     }
 }
