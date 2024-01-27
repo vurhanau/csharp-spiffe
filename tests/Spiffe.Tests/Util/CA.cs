@@ -19,7 +19,7 @@ internal class CertificateCreationOptions
     public Uri? SubjectAlternateName { get; set; }
 }
 
-internal class CA
+internal static class CA
 {
     internal static ECDsa CreateEC256Key()
     {
