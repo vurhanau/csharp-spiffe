@@ -7,14 +7,6 @@ namespace Spiffe.Tests.Util;
 
 public class TestCrypto
 {
-    // [Fact]
-    // public void TestCA()
-    // {
-    //     var c = CA.CreateSigningCertificate();
-    //     var xc = CA.CreateX509Certificate(c);
-    //     var xs = CA.CreateX509Svid(c, SpiffeId.FromString("spiffe://example.org/mywld"));
-    // }
-
     [Fact]
     public void TestGetCertificateWithRsaPrivateKey()
     {
