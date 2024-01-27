@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
+using Spiffe.Id;
 using Spiffe.Util;
 
 namespace Spiffe.Tests.Util;
