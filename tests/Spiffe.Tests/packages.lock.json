@@ -146,6 +146,11 @@
           "System.Security.Cryptography.ProtectedData": "4.4.0"
         }
       },
+      "System.Diagnostics.EventLog": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "lcyUiXTsETK2ALsZrX+nWuHSIQeazhqPphLfaRxzdGaG93+0kELqpgEHtwWOlQe7+jSFnKwaCAgL4kjeZCQJnw=="
+      },
       "System.Reflection.Metadata": {
         "type": "Transitive",
         "resolved": "1.6.0",
