@@ -18,6 +18,8 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private readonly ILogger _logger;
 
+    private readonly Func<Backoff> _backoffFunc;
+
     private static readonly (string Key, string Value) SpiffeHeader = ("workload.spiffe.io", "true");
 
     private static readonly X509SVIDRequest X509SvidRequest = new();
@@ -26,11 +28,13 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     internal WorkloadApiClient(SpiffeWorkloadAPIClient client,
                                Action<CallOptions> configureCall,
-                               ILogger logger)
+                               ILogger logger,
+                               Func<Backoff>? backoffFunc = null)
     {
         _client = client;
         _configureCall = configureCall;
         _logger = logger;
+        _backoffFunc = backoffFunc ?? Backoff.Create;
     }
 
     /// <summary>
@@ -134,7 +138,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         string ty = typeof(T).Name;
         _logger.LogTrace("Start watching {}", ty);
 
-        Backoff backoff = Backoff.Create();
+        Backoff backoff = _backoffFunc();
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -172,35 +176,26 @@ public class WorkloadApiClient : IWorkloadApiClient
         _logger.LogDebug("Watching {}", fty);
 
         CallOptions callOptions = GetCallOptions(cancellationToken);
-        try
+        using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
+        IAsyncEnumerable<TFrom> stream = call.ResponseStream.ReadAllAsync(cancellationToken);
+        await foreach (TFrom response in stream)
         {
-            using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
-            IAsyncEnumerable<TFrom> stream = call.ResponseStream.ReadAllAsync(cancellationToken);
-            await foreach (TFrom response in stream)
+            backoff.Reset();
+            _logger.LogDebug("Backoff reset");
+
+            if (_logger.IsEnabled(LogLevel.Trace))
             {
-                backoff.Reset();
-                _logger.LogDebug("Backoff reset");
-
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    _logger.LogTrace("{} response: {}", fty, Strings.ToString(response));
-                }
-
-                TResult parsed = parserFunc(response);
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    _logger.LogTrace("{} parsed response: {}", rty, stringFunc(parsed, true));
-                }
-
-                watcher.OnUpdate(parsed);
-                _logger.LogDebug("{} updated", rty);
+                _logger.LogTrace("{} response: {}", fty, Strings.ToString(response));
             }
-        }
-        catch (Exception e)
-        {
-            _logger.LogTrace(e, "Failed to process {} response", fty);
-            watcher.OnError(e);
-            throw;
+
+            TResult parsed = parserFunc(response);
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace("{} parsed response: {}", rty, stringFunc(parsed, true));
+            }
+
+            watcher.OnUpdate(parsed);
+            _logger.LogDebug("{} updated", rty);
         }
     }
 
@@ -230,9 +225,14 @@ public class WorkloadApiClient : IWorkloadApiClient
         TimeSpan retryAfter = backoff.Duration();
         _logger.LogWarning(e, "Failed to watch the Workload API, retrying in {} seconds", retryAfter.TotalSeconds);
 
-        await Task.Delay(retryAfter, cancellationToken);
-
-        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            await Task.Delay(retryAfter, cancellationToken);
+        }
+        catch (OperationCanceledException oce)
+        {
+            _logger.LogDebug(oce, "Retry backoff watch cancelled");
+        }
 
         return false;
     }

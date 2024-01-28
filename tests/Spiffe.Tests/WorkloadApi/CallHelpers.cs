@@ -19,9 +19,16 @@ internal class TestAsyncStreamReader<T> : IAsyncStreamReader<T>
 
 internal class TestErrorAsyncStreamReader<T> : IAsyncStreamReader<T>
 {
-    public T Current => throw new Exception("Oops!");
+    private readonly Exception _e;
 
-    public Task<bool> MoveNext(CancellationToken cancellationToken) => throw new Exception("Oops!");
+    public TestErrorAsyncStreamReader(Exception e)
+    {
+        _e = e;
+    }
+
+    public T Current => throw _e;
+
+    public Task<bool> MoveNext(CancellationToken cancellationToken) => throw _e;
 }
 
 internal static class CallHelpers
@@ -36,10 +43,10 @@ internal static class CallHelpers
             () => { });
     }
 
-    public static AsyncServerStreamingCall<TResponse> CreateAsyncServerStreamingErrorCall<TResponse>()
+    public static AsyncServerStreamingCall<TResponse> CreateAsyncServerStreamingErrorCall<TResponse>(Exception e)
     {
         return new AsyncServerStreamingCall<TResponse>(
-            new TestErrorAsyncStreamReader<TResponse>(),
+            new TestErrorAsyncStreamReader<TResponse>(e),
             Task.FromResult(new Metadata()),
             () => Status.DefaultSuccess,
             () => new Metadata(),
