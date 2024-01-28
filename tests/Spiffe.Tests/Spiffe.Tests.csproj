@@ -13,7 +13,6 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Moq" />
-    <!-- <PackageReference Include="Grpc.Core.Testing" /> -->
     <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
