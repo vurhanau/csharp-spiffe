@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Spiffe.WorkloadApi;
 
 namespace Spiffe.Test.WorkloadApi;

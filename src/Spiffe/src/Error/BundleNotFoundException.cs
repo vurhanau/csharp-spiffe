@@ -1,4 +1,4 @@
-namespace Spiffe.Error;
+﻿namespace Spiffe.Error;
 
 /// <summary>
 /// Thrown to indicate that a Bundle could not be found in the Bundle Source.

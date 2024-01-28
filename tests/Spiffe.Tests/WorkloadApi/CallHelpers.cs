@@ -1,4 +1,4 @@
-using Grpc.Core;
+﻿using Grpc.Core;
 
 namespace Spiffe.Tests.WorkloadApi;
 

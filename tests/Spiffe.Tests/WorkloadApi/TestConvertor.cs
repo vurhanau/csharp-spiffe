@@ -1,4 +1,4 @@
-namespace Spiffe.Test.WorkloadApi;
+﻿namespace Spiffe.Test.WorkloadApi;
 
 // TODO: implement
 public class TestConvertor
