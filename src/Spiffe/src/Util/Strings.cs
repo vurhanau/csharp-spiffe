@@ -14,12 +14,12 @@ namespace Spiffe.Util;
 /// </summary>
 public static class Strings
 {
-    private static readonly JsonSerializerOptions s_jsonOpts = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions s_jsonOpts = new()
     {
         WriteIndented = true,
     };
 
-    private static readonly JsonFormatter s_protoJson = new JsonFormatter(JsonFormatter.Settings.Default.WithIndentation());
+    private static readonly JsonFormatter s_protoJson = new(JsonFormatter.Settings.Default.WithIndentation());
 
     /// <summary>
     /// Gets X509 context string representation.
