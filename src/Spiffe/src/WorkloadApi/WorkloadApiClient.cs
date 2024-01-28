@@ -20,11 +20,11 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private readonly Func<Backoff> _backoffFunc;
 
-    private static readonly (string Key, string Value) SpiffeHeader = ("workload.spiffe.io", "true");
+    private static readonly (string Key, string Value) s_spiffeHeader = ("workload.spiffe.io", "true");
 
-    private static readonly X509SVIDRequest X509SvidRequest = new();
+    private static readonly X509SVIDRequest s_x509SvidRequest = new();
 
-    private static readonly X509BundlesRequest X509BundlesRequest = new();
+    private static readonly X509BundlesRequest s_x509BundlesRequest = new();
 
     internal WorkloadApiClient(SpiffeWorkloadAPIClient client,
                                Action<CallOptions> configureCall,
@@ -45,17 +45,16 @@ public class WorkloadApiClient : IWorkloadApiClient
         _ = channel ?? throw new ArgumentNullException(nameof(channel));
 
         SpiffeWorkloadAPIClient client = new(channel);
-        Action<CallOptions> configureCall = _ => { };
         logger ??= NullLogger.Instance;
 
-        return new WorkloadApiClient(client, configureCall, logger);
+        return new WorkloadApiClient(client, NoopConfigurer, logger);
     }
 
     /// <inheritdoc/>
     public async Task<X509Context> FetchX509ContextAsync(CancellationToken cancellationToken = default)
     {
         return await FetchX509(
-            opts => _client.FetchX509SVID(X509SvidRequest, opts),
+            opts => _client.FetchX509SVID(s_x509SvidRequest, opts),
             Convertor.ParseX509Context,
             cancellationToken);
     }
@@ -70,7 +69,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     public async Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default)
     {
         return await FetchX509(
-            opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
+            opts => _client.FetchX509Bundles(s_x509BundlesRequest, opts),
             Convertor.ParseX509BundleSet,
             cancellationToken);
     }
@@ -111,7 +110,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         await WatchX509Internal<X509SVIDResponse, X509Context>(
             watcher,
-            opts => _client.FetchX509SVID(X509SvidRequest, opts),
+            opts => _client.FetchX509SVID(s_x509SvidRequest, opts),
             Convertor.ParseX509Context,
             Strings.ToString,
             backoff,
@@ -124,7 +123,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         await WatchX509Internal<X509BundlesResponse, X509BundleSet>(
             watcher,
-            opts => _client.FetchX509Bundles(X509BundlesRequest, opts),
+            opts => _client.FetchX509Bundles(s_x509BundlesRequest, opts),
             Convertor.ParseX509BundleSet,
             Strings.ToString,
             backoff,
@@ -239,10 +238,15 @@ public class WorkloadApiClient : IWorkloadApiClient
 
     private CallOptions GetCallOptions(CancellationToken cancellationToken)
     {
-        CallOptions options = new(headers: [new(SpiffeHeader.Key, SpiffeHeader.Value)],
+        CallOptions options = new(headers: [new(s_spiffeHeader.Key, s_spiffeHeader.Value)],
                                   cancellationToken: cancellationToken);
-        _configureCall?.Invoke(options);
+        _configureCall.Invoke(options);
 
         return options;
+    }
+
+    private static void NoopConfigurer(CallOptions ignore)
+    {
+        // noop
     }
 }

@@ -26,6 +26,6 @@ public class X509BundleSet(Dictionary<TrustDomain, X509Bundle> bundles)
             throw new BundleNotFoundException(message);
         }
 
-        return bundle!;
+        return bundle;
     }
 }

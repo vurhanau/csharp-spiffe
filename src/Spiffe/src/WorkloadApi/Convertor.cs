@@ -19,20 +19,15 @@ internal static class Convertor
         {
             // In the event of more than one X509SVID message with the same hint value set, then the first message in the
             // list SHOULD be selected.
-            if (!string.IsNullOrEmpty(svid.Hint))
+            if (!string.IsNullOrEmpty(svid.Hint) && !hints.Add(svid.Hint))
             {
-                if (hints.Contains(svid.Hint))
-                {
-                    continue;
-                }
-
-                hints.Add(svid.Hint);
+                continue;
             }
 
             X509Svid model = ParseSvid(svid);
             svids.Add(model);
 
-            TrustDomain td = model.SpiffeId!.TrustDomain!;
+            TrustDomain td = model.SpiffeId.TrustDomain;
             X509Bundle bundle = ParseBundle(td, svid.Bundle);
             bundles.Add(td, bundle);
         }
@@ -50,7 +45,7 @@ internal static class Convertor
         return new(bundles);
     }
 
-    public static X509Svid ParseSvid(X509SVID svid)
+    private static X509Svid ParseSvid(X509SVID svid)
     {
         SpiffeId spiffeId = SpiffeId.FromString(svid.SpiffeId);
         X509Certificate2Collection certificates = Crypto.ParseCertificates(svid.X509Svid.Span);
@@ -59,7 +54,7 @@ internal static class Convertor
         return new(spiffeId, certificates, svid.Hint);
     }
 
-    public static X509Bundle ParseBundle(TrustDomain td, ByteString bundle)
+    private static X509Bundle ParseBundle(TrustDomain td, ByteString bundle)
     {
         X509Certificate2Collection authorities = Crypto.ParseCertificates(bundle.Span);
         return new X509Bundle(td, authorities);
