@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Spiffe.Tests.Util;
@@ -19,24 +18,26 @@ internal static class CertUtil
         return c[0];
     }
 
-    internal static byte[] GetCertBytes(string pemFile)
+    internal static byte[][] GetCertBytes(string pemFile)
     {
-        return FirstFromPemFile(pemFile).RawData;
+        X509Certificate2Collection c = [];
+        c.ImportFromPemFile(pemFile);
+        return c.Select(ci => ci.RawData).ToArray();
     }
 
-    // internal static byte[] GetEcdsaBytesFromPemFile(string pemFile)
-    // {
-    //     using ECDsa ecdsa = ECDsa.Create();
-    //     ecdsa.ImportFromPem(File.ReadAllText(pemFile));
-    //     return ecdsa.ExportPkcs8PrivateKey();
-    // }
+    internal static byte[] GetEcdsaBytesFromPemFile(string pemFile)
+    {
+        using ECDsa ecdsa = ECDsa.Create();
+        ecdsa.ImportFromPem(File.ReadAllText(pemFile));
+        return ecdsa.ExportPkcs8PrivateKey();
+    }
 
-    // internal static byte[] GetRsaBytesFromPemFile(string pemFile)
-    // {
-    //     using RSA rsa = RSA.Create();
-    //     rsa.ImportFromPem(File.ReadAllText(pemFile));
-    //     return rsa.ExportPkcs8PrivateKey();
-    // }
+    internal static byte[] GetRsaBytesFromPemFile(string pemFile)
+    {
+        using RSA rsa = RSA.Create();
+        rsa.ImportFromPem(File.ReadAllText(pemFile));
+        return rsa.ExportPkcs8PrivateKey();
+    }
 
     internal static byte[] Concat(params X509Certificate2[] certs)
     {
