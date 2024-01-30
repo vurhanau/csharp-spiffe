@@ -9,8 +9,8 @@ internal class Watcher<T> : IWatcher<T>
 
     internal Watcher(Action<T> onUpdate, Action<Exception> onError)
     {
-        _onUpdate = onUpdate;
-        _onError = onError;
+        _onUpdate = onUpdate ?? throw new ArgumentNullException(nameof(onUpdate));
+        _onError = onError ?? throw new ArgumentNullException(nameof(onError));
     }
 
     internal Watcher(Action<T> onUpdate)

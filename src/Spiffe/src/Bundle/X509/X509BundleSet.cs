@@ -6,12 +6,20 @@ namespace Spiffe.Bundle.X509;
 /// <summary>
 /// Represents a set of X.509 bundles keyed by trust domain.
 /// </summary>
-public class X509BundleSet(Dictionary<TrustDomain, X509Bundle> bundles)
+public class X509BundleSet
 {
+    /// <summary>
+    /// Contrustor
+    /// </summary>
+    public X509BundleSet(Dictionary<TrustDomain, X509Bundle> bundles)
+    {
+        Bundles = bundles ?? throw new ArgumentNullException(nameof(bundles));
+    }
+
     /// <summary>
     /// Gets a trust domain to X.509 bundle mapping.
     /// </summary>
-    public Dictionary<TrustDomain, X509Bundle> Bundles { get; } = bundles;
+    public Dictionary<TrustDomain, X509Bundle> Bundles { get; }
 
     /// <summary>
     /// Gets a bundle associated with the trust domain.

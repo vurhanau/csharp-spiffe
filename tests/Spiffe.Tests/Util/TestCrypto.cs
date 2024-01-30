@@ -2,7 +2,7 @@
 using FluentAssertions;
 using Spiffe.Id;
 using Spiffe.Util;
-using static Spiffe.Tests.Util.CertLoader;
+using static Spiffe.Tests.Util.CertUtil;
 
 namespace Spiffe.Tests.Util;
 

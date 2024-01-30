@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Google.Protobuf;
-using Google.Protobuf.Collections;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
@@ -12,10 +11,12 @@ internal static class Convertor
 {
     public static X509Context ParseX509Context(X509SVIDResponse response)
     {
+        _ = response ?? throw new ArgumentNullException(nameof(response));
+
         List<X509Svid> svids = [];
         Dictionary<TrustDomain, X509Bundle> bundles = [];
         HashSet<string> hints = [];
-        foreach (X509SVID svid in response.Svids)
+        foreach (X509SVID svid in response.Svids ?? [])
         {
             // In the event of more than one X509SVID message with the same hint value set, then the first message in the
             // list SHOULD be selected.
@@ -39,6 +40,8 @@ internal static class Convertor
 
     public static X509BundleSet ParseX509BundleSet(X509BundlesResponse response)
     {
+        _ = response ?? throw new ArgumentNullException(nameof(response));
+
         Dictionary<TrustDomain, X509Bundle> bundles = [];
         ParseBundles(response.Bundles, bundles);
 
@@ -60,9 +63,9 @@ internal static class Convertor
         return new X509Bundle(td, authorities);
     }
 
-    private static void ParseBundles(MapField<string, ByteString> src, Dictionary<TrustDomain, X509Bundle> dest)
+    private static void ParseBundles(IEnumerable<KeyValuePair<string, ByteString>> src, Dictionary<TrustDomain, X509Bundle> dest)
     {
-        foreach (KeyValuePair<string, ByteString> bundle in src)
+        foreach (KeyValuePair<string, ByteString> bundle in src ?? [])
         {
             TrustDomain td = TrustDomain.FromString(bundle.Key);
             dest[td] = ParseBundle(td, bundle.Value);
