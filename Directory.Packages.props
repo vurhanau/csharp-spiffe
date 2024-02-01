@@ -6,7 +6,7 @@
         <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
-        <TestSdkVersion>17.6.0</TestSdkVersion>
+        <TestSdkVersion>17.8.0</TestSdkVersion>
         <XunitVersion>2.6.6</XunitVersion>
         <XunitRunnerVersion>2.5.6</XunitRunnerVersion>
         <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
@@ -14,7 +14,7 @@
         <CoverletVersion>6.0.0</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>9.17.0.82934</SonarVersion>
+        <SonarVersion>9.18.0.83559</SonarVersion>
     </PropertyGroup>
 
     <ItemGroup>
