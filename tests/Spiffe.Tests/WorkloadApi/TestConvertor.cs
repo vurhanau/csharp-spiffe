@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Google.Protobuf;
 using Spiffe.Bundle.X509;
@@ -62,6 +63,19 @@ public class TestConvertor
         // Parse null bundle set
         Action nullBundleResponse = () => Convertor.ParseX509BundleSet(null);
         nullBundleResponse.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void TestLoadEcdsa()
+    {
+        using ECDsa e1 = ECDsa.Create();
+        e1.ImportFromPem(File.ReadAllText("TestData/key-pkcs8-ecdsa.pem"));
+        byte[] b1 = e1.ExportPkcs8PrivateKey();
+
+        using ECDsa e2 = ECDsa.Create();
+        e2.ImportPkcs8PrivateKey(b1, out int _);
+        byte[] b2 = e2.ExportPkcs8PrivateKey();
+        b1.Should().Equal(b2);
     }
 
     [Fact]
