@@ -30,7 +30,7 @@ internal static class Convertor
 
             TrustDomain td = model.SpiffeId.TrustDomain;
             X509Bundle bundle = ParseBundle(td, svid.Bundle);
-            bundles.Add(td, bundle);
+            bundles[td] = bundle;
         }
 
         ParseBundles(response.FederatedBundles, bundles);

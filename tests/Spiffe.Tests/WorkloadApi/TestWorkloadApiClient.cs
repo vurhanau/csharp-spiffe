@@ -24,7 +24,7 @@ public class TestWorkloadApiClient
         using X509Certificate2 cert = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         var resp = new X509BundlesResponse();
-        resp.Bundles.Add(TrustDomain.Name, ByteString.CopyFrom(cert.RawData));
+        resp.Bundles.Add("spiffe://example.org", ByteString.CopyFrom(cert.RawData));
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
                       .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
 

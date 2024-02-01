@@ -84,22 +84,24 @@ public class TestConvertor
         byte[] federatedBundle = CertUtil.Concat(cert1[0], cert2);
 
         X509SVIDResponse r = new();
-        r.Svids.Add(new X509SVID()
+        X509SVID s1 = new()
         {
             SpiffeId = id1.Id,
             Bundle = ByteString.CopyFrom(bundle1),
             X509Svid = ByteString.CopyFrom(CertUtil.Concat(cert1)),
             X509SvidKey = ByteString.CopyFrom(key1),
             Hint = hint1,
-        });
-        r.Svids.Add(new X509SVID()
+        };
+        X509SVID s2 = new()
         {
             SpiffeId = id2.Id,
             Bundle = ByteString.CopyFrom(bundle2),
             X509Svid = ByteString.CopyFrom(CertUtil.Concat(cert2)),
             X509SvidKey = ByteString.CopyFrom(key2),
             Hint = hint2,
-        });
+        };
+        r.Svids.Add(s1);
+        r.Svids.Add(s2);
         r.FederatedBundles.Add(federatedTd.Name, ByteString.CopyFrom(federatedBundle));
 
         X509Context x509Context = Convertor.ParseX509Context(r);
@@ -150,10 +152,22 @@ public class TestConvertor
         svid2.Certificates[0].GetRSAPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(key2);
 
         // Parse 2 SVIDs with the same hint - should return just first
-        r.Svids[1].Hint = hint1;
+        r.Svids[1] = new X509SVID(s2)
+        {
+            Hint = hint1,
+        };
         x509Context = Convertor.ParseX509Context(r);
         x509Context.X509Svids.Should().ContainSingle();
         VerifyFirstSvid();
+
+        // Parse 2 SVIDs from the same trust domain
+        var s3 = new X509SVID(s2)
+        {
+            SpiffeId = SpiffeId.FromPath(id1.TrustDomain, id2.Path).Id,
+        };
+        r.Svids[1] = s3;
+        x509Context = Convertor.ParseX509Context(r);
+        x509Context.X509Bundles.Bundles.Should().HaveCount(2);
 
         // Parse null
         Action nullSvidResponse = () => Convertor.ParseX509Context(null);
