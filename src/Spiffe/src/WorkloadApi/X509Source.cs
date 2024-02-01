@@ -74,9 +74,8 @@ public sealed class X509Source : IX509Source
         using CancellationTokenSource timeout = new();
         timeout.CancelAfter(timeoutMillis);
         using CancellationTokenSource cancelOrTimeout = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-        cancellationToken = cancelOrTimeout.Token;
 
-        await source.WaitUntilUpdated(cancellationToken);
+        await source.WaitUntilUpdated(cancelOrTimeout.Token);
 
         return source;
     }
@@ -159,7 +158,7 @@ public sealed class X509Source : IX509Source
                !IsDisposed &&
                !cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(500, cancellationToken);
+            await Task.Delay(50, cancellationToken);
         }
     }
 
