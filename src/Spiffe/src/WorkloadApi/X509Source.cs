@@ -38,9 +38,9 @@ public sealed class X509Source : IX509Source
     }
 
     /// <summary>
-    /// Visible for testing
+    /// Indicates if source is initialized.
     /// </summary>
-    internal bool IsInitialized => _initialized == 1;
+    public bool IsInitialized => _initialized == 1;
 
     private bool IsDisposed => _disposed != 0;
 
@@ -71,11 +71,7 @@ public sealed class X509Source : IX509Source
             () => client.WatchX509ContextAsync(watcher, cancellationToken),
             cancellationToken);
 
-        using CancellationTokenSource timeout = new();
-        timeout.CancelAfter(timeoutMillis);
-        using CancellationTokenSource cancelOrTimeout = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-
-        await source.WaitUntilUpdated(cancelOrTimeout.Token);
+        await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
 
         return source;
     }
@@ -152,23 +148,20 @@ public sealed class X509Source : IX509Source
     /// <summary>
     /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled.
     /// </summary>
-    private async Task WaitUntilUpdated(CancellationToken cancellationToken = default)
+    private async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
     {
+        using CancellationTokenSource timeout = new();
+        timeout.CancelAfter(timeoutMillis);
+
         while (!IsInitialized &&
                !IsDisposed &&
+               !timeout.IsCancellationRequested &&
                !cancellationToken.IsCancellationRequested)
         {
-            try
-            {
-                await Task.Delay(50, cancellationToken);
-            }
-            catch
-            {
-                throw new OperationCanceledException();
-            }
+            await Task.Delay(50);
         }
 
-        cancellationToken.ThrowIfCancellationRequested();
+        timeout.Token.ThrowIfCancellationRequested();
     }
 
     private void ThrowIfDisposed()

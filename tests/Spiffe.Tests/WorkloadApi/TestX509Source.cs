@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
@@ -94,10 +95,24 @@ public class TestX509Source
                       .Returns(CallHelpers.CreateAsyncServerStreamingCall(new X509SVIDResponse()));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        // Respect cancellation token
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
-        await Assert.ThrowsAsync<OperationCanceledException>(() => X509Source.CreateAsync(c, cancellationToken: cancellation.Token));
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
+        X509Source s = await X509Source.CreateAsync(c, cancellationToken: cancellation.Token);
+
+        stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 1000);
+        s.IsInitialized.Should().BeFalse();
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task TestCreateTimedOut()
+    {
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
+                      .Callback(async () => await Task.Delay(TimeSpan.FromHours(1)))
+                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(new X509SVIDResponse()));
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         // Respect timeout
         await Assert.ThrowsAsync<OperationCanceledException>(() => X509Source.CreateAsync(c, timeoutMillis: 500));
