@@ -76,6 +76,11 @@ public class TestConvertor
         e2.ImportPkcs8PrivateKey(b1, out int _);
         byte[] b2 = e2.ExportPkcs8PrivateKey();
         b1.Should().Equal(b2);
+
+        byte[][] cert1 = CertUtil.GetCertBytes("TestData/good-leaf-and-intermediate.pem");
+        using X509Certificate2 c = new X509Certificate2(cert1[0]);
+        using var c2 = c.CopyWithPrivateKey(e1);
+        b1.Should().Equal(c2.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey());
     }
 
     [Fact]
