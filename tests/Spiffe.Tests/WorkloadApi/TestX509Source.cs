@@ -97,12 +97,10 @@ public class TestX509Source
         // Respect cancellation token
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
-        Func<Task> f = () => X509Source.CreateAsync(c, cancellationToken: cancellation.Token);
-        await f.Should().ThrowAsync<OperationCanceledException>();
+        await Assert.ThrowsAsync<OperationCanceledException>(() => X509Source.CreateAsync(c, cancellationToken: cancellation.Token));
 
         // Respect timeout
-        f = () => X509Source.CreateAsync(c, timeoutMillis: 500);
-        await f.Should().ThrowAsync<OperationCanceledException>();
+        await Assert.ThrowsAsync<OperationCanceledException>(() => X509Source.CreateAsync(c, timeoutMillis: 500));
     }
 
     [Fact]

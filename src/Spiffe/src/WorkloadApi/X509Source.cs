@@ -158,8 +158,17 @@ public sealed class X509Source : IX509Source
                !IsDisposed &&
                !cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(50, cancellationToken);
+            try
+            {
+                await Task.Delay(50, cancellationToken);
+            }
+            catch
+            {
+                throw new OperationCanceledException();
+            }
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
     }
 
     private void ThrowIfDisposed()
