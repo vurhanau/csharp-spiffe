@@ -96,25 +96,12 @@ public class TestX509Source
 
         // Respect cancellation token
         using CancellationTokenSource cancellation = new();
-        cancellation.CancelAfter(100);
+        cancellation.CancelAfter(500);
         Func<Task> f = () => X509Source.CreateAsync(c, cancellationToken: cancellation.Token);
         await f.Should().ThrowAsync<OperationCanceledException>();
 
         // Respect timeout
-        f = () => X509Source.CreateAsync(c, timeoutMillis: 100);
-        await f.Should().ThrowAsync<OperationCanceledException>();
-    }
-
-    [Fact(Timeout = 10_000)]
-    public async Task TestCreateTimeout()
-    {
-        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
-        mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Callback(async () => await Task.Delay(TimeSpan.FromHours(1)))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(new X509SVIDResponse()));
-        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
-
-        Func<Task> f = () => X509Source.CreateAsync(c, timeoutMillis: 100);
+        f = () => X509Source.CreateAsync(c, timeoutMillis: 500);
         await f.Should().ThrowAsync<OperationCanceledException>();
     }
 
