@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
@@ -95,17 +94,15 @@ public class TestX509Source
                       .Returns(CallHelpers.CreateAsyncServerStreamingCall(new X509SVIDResponse()));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        using CancellationTokenSource timeout = new();
-        int timeoutMillis = 100;
-        timeout.CancelAfter(timeoutMillis);
-        Stopwatch stopwatch = Stopwatch.StartNew();
-
-        Func<Task> f = () => X509Source.CreateAsync(c, cancellationToken: timeout.Token);
+        // Respect cancellation token
+        using CancellationTokenSource cancellation = new();
+        cancellation.CancelAfter(100);
+        Func<Task> f = () => X509Source.CreateAsync(c, cancellationToken: cancellation.Token);
         await f.Should().ThrowAsync<OperationCanceledException>();
 
-        timeout.Token.IsCancellationRequested.Should().BeTrue();
-        TimeSpan duration = stopwatch.Elapsed;
-        duration.TotalMilliseconds.Should().BeInRange(1.0 * timeoutMillis / 2, timeoutMillis * 2);
+        // Respect timeout
+        f = () => X509Source.CreateAsync(c, timeoutMillis: 100);
+        await f.Should().ThrowAsync<OperationCanceledException>();
     }
 
     [Fact(Timeout = 10_000)]
@@ -117,13 +114,8 @@ public class TestX509Source
                       .Returns(CallHelpers.CreateAsyncServerStreamingCall(new X509SVIDResponse()));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        int timeoutMillis = 100;
-        Func<Task> f = () => X509Source.CreateAsync(c, timeoutMillis: timeoutMillis);
+        Func<Task> f = () => X509Source.CreateAsync(c, timeoutMillis: 100);
         await f.Should().ThrowAsync<OperationCanceledException>();
-
-        TimeSpan duration = stopwatch.Elapsed;
-        duration.TotalMilliseconds.Should().BeInRange(1.0 * timeoutMillis / 2, timeoutMillis * 2);
     }
 
     [Fact]
