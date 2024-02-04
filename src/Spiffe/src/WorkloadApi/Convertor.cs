@@ -9,37 +9,46 @@ namespace Spiffe.WorkloadApi;
 
 internal static class Convertor
 {
-    public static X509Context ToX509Context(X509SVIDResponse response)
+    public static X509Context ParseX509Context(X509SVIDResponse response)
     {
+        _ = response ?? throw new ArgumentNullException(nameof(response));
+
         List<X509Svid> svids = [];
         Dictionary<TrustDomain, X509Bundle> bundles = [];
-        foreach (X509SVID svid in response.Svids)
+        HashSet<string> hints = [];
+        foreach (X509SVID svid in response.Svids ?? [])
         {
-            X509Svid model = ToSvidModel(svid);
+            // In the event of more than one X509SVID message with the same hint value set, then the first message in the
+            // list SHOULD be selected.
+            if (!string.IsNullOrEmpty(svid.Hint) && !hints.Add(svid.Hint))
+            {
+                continue;
+            }
+
+            X509Svid model = ParseSvid(svid);
             svids.Add(model);
 
-            TrustDomain td = model.SpiffeId!.TrustDomain!;
-            X509Bundle bundle = ToBundleModel(td, svid);
-            bundles.Add(td, bundle);
+            TrustDomain td = model.SpiffeId.TrustDomain;
+            X509Bundle bundle = ParseBundle(td, svid.Bundle);
+            bundles[td] = bundle;
         }
+
+        ParseBundles(response.FederatedBundles, bundles);
 
         return new(svids, new X509BundleSet(bundles));
     }
 
-    public static X509BundleSet ToX509BundleSet(X509BundlesResponse response)
+    public static X509BundleSet ParseX509BundleSet(X509BundlesResponse response)
     {
+        _ = response ?? throw new ArgumentNullException(nameof(response));
+
         Dictionary<TrustDomain, X509Bundle> bundles = [];
-        foreach (KeyValuePair<string, ByteString> bundle in response.Bundles)
-        {
-            TrustDomain td = TrustDomain.FromString(bundle.Key);
-            X509Certificate2Collection authorities = Crypto.ParseCertificates(bundle.Value.Span);
-            bundles[td] = new X509Bundle(td, authorities);
-        }
+        ParseBundles(response.Bundles, bundles);
 
         return new(bundles);
     }
 
-    public static X509Svid ToSvidModel(X509SVID svid)
+    private static X509Svid ParseSvid(X509SVID svid)
     {
         SpiffeId spiffeId = SpiffeId.FromString(svid.SpiffeId);
         X509Certificate2Collection certificates = Crypto.ParseCertificates(svid.X509Svid.Span);
@@ -48,9 +57,18 @@ internal static class Convertor
         return new(spiffeId, certificates, svid.Hint);
     }
 
-    public static X509Bundle ToBundleModel(TrustDomain td, X509SVID svid)
+    private static X509Bundle ParseBundle(TrustDomain td, ByteString bundle)
     {
-        X509Certificate2Collection authorities = Crypto.ParseCertificates(svid.Bundle.Span);
+        X509Certificate2Collection authorities = Crypto.ParseCertificates(bundle.Span);
         return new X509Bundle(td, authorities);
+    }
+
+    private static void ParseBundles(IEnumerable<KeyValuePair<string, ByteString>> src, Dictionary<TrustDomain, X509Bundle> dest)
+    {
+        foreach (KeyValuePair<string, ByteString> bundle in src ?? [])
+        {
+            TrustDomain td = TrustDomain.FromString(bundle.Key);
+            dest[td] = ParseBundle(td, bundle.Value);
+        }
     }
 }

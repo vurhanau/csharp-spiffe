@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
-using Spiffe.Id;
 using Spiffe.Util;
+using static Spiffe.Tests.Util.CertUtil;
 
 namespace Spiffe.Tests.Util;
 
@@ -10,37 +10,39 @@ public class TestCrypto
     [Fact]
     public void TestGetCertificateWithRsaPrivateKey()
     {
-        string certPath = "Util/TestData/good-leaf-only.pem";
-        string keyPath = "Util/TestData/key-pkcs8-rsa.pem";
+        string certPath = "TestData/good-leaf-only.pem";
+        string keyPath = "TestData/key-pkcs8-rsa.pem";
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         byte[] rsaPrivateKey = expected.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
-        using X509Certificate2 tmp = LoadCert(certPath);
+        using X509Certificate2 tmp = FirstFromPemFile(certPath);
         using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, rsaPrivateKey.AsSpan());
 
-        expected.RawData.Should().Equal(actual.RawData);
+        actual.RawData.Should().Equal(expected.RawData);
+        actual.GetRSAPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(rsaPrivateKey);
     }
 
     [Fact]
     public void TestGetCertificateWithEcdsaPrivateKey()
     {
-        string certPath = "Util/TestData/good-leaf-and-intermediate.pem";
-        string keyPath = "Util/TestData/key-pkcs8-ecdsa.pem";
+        string certPath = "TestData/good-leaf-and-intermediate.pem";
+        string keyPath = "TestData/key-pkcs8-ecdsa.pem";
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         byte[] ecdsaPrivateKey = expected.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey();
-        using X509Certificate2 tmp = LoadCert(certPath);
+        using X509Certificate2 tmp = FirstFromPemFile(certPath);
         using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, ecdsaPrivateKey.AsSpan());
 
-        expected.RawData.Should().Equal(actual.RawData);
+        actual.RawData.Should().Equal(expected.RawData);
+        actual.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(ecdsaPrivateKey);
     }
 
     [Fact]
     public void TestGetCertificateWithInvalidPrivateKey()
     {
-        string certPath = "Util/TestData/good-leaf-only.pem";
+        string certPath = "TestData/good-leaf-only.pem";
 
-        using X509Certificate2 cert = LoadCert(certPath);
+        using X509Certificate2 cert = FirstFromPemFile(certPath);
         byte[] invalidPrivateKey = "not-DER-encoded"u8.ToArray();
         Action a = () => Crypto.GetCertificateWithPrivateKey(cert, invalidPrivateKey.AsSpan());
         a.Should().Throw<Exception>();
@@ -49,7 +51,7 @@ public class TestCrypto
     [Fact]
     public void TestParseGood()
     {
-        string certAndKeyPath = "Util/TestData/good-cert-and-key.pem";
+        string certAndKeyPath = "TestData/good-cert-and-key.pem";
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certAndKeyPath);
         X509Certificate2Collection actual = Crypto.ParseCertificates(expected.RawData);
@@ -62,7 +64,7 @@ public class TestCrypto
     [Fact]
     public void TestParseGoodLeafAndIntermediate()
     {
-        string leafAndIntermediatePath = "Util/TestData/good-leaf-and-intermediate.pem";
+        string leafAndIntermediatePath = "TestData/good-leaf-and-intermediate.pem";
         X509Certificate2Collection expected = [];
         expected.ImportFromPemFile(leafAndIntermediatePath);
 
@@ -87,12 +89,5 @@ public class TestCrypto
         byte[] corrupt = "not-DER-encoded"u8.ToArray();
         Action a = () => Crypto.ParseCertificates(corrupt);
         a.Should().Throw<Exception>();
-    }
-
-    private static X509Certificate2 LoadCert(string pemFile)
-    {
-        X509Certificate2Collection c = [];
-        c.ImportFromPemFile(pemFile);
-        return c[0];
     }
 }

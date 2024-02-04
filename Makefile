@@ -27,10 +27,13 @@ build: restore
 	@dotnet build
 
 x509: restore
-	$(RUN) x509 $(AGENT_SOCKET)
+	$(RUN) x509svid $(AGENT_SOCKET)
 
 bundle: restore
-	$(RUN) bundle $(AGENT_SOCKET)
+	$(RUN) x509bundle $(AGENT_SOCKET)
+
+watch: restore
+	$(RUN) x509watch $(AGENT_SOCKET)
 
 test: restore
 	@dotnet test

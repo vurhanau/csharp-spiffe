@@ -87,6 +87,7 @@ dotnet_diagnostic.SA1623.severity = none # The property's documentation summary 
 dotnet_diagnostic.SA1629.severity = none # A section of the Xml header documentation for a C# element does not end with a period (also known as a full stop).
 dotnet_diagnostic.SA1633.severity = none # A C# code file is missing a standard file header.
 dotnet_diagnostic.SA1642.severity = none # Constructor summary documentation should begin with standard text.
+dotnet_diagnostic.SA1649.severity = none # File name should match first type name.
 
 # IDE code style
 dotnet_diagnostic.IDE1006.severity = silent # Naming rule violation: Missing prefix: 's_' for static fiels.

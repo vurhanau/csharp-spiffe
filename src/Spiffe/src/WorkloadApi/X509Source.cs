@@ -1,4 +1,4 @@
-using Spiffe.Bundle.X509;
+﻿using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
 
@@ -10,121 +10,170 @@ namespace Spiffe.WorkloadApi;
 /// It handles a <see cref="X509Svid"/> and a <see cref="X509BundleSet"/> that are updated automatically
 /// whenever there is an update from the Workload API.
 /// <br/>
-/// Implements the <see cref="IDisposable"/> interface to close the source,
-/// dropping the connection to the Workload API. Other source methods will return an error
-/// after close has been called.
+/// Implements the <see cref="IDisposable"/> interface to close the source.
+/// Other source methods will return an error after close has been called.
 /// </summary>
 public sealed class X509Source : IX509Source
 {
-    private readonly Func<List<X509Svid>, X509Svid?> _picker;
+    private readonly Func<List<X509Svid>, X509Svid> _picker;
 
-    private readonly ReaderWriterLock _lock;
-
-    private readonly TimeSpan _lockTimeout;
+    private readonly ReaderWriterLockSlim _lock;
 
     private X509Svid? _svid;
 
     private X509BundleSet? _bundles;
 
+    private volatile int _initialized;
+
+    private volatile int _disposed;
+
     /// <summary>
     /// Constructs X509 source.
+    /// Visible for testing.
     /// </summary>
-    internal X509Source(Func<List<X509Svid>, X509Svid?> picker)
+    internal X509Source(Func<List<X509Svid>, X509Svid> picker)
     {
         _picker = picker;
-        _lock = new ReaderWriterLock();
-        _lockTimeout = TimeSpan.FromSeconds(5);
+        _lock = new ReaderWriterLockSlim();
     }
 
     /// <summary>
-    /// Blocks to get an initial X509 context and then listens to updates.
+    /// Indicates if source is initialized.
     /// </summary>
-    public static Task StartAsync(IWorkloadApiClient client,
-                                  Func<List<X509Svid>, X509Svid?>? picker = null,
-                                  CancellationToken cancellationToken = default)
+    public bool IsInitialized => _initialized == 1;
+
+    private bool IsDisposed => _disposed != 0;
+
+    /// <summary>
+    /// Creates a new X509Source. It awaits until the initial update
+    /// has been received from the Workload API for <paramref name="timeoutMillis"/>. The source should be closed when
+    /// no longer in use to free underlying resources.
+    /// </summary>
+    public static async Task<X509Source> CreateAsync(IWorkloadApiClient client,
+                                                     Func<List<X509Svid>, X509Svid>? picker = null,
+                                                     int timeoutMillis = 60_000,
+                                                     CancellationToken cancellationToken = default)
     {
         _ = client ?? throw new ArgumentNullException(nameof(client));
-        picker ??= svids => svids.FirstOrDefault();
-
-        CountdownEvent countdown = new(1);
-        X509Source source = new(picker);
-        Task watchTask = Task.Run(
-            async () =>
+        picker ??= svids =>
+        {
+            if (svids.Count == 0)
             {
-                bool stop = false;
-                while (!cancellationToken.IsCancellationRequested && !stop)
-                {
-                    try
-                    {
-                        await client.WatchX509ContextAsync(
-                            (x509Context, _) =>
-                            {
-                                source.UpdateX509Context(x509Context);
-                                countdown.Signal();
-                            },
-                            cancellationToken);
-                    }
-                    catch
-                    {
-                        stop = true;
-                    }
-                }
-            },
-            cancellationToken);
-
-        countdown.Wait(cancellationToken);
-
-        return watchTask;
-    }
-
-    /// <inheritdoc/>
-    public X509Svid? GetX509Svid()
-    {
-        // check if closed
-        _lock.AcquireReaderLock(_lockTimeout);
-        try
-        {
-            return _svid;
-        }
-        finally
-        {
-            _lock.ReleaseReaderLock();
-        }
-    }
-
-    /// <inheritdoc/>
-    public X509Bundle? GetX509Bundle(TrustDomain trustDomain)
-    {
-        // check if closed
-        _lock.AcquireReaderLock(_lockTimeout);
-        try
-        {
-            if (_bundles == null)
-            {
-                return null;
+                throw new ArgumentException("SVIDs must be non-empty");
             }
 
-            bool found = _bundles.Bundles.TryGetValue(trustDomain, out X509Bundle? bundle);
-            return found ? bundle : null;
+            return svids[0];
+        };
+
+        X509Source source = new(picker);
+        Watcher<X509Context> watcher = new(source.SetX509Context);
+        _ = Task.Run(
+            () => client.WatchX509ContextAsync(watcher, cancellationToken),
+            cancellationToken);
+
+        await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
+
+        return source;
+    }
+
+    /// <summary>
+    /// Gets a default SVID.
+    /// </summary>
+    public X509Svid GetX509Svid()
+    {
+        ThrowIfNotInitalized();
+        ThrowIfDisposed();
+
+        _lock.EnterReadLock();
+        try
+        {
+            return _svid!;
         }
         finally
         {
-            _lock.ReleaseReaderLock();
+            _lock.ExitReadLock();
         }
     }
 
-    private void UpdateX509Context(X509Context x509Context)
+    /// <summary>
+    /// Gets a trust bundle associated with trust domain.
+    /// </summary>
+    public X509Bundle GetX509Bundle(TrustDomain trustDomain)
     {
-        // check if closed
-        _lock.AcquireWriterLock(_lockTimeout);
+        ThrowIfNotInitalized();
+        ThrowIfDisposed();
+
+        _lock.EnterReadLock();
+        try
+        {
+            return _bundles!.GetBundleForTrustDomain(trustDomain);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    /// <summary>
+    /// Disposes client
+    /// </summary>
+    public void Dispose()
+    {
+        if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
+        {
+            _lock.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Visible for testing.
+    /// </summary>
+    internal void SetX509Context(X509Context x509Context)
+    {
+        ThrowIfDisposed();
+
+        _lock.EnterWriteLock();
         try
         {
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
+            _initialized = 1;
         }
         finally
         {
-            _lock.ReleaseWriterLock();
+            _lock.ExitWriteLock();
+        }
+    }
+
+    /// <summary>
+    /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled.
+    /// </summary>
+    private async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
+    {
+        using CancellationTokenSource timeout = new();
+        timeout.CancelAfter(timeoutMillis);
+
+        while (!IsInitialized &&
+               !IsDisposed &&
+               !timeout.IsCancellationRequested &&
+               !cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(50);
+        }
+
+        timeout.Token.ThrowIfCancellationRequested();
+    }
+
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+    }
+
+    private void ThrowIfNotInitalized()
+    {
+        if (!IsInitialized)
+        {
+            throw new InvalidOperationException("X509 source is not initialized");
         }
     }
 }

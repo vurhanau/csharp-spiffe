@@ -1,5 +1,4 @@
-﻿#pragma warning disable SA1402 // File may only contain a single type
-using CommandLine;
+﻿using CommandLine;
 
 namespace Spiffe.Client;
 
@@ -9,18 +8,17 @@ internal class Options
     public string? Address { get; set; }
 }
 
-[Verb("x509", HelpText = "Command to fetch X509 SVID from Workload API.")]
+[Verb("x509svid", HelpText = "Command to fetch X509 SVID from Workload API.")]
 internal class X509Command : Options
 {
 }
 
-[Verb("bundle", HelpText = "Command to fetch X509 bundle from Workload API.")]
-internal class BundleCommand : Options
+[Verb("x509bundle", HelpText = "Command to fetch X509 bundles from Workload API.")]
+internal class X509BundleCommand : Options
 {
 }
 
-[Verb("watch", HelpText = "Command to watch Workload API update stream.")]
+[Verb("x509watch", HelpText = "Command to watch Workload API X509 SVID update stream.")]
 internal class WatchCommand : Options
 {
 }
-#pragma warning restore SA1402 // File may only contain a single type
