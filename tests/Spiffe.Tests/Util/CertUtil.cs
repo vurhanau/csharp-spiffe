@@ -5,14 +5,10 @@ namespace Spiffe.Tests.Util;
 
 internal static class CertUtil
 {
-    /// <summary>
-    /// <see cref="X509Certificate2.CreateFromPemFile"/> fails to load certs from PEM:
-    /// - Intermediate + leaf
-    /// - Leaf only
-    /// TODO: why?
-    /// </summary>
     internal static X509Certificate2 FirstFromPemFile(string pemFile)
     {
+        // X509Certificate2.CreateFromPemFile fails to load plain cert from PEM.
+        // It expects a private key to be a part of PEM if key file is unspecified.
         X509Certificate2Collection c = [];
         c.ImportFromPemFile(pemFile);
         return c[0];
@@ -25,11 +21,11 @@ internal static class CertUtil
         return c.Select(ci => ci.RawData).ToArray();
     }
 
-    internal static byte[] GetEcdsaBytesFromPemFile(string pemFile)
+    internal static ECDsa GetEcdsaFromPemFile(string pemFile)
     {
-        using ECDsa ecdsa = ECDsa.Create();
+        ECDsa ecdsa = ECDsa.Create();
         ecdsa.ImportFromPem(File.ReadAllText(pemFile));
-        return ecdsa.ExportPkcs8PrivateKey();
+        return ecdsa;
     }
 
     internal static byte[] GetRsaBytesFromPemFile(string pemFile)

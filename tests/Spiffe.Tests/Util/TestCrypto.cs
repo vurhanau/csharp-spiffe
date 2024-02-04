@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
-using Spiffe.Id;
 using Spiffe.Util;
 using static Spiffe.Tests.Util.CertUtil;
 
@@ -19,7 +18,8 @@ public class TestCrypto
         using X509Certificate2 tmp = FirstFromPemFile(certPath);
         using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, rsaPrivateKey.AsSpan());
 
-        expected.RawData.Should().Equal(actual.RawData);
+        actual.RawData.Should().Equal(expected.RawData);
+        actual.GetRSAPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(rsaPrivateKey);
     }
 
     [Fact]
@@ -33,7 +33,8 @@ public class TestCrypto
         using X509Certificate2 tmp = FirstFromPemFile(certPath);
         using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, ecdsaPrivateKey.AsSpan());
 
-        expected.RawData.Should().Equal(actual.RawData);
+        actual.RawData.Should().Equal(expected.RawData);
+        actual.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(ecdsaPrivateKey);
     }
 
     [Fact]

@@ -66,30 +66,12 @@ public class TestConvertor
     }
 
     [Fact]
-    public void TestLoadEcdsa()
-    {
-        using ECDsa e1 = ECDsa.Create();
-        e1.ImportFromPem(File.ReadAllText("TestData/key-pkcs8-ecdsa.pem"));
-        byte[] b1 = e1.ExportPkcs8PrivateKey();
-
-        using ECDsa e2 = ECDsa.Create();
-        e2.ImportPkcs8PrivateKey(b1, out int _);
-        byte[] b2 = e2.ExportPkcs8PrivateKey();
-        b1.Should().Equal(b2);
-
-        byte[][] cert1 = CertUtil.GetCertBytes("TestData/good-leaf-and-intermediate.pem");
-        using X509Certificate2 c = new X509Certificate2(cert1[0]);
-        using var c2 = c.CopyWithPrivateKey(e1);
-        c2.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(b1);
-    }
-
-    [Fact]
     public void TestParseX509Context()
     {
         // Parse 2 SVIDs and 1 federated bundle
         SpiffeId id1 = SpiffeId.FromString("spiffe://example1.org/workload1");
         byte[][] cert1 = CertUtil.GetCertBytes("TestData/good-leaf-and-intermediate.pem");
-        byte[] key1 = CertUtil.GetEcdsaBytesFromPemFile("TestData/key-pkcs8-ecdsa.pem");
+        using ECDsa key1 = CertUtil.GetEcdsaFromPemFile("TestData/key-pkcs8-ecdsa.pem");
         byte[] bundle1 = CertUtil.Concat(cert1[1], cert1[0]);
         string hint1 = "internal1";
 
@@ -108,7 +90,7 @@ public class TestConvertor
             SpiffeId = id1.Id,
             Bundle = ByteString.CopyFrom(bundle1),
             X509Svid = ByteString.CopyFrom(CertUtil.Concat(cert1)),
-            X509SvidKey = ByteString.CopyFrom(key1),
+            X509SvidKey = ByteString.CopyFrom(key1.ExportPkcs8PrivateKey()),
             Hint = hint1,
         };
         X509SVID s2 = new()
@@ -157,7 +139,8 @@ public class TestConvertor
             svid1.Certificates.Should().HaveCount(2); // leaf + intermediate
             svid1.Certificates[0].RawData.Should().Equal(cert1[0]);
             svid1.Certificates[0].HasPrivateKey.Should().BeTrue();
-            svid1.Certificates[0].GetECDsaPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(key1);
+            ECDsa actualKey = svid1.Certificates[0].GetECDsaPrivateKey()!;
+            VerifyEcdsa(actualKey, key1);
             svid1.Certificates[1].RawData.Should().Equal(cert1[1]);
         }
 
@@ -191,5 +174,17 @@ public class TestConvertor
         // Parse null
         Action nullSvidResponse = () => Convertor.ParseX509Context(null);
         nullSvidResponse.Should().Throw<ArgumentNullException>();
+    }
+
+    // Verify ECDsa by verifying signatures, not by PKCS binary:
+    // https://github.com/dotnet/runtime/issues/97932
+    private static void VerifyEcdsa(ECDsa e1, ECDsa e2)
+    {
+        ReadOnlySpan<byte> data = "hello"u8;
+        HashAlgorithmName ha = HashAlgorithmName.SHA384;
+        byte[] s1 = e1.SignData(data, ha);
+        byte[] s2 = e2.SignData(data, ha);
+        e1.VerifyData(data, s2, ha).Should().BeTrue();
+        e2.VerifyData(data, s1, ha).Should().BeTrue();
     }
 }
