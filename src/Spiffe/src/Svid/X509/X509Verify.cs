@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
@@ -41,6 +40,8 @@ public static class X509Verify
         }
 
         // TODO: add ExtKeyUsageAny validation
+        // TODO: add use validation
+        // https://github.com/dotnet/aspnetcore/blob/main/src/Security/Authentication/Certificate/src/CertificateAuthenticationHandler.cs#L208
 
         X509Bundle bundle = bundleSource.GetX509Bundle(id.TrustDomain);
 
@@ -65,31 +66,7 @@ public static class X509Verify
     {
         _ = certificate ?? throw new ArgumentNullException(nameof(certificate));
 
-        IEnumerable<string> san = certificate.Extensions.Cast<X509Extension>()
-                                             .Where(ext => ext.Oid?.Value == "2.5.29.17") // n.Oid.FriendlyName == "Subject Alternative Name"
-                                             .Select(ext => new AsnEncodedData(ext.Oid, ext.RawData))
-                                             .Select(ext => ext.Format(true));
-        if (!san.Any())
-        {
-            throw new ArgumentException("Certificate doesn't contain URI SAN");
-        }
-
-        if (san.Count() > 1)
-        {
-            throw new ArgumentException("Certificate contains more than one URI SAN");
-        }
-
-        string str = san.First().Trim();
-
-        // Windows: "URL=spiffe://example.org/workload"
-        // Unix, MacOS (OpenSSL): "URI:spiffe://example.org/workload".
-        int uriOffset = str.IndexOf(SpiffeId.SchemePrefix);
-        if (string.IsNullOrEmpty(str) || uriOffset < 0)
-        {
-            throw new ArgumentException($"Certificate SAN does not contain Spiffe ID: {str}");
-        }
-
-        str = str.Substring(uriOffset);
+        string str = certificate.GetNameInfo(X509NameType.UrlName, false);
 
         return SpiffeId.FromString(str);
     }
