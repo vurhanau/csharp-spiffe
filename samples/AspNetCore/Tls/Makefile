@@ -1,10 +1,10 @@
 .PHONY: server client curl
 
 server:
-	@dotnet run --project TlsServer/
+	@dotnet run --project TlsAspNetServer/
 
 client:
-	@dotnet run --project TlsClient/
+	@dotnet run --project TlsAspNetClient/
 
 curl:
 	@curl -vvv http://localhost:5000/
