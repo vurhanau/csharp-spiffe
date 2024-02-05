@@ -79,13 +79,17 @@ public static class X509Verify
             throw new ArgumentException("Certificate contains more than one URI SAN");
         }
 
-        string str = san.First();
-        if (!str.StartsWith("URI:"))
+        string str = san.First().Trim();
+
+        // Windows: "URL=spiffe://example.org/workload"
+        // Unix, MacOS (OpenSSL): "URI:spiffe://example.org/workload".
+        int uriOffset = str.IndexOf(SpiffeId.SchemePrefix);
+        if (string.IsNullOrEmpty(str) || uriOffset < 0)
         {
-            throw new ArgumentException($"Certificate SAN format is not supported ({str})");
+            throw new ArgumentException($"Certificate SAN does not contain Spiffe ID: {str}");
         }
 
-        str = str.Substring("URI:".Length);
+        str = str.Substring(uriOffset);
 
         return SpiffeId.FromString(str);
     }
