@@ -20,6 +20,15 @@ policy:
 		-spiffeID spiffe://example.org/myservice \
 		-selector unix:uid:$$(id -u)
 
+backend:
+	@dotnet run --project samples/AspNetCore/Backend/
+
+frontend:
+	@dotnet run --project samples/AspNetCore/Frontend/
+
+curl:
+	@curl -vvv http://localhost:5000/
+
 restore:
 	@dotnet restore --locked-mode --force-evaluate
 
