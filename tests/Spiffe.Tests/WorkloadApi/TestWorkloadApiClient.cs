@@ -8,11 +8,10 @@ using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
 using Spiffe.Tests.Util;
-using Spiffe.Tests.WorkloadApi;
 using Spiffe.WorkloadApi;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
-namespace Spiffe.Test.WorkloadApi;
+namespace Spiffe.Tests.WorkloadApi;
 
 public class TestWorkloadApiClient
 {
@@ -301,7 +300,7 @@ public class TestWorkloadApiClient
                                           X509Certificate2 expectedCert,
                                           string expectedHint)
     {
-        svid.SpiffeId.Should().Be(expectedSpiffeId);
+        svid.Id.Should().Be(expectedSpiffeId);
         svid.Hint.Should().Be(expectedHint);
 
         X509Certificate2Collection certs = svid.Certificates;

@@ -2,7 +2,7 @@
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 
-namespace Spiffe.Test.Bundle.X509;
+namespace Spiffe.Tests.Bundle.X509;
 
 public class TestX509Bundle
 {

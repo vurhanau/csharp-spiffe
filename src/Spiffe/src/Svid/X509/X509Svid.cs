@@ -13,7 +13,7 @@ public class X509Svid
     /// <summary>
     /// Creates X509 SVID.
     /// </summary>
-    public X509Svid(SpiffeId spiffeId,
+    public X509Svid(SpiffeId id,
                     X509Certificate2Collection certificates,
                     string hint)
     {
@@ -27,7 +27,7 @@ public class X509Svid
             throw new ArgumentException("Leaf certificate must have a private key");
         }
 
-        SpiffeId = spiffeId;
+        Id = id;
         Certificates = certificates;
         Hint = hint;
     }
@@ -35,7 +35,7 @@ public class X509Svid
     /// <summary>
     /// Gets SVID SPIFFE id.
     /// </summary>
-    public SpiffeId SpiffeId { get; }
+    public SpiffeId Id { get; }
 
     /// <summary>
     /// X.509 certificates of the X509-SVID.

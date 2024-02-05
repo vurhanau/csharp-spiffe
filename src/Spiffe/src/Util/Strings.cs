@@ -49,7 +49,7 @@ public static class Strings
     public static string ToString(X509Svid x509Svid, bool verbose = false)
     {
         StringBuilder sb = new();
-        sb.AppendLine($"Spiffe ID: {x509Svid.SpiffeId?.Id}");
+        sb.AppendLine($"Spiffe ID: {x509Svid.Id?.Id}");
         if (!string.IsNullOrEmpty(x509Svid.Hint))
         {
             sb.AppendLine($"Hint: {x509Svid.Hint}");

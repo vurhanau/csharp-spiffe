@@ -40,10 +40,7 @@ public static class X509Verify
             throw new ArgumentException("Leaf certificate with KeyCrlSign key usage");
         }
 
-        if (!HasExtKeyUsageAny(leaf))
-        {
-            throw new ArgumentException("Leaf certificate has no ExtKeyUsageAny enhanced key usage");
-        }
+        // TODO: add ExtKeyUsageAny validation
 
         X509Bundle bundle = bundleSource.GetX509Bundle(id.TrustDomain);
 
@@ -101,20 +98,5 @@ public static class X509Verify
     private static bool IsCA(X509Certificate2 cert)
     {
         return cert.Extensions.OfType<X509BasicConstraintsExtension>().Any(c => c.CertificateAuthority);
-    }
-
-    private static bool HasExtKeyUsageAny(X509Certificate2 cert)
-    {
-        // TODO: fix ext key validation
-        return true;
-
-        // return cert.Extensions.OfType<X509EnhancedKeyUsageExtension>()
-        // .Select(k => 
-        // {
-        //     var ext = new AsnEncodedData(k.Oid, k.RawData);
-        //     Console.WriteLine($"{k.Oid?.FriendlyName} = {ext.Format(true)}, {k.Critical}");
-        //     return k;
-        // })
-        // .Any(c => c.Oid?.Value == "2.5.29.37.0"); // anyExtendedKeyUsage
     }
 }
