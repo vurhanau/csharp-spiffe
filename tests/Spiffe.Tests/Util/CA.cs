@@ -188,7 +188,7 @@ internal class CA
             request.CertificateExtensions.Add(sanExtension);
         }
 
-        // Enhanced key usages
+        // enhanced key usages
         request.CertificateExtensions.Add(
             new X509EnhancedKeyUsageExtension(
                 [
@@ -225,7 +225,7 @@ internal class CA
         // There is no built-in support, so it needs to be copied from the
         // Subject Key Identifier of the signing certificate.
         // AuthorityKeyIdentifier is "KeyID=<subject key identifier>"
-        byte[] issuerSubjectKey = cert.Extensions["X509v3 Subject Key Identifier"]!.RawData;
+        byte[] issuerSubjectKey = cert.Extensions.First(f => f.Oid?.Value == "2.5.29.14").RawData; // X509v3 Subject Key Identifier
         ArraySegment<byte> segment = new(issuerSubjectKey, 2, issuerSubjectKey.Length - 2);
         byte[] authorityKeyIdentifer = new byte[segment.Count + 4];
 
