@@ -124,7 +124,7 @@ internal class CA
 
         DateTimeOffset notBefore = DateTimeOffset.UtcNow;
         DateTimeOffset notAfter = parent != null // Handles the case when cert.notAfter < issuer.notAfter
-                                    ? notBefore.AddMinutes(30)
+                                    ? parent.NotAfter.AddMinutes(-1)
                                     : notBefore.AddHours(1);
         if (parent == null)
         {
@@ -202,7 +202,7 @@ internal class CA
             new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
 
         DateTimeOffset notBefore = DateTimeOffset.UtcNow;
-        DateTimeOffset notAfter = notBefore.AddMinutes(30);
+        DateTimeOffset notAfter = parent.NotAfter.AddMinutes(-1);
         using X509Certificate2 cert = request.Create(parent, notBefore, notAfter, serial);
 
         return cert.CopyWithPrivateKey(key);
