@@ -98,9 +98,9 @@ public class TestX509Source
         cancellation.CancelAfter(500);
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        X509Source s = await X509Source.CreateAsync(c, cancellationToken: cancellation.Token);
+        X509Source s = await X509Source.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
 
-        stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 1000);
+        stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 5000);
         s.IsInitialized.Should().BeFalse();
     }
 

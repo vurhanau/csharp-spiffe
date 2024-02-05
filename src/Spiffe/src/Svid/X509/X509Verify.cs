@@ -82,7 +82,7 @@ public static class X509Verify
         string str = san.First();
         if (!str.StartsWith("URI:"))
         {
-            throw new ArgumentException("Certificate SAN format is not supported");
+            throw new ArgumentException($"Certificate SAN format is not supported ({str})");
         }
 
         str = str.Substring("URI:".Length);
