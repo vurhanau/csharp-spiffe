@@ -22,9 +22,9 @@ builder.WebHost.UseKestrel(kestrel =>
     {
         listenOptions.UseHttps(new TlsHandshakeCallbackOptions
         {
-            // Configure mTLS server options
+            // Configure TLS server options
             OnConnection = ctx => ValueTask.FromResult(
-                SpiffeSslConfig.GetMtlsServerOptions(x509Source)),
+                SpiffeSslConfig.GetTlsServerOptions(x509Source)),
         });
     });
 });
@@ -32,8 +32,8 @@ builder.WebHost.UseKestrel(kestrel =>
 WebApplication app = builder.Build();
 app.Lifetime.ApplicationStopped.Register(close.Cancel);
 
-string backendCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
-app.Logger.LogInformation("Backend certificate:\n {}", backendCertificate);
+string serverCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
+app.Logger.LogInformation("Server certificate:\n {}", serverCertificate);
 
 app.MapGet("/", () => "Hello World!");
 

@@ -3,8 +3,8 @@ using Spiffe.Grpc;
 using Spiffe.Ssl;
 using Spiffe.WorkloadApi;
 
-string frontendUrl = "http://localhost:5000";
-string backendUrl = "https://localhost:5001";
+string clientUrl = "http://localhost:5000";
+string serverUrl = "https://localhost:5001";
 string spiffeAddress = "unix:///tmp/spire-agent/public/api.sock";
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -23,14 +23,14 @@ using HttpClient http = new(new SocketsHttpHandler()
 WebApplication app = builder.Build();
 app.Lifetime.ApplicationStopped.Register(close.Cancel);
 
-string backendCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
-app.Logger.LogInformation("Frontend certificate:\n {}", backendCertificate);
+string clientCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
+app.Logger.LogInformation("Client certificate:\n {}", clientCertificate);
 
 app.MapGet("/", async () =>
 {
-    HttpResponseMessage r = await http.GetAsync(backendUrl);
+    HttpResponseMessage r = await http.GetAsync(serverUrl);
     string str = await r.Content.ReadAsStringAsync();
     return str;
 });
 
-app.Run(frontendUrl);
+app.Run(clientUrl);
