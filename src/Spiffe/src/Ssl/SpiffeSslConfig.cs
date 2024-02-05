@@ -14,6 +14,18 @@ namespace Spiffe.Ssl;
 public static class SpiffeSslConfig
 {
     /// <summary>
+    /// Creates TLS server authentication config backed by X509 SVID.
+    /// </summary>
+    public static SslServerAuthenticationOptions GetTlsServerOptions(X509Source x509Source)
+    {
+        return new SslServerAuthenticationOptions
+        {
+            ClientCertificateRequired = false,
+            ServerCertificateContext = CreateContext(x509Source),
+        };
+    }
+
+    /// <summary>
     /// Creates MTLS server authentication config backed by X509 SVID.
     /// </summary>
     public static SslServerAuthenticationOptions GetMtlsServerOptions(X509Source x509Source)
@@ -23,6 +35,17 @@ public static class SpiffeSslConfig
             ClientCertificateRequired = true,
             RemoteCertificateValidationCallback = (_, cert, chain, _) => ValidateRemoteCertificate(cert, chain, x509Source),
             ServerCertificateContext = CreateContext(x509Source),
+        };
+    }
+
+    /// <summary>
+    /// Creates TLS client authentication config backed by X509 SVID.
+    /// </summary>
+    public static SslClientAuthenticationOptions GetTlsClientOptions(IX509BundleSource x509BundleSource)
+    {
+        return new SslClientAuthenticationOptions
+        {
+            RemoteCertificateValidationCallback = (_, cert, chain, _) => ValidateRemoteCertificate(cert, chain, x509BundleSource),
         };
     }
 
@@ -38,7 +61,7 @@ public static class SpiffeSslConfig
         };
     }
 
-    private static bool ValidateRemoteCertificate(X509Certificate? cert, X509Chain? chain, X509Source x509Source)
+    private static bool ValidateRemoteCertificate(X509Certificate? cert, X509Chain? chain, IX509BundleSource x509BundleSource)
     {
         if (cert == null || chain == null)
         {
@@ -48,7 +71,7 @@ public static class SpiffeSslConfig
         X509Certificate2 leaf = new(cert);
         X509Certificate2Collection intermediates = chain.ChainPolicy.ExtraStore;
 
-        return X509Verify.Verify(leaf, intermediates, x509Source);
+        return X509Verify.Verify(leaf, intermediates, x509BundleSource);
     }
 
     private static SslStreamCertificateContext CreateContext(X509Source x509Source)

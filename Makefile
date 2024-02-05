@@ -20,11 +20,11 @@ policy:
 		-spiffeID spiffe://example.org/myservice \
 		-selector unix:uid:$$(id -u)
 
-backend:
-	@dotnet run --project samples/AspNetCore/Backend/
+tls:
+	@echo $(realpath samples/AspNetCore/Tls)
 
-frontend:
-	@dotnet run --project samples/AspNetCore/Frontend/
+mtls:
+	@echo $(realpath samples/AspNetCore/Mtls)
 
 curl:
 	@curl -vvv http://localhost:5000/
