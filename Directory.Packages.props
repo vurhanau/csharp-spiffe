@@ -15,6 +15,7 @@
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
         <SonarVersion>9.18.0.83559</SonarVersion>
+        <AspNetCoreCertificateAuthenticationVersion>8.0.1</AspNetCoreCertificateAuthenticationVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -38,6 +39,9 @@
         <PackageVersion Include="Moq" Version="$(MoqVersion)" />
         <PackageVersion Include="coverlet.msbuild" Version="$(CoverletVersion)" />
         <PackageVersion Include="coverlet.collector" Version="$(CoverletVersion)" />
+
+        <!-- Samples -->
+        <PackageVersion Include="Microsoft.AspNetCore.Authentication.Certificate" Version="$(AspNetCoreCertificateAuthenticationVersion)" />
 
         <!-- Analyzers -->
         <PackageVersion Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
