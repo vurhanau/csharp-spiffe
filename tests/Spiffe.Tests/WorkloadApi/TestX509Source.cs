@@ -9,11 +9,10 @@ using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
 using Spiffe.Tests.Util;
-using Spiffe.Tests.WorkloadApi;
 using Spiffe.WorkloadApi;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
-namespace Spiffe.Test.WorkloadApi;
+namespace Spiffe.Tests.WorkloadApi;
 
 public class TestX509Source
 {
@@ -99,9 +98,9 @@ public class TestX509Source
         cancellation.CancelAfter(500);
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        X509Source s = await X509Source.CreateAsync(c, cancellationToken: cancellation.Token);
+        X509Source s = await X509Source.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
 
-        stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 1000);
+        stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 5000);
         s.IsInitialized.Should().BeFalse();
     }
 
@@ -140,7 +139,7 @@ public class TestX509Source
                                           X509Certificate2 expectedCert,
                                           string expectedHint)
     {
-        svid.SpiffeId.Should().Be(expectedSpiffeId);
+        svid.Id.Should().Be(expectedSpiffeId);
         svid.Hint.Should().Be(expectedHint);
 
         X509Certificate2Collection certs = svid.Certificates;

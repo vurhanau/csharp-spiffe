@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using Spiffe.WorkloadApi;
 
-namespace Spiffe.Test.WorkloadApi;
+namespace Spiffe.Tests.WorkloadApi;
 
 public class TestBackoff
 {

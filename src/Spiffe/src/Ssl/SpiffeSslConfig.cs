@@ -45,16 +45,10 @@ public static class SpiffeSslConfig
             return false;
         }
 
-        // TODO: restrict validation, use Verify.cs
-        X509Certificate2 cert2 = new(cert);
-        SpiffeId id = Verify.GetSpiffeIdFromCertificate(cert2);
-        X509Bundle bundle = x509Source.GetX509Bundle(id.TrustDomain);
+        X509Certificate2 leaf = new(cert);
+        X509Certificate2Collection intermediates = chain.ChainPolicy.ExtraStore;
 
-        X509ChainPolicy cp = chain.ChainPolicy;
-        cp.TrustMode = X509ChainTrustMode.CustomRootTrust;
-        cp.CustomTrustStore.AddRange(bundle.X509Authorities);
-
-        return chain.Build(cert2);
+        return X509Verify.Verify(leaf, intermediates, x509Source);
     }
 
     private static SslStreamCertificateContext CreateContext(X509Source x509Source)

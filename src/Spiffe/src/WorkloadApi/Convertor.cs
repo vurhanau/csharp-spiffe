@@ -28,7 +28,7 @@ internal static class Convertor
             X509Svid model = ParseSvid(svid);
             svids.Add(model);
 
-            TrustDomain td = model.SpiffeId.TrustDomain;
+            TrustDomain td = model.Id.TrustDomain;
             X509Bundle bundle = ParseBundle(td, svid.Bundle);
             bundles[td] = bundle;
         }

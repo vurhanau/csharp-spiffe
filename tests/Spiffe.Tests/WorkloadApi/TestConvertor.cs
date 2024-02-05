@@ -8,7 +8,7 @@ using Spiffe.Svid.X509;
 using Spiffe.Tests.Util;
 using Spiffe.WorkloadApi;
 
-namespace Spiffe.Test.WorkloadApi;
+namespace Spiffe.Tests.WorkloadApi;
 
 public class TestConvertor
 {
@@ -134,7 +134,7 @@ public class TestConvertor
         void VerifyFirstSvid()
         {
             X509Svid svid1 = x509Context.X509Svids[0];
-            svid1.SpiffeId.Should().Be(id1);
+            svid1.Id.Should().Be(id1);
             svid1.Hint.Should().Be(hint1);
             svid1.Certificates.Should().HaveCount(2); // leaf + intermediate
             svid1.Certificates[0].RawData.Should().Equal(cert1[0]);
@@ -147,7 +147,7 @@ public class TestConvertor
         VerifyFirstSvid();
 
         X509Svid svid2 = x509Context.X509Svids[1];
-        svid2.SpiffeId.Should().Be(id2);
+        svid2.Id.Should().Be(id2);
         svid2.Hint.Should().Be(hint2);
         svid2.Certificates.Should().ContainSingle();
         svid2.Certificates[0].RawData.Should().Equal(cert2);

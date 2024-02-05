@@ -1,6 +1,8 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Spiffe.Bundle.X509;
 using Spiffe.Id;
+using Spiffe.Svid.X509;
 
 namespace Spiffe.Tests.Util;
 
@@ -19,19 +21,78 @@ internal class CertificateCreationOptions
     public Uri? SubjectAlternateName { get; set; }
 }
 
-internal static class CA
+internal class CA
 {
-    internal static ECDsa CreateEC256Key()
+    public TrustDomain? TrustDomain { get; set; }
+
+    public CA? Parent { get; set; }
+
+    public X509Certificate2? Cert { get; set; }
+
+    internal static CA NewCA(TrustDomain trustDomain)
     {
-        return ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        X509Certificate2 cert = CreateCACertificate();
+        return new CA
+        {
+            TrustDomain = trustDomain,
+            Cert = cert,
+        };
     }
 
-    internal static byte[] CreateSerial()
+    internal CA ChildCA()
     {
-        return BitConverter.GetBytes(Random.Shared.NextInt64());
+        X509Certificate2 cert = CreateCACertificate(Cert);
+        return new CA
+        {
+            Parent = this,
+            Cert = cert,
+        };
     }
 
-    internal static X509Certificate2 CreateSigningCertificate(X509Certificate2? parent = null)
+    internal X509Svid CreateX509Svid(SpiffeId id)
+    {
+        X509Certificate2 cert = CreateX509Svid(Cert!, id);
+        X509Certificate2Collection chain = [cert];
+        chain.AddRange(Chain(false));
+        return new(id, chain, string.Empty);
+    }
+
+    internal X509Certificate2Collection X509Authorities()
+    {
+        CA root = this;
+        while (root.Parent != null)
+        {
+            root = root.Parent;
+        }
+
+        X509Certificate2Collection result = [root.Cert!];
+        return result;
+    }
+
+    internal X509Bundle X509Bundle()
+    {
+        return new X509Bundle(TrustDomain!, X509Authorities());
+    }
+
+    internal X509Certificate2Collection Chain(bool includeRoot)
+    {
+        X509Certificate2Collection chain = [];
+        CA? next = this;
+        while (next != null)
+        {
+            if (includeRoot || next.Parent != null)
+            {
+                chain.Add(next.Cert!);
+            }
+
+            next = next.Parent;
+        }
+
+        return chain;
+    }
+
+    internal static X509Certificate2 CreateCACertificate(X509Certificate2? parent = null,
+                                                         Action<CertificateRequest>? csrConfigure = null)
     {
         using ECDsa key = CreateEC256Key();
         byte[] serial = CreateSerial();
@@ -62,18 +123,32 @@ internal static class CA
         csr.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(csr.PublicKey, false));
 
         DateTimeOffset notBefore = DateTimeOffset.UtcNow;
-        DateTimeOffset notAfter = DateTimeOffset.UtcNow.AddHours(1);
+        DateTimeOffset notAfter = parent != null // Handles the case when cert.notAfter < issuer.notAfter
+                                    ? parent.NotAfter.AddMinutes(-1)
+                                    : notBefore.AddHours(1);
         if (parent == null)
         {
             return csr.CreateSelfSigned(notBefore, notAfter);
         }
 
+        csrConfigure?.Invoke(csr);
+
         using X509Certificate2 ca = csr.Create(parent, notBefore, notAfter, serial);
         return ca.CopyWithPrivateKey(key);
     }
 
-    internal static X509Certificate2 CreateX509Certificate(X509Certificate2 parent,
-                                                           CertificateCreationOptions? options = null)
+    private static ECDsa CreateEC256Key()
+    {
+        return ECDsa.Create(ECCurve.NamedCurves.nistP256);
+    }
+
+    private static byte[] CreateSerial()
+    {
+        return BitConverter.GetBytes(Random.Shared.NextInt64());
+    }
+
+    private static X509Certificate2 CreateX509Certificate(X509Certificate2 parent,
+                                                          CertificateCreationOptions? options = null)
     {
         _ = parent ?? throw new ArgumentNullException(nameof(parent));
         if (!parent.HasPrivateKey)
@@ -113,7 +188,7 @@ internal static class CA
             request.CertificateExtensions.Add(sanExtension);
         }
 
-        // Enhanced key usages
+        // enhanced key usages
         request.CertificateExtensions.Add(
             new X509EnhancedKeyUsageExtension(
                 [
@@ -127,13 +202,13 @@ internal static class CA
             new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
 
         DateTimeOffset notBefore = DateTimeOffset.UtcNow;
-        DateTimeOffset notAfter = DateTimeOffset.UtcNow.AddHours(1);
+        DateTimeOffset notAfter = parent.NotAfter.AddMinutes(-1);
         using X509Certificate2 cert = request.Create(parent, notBefore, notAfter, serial);
 
         return cert.CopyWithPrivateKey(key);
     }
 
-    internal static X509Certificate2 CreateX509Svid(X509Certificate2 parent, SpiffeId id)
+    private static X509Certificate2 CreateX509Svid(X509Certificate2 parent, SpiffeId id)
     {
         byte[] serial = CreateSerial();
         return CreateX509Certificate(parent, new()
@@ -145,12 +220,12 @@ internal static class CA
         });
     }
 
-    internal static X509Extension GetAuthorityKeyIdentifier(X509Certificate2 cert)
+    private static X509Extension GetAuthorityKeyIdentifier(X509Certificate2 cert)
     {
         // There is no built-in support, so it needs to be copied from the
         // Subject Key Identifier of the signing certificate.
         // AuthorityKeyIdentifier is "KeyID=<subject key identifier>"
-        byte[] issuerSubjectKey = cert.Extensions["X509v3 Subject Key Identifier"]!.RawData;
+        byte[] issuerSubjectKey = cert.Extensions.First(f => f.Oid?.Value == "2.5.29.14").RawData; // X509v3 Subject Key Identifier
         ArraySegment<byte> segment = new(issuerSubjectKey, 2, issuerSubjectKey.Length - 2);
         byte[] authorityKeyIdentifer = new byte[segment.Count + 4];
 
