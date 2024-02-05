@@ -9,6 +9,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Client", "src\Spiffe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Tests", "tests\Spiffe.Tests\Spiffe.Tests.csproj", "{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{8BFD4D96-4296-4CD4-9F87-2E7D06CFADF9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AspNetCore", "AspNetCore", "{B88A4333-97E0-41AD-8FB4-D94ABB226DBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend", "samples\AspNetCore\Backend\Backend.csproj", "{412E2E7F-F8FC-4BA0-A381-CC697B938E3C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frontend", "samples\AspNetCore\Frontend\Frontend.csproj", "{8B08FAA6-9938-4694-AB43-47CA7A0FFAA4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +38,18 @@ Global
 		{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68D27CC5-F143-4E54-B65C-4EF745A2D0F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{412E2E7F-F8FC-4BA0-A381-CC697B938E3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{412E2E7F-F8FC-4BA0-A381-CC697B938E3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{412E2E7F-F8FC-4BA0-A381-CC697B938E3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{412E2E7F-F8FC-4BA0-A381-CC697B938E3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B08FAA6-9938-4694-AB43-47CA7A0FFAA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B08FAA6-9938-4694-AB43-47CA7A0FFAA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B08FAA6-9938-4694-AB43-47CA7A0FFAA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B08FAA6-9938-4694-AB43-47CA7A0FFAA4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B88A4333-97E0-41AD-8FB4-D94ABB226DBD} = {8BFD4D96-4296-4CD4-9F87-2E7D06CFADF9}
+		{412E2E7F-F8FC-4BA0-A381-CC697B938E3C} = {B88A4333-97E0-41AD-8FB4-D94ABB226DBD}
+		{8B08FAA6-9938-4694-AB43-47CA7A0FFAA4} = {B88A4333-97E0-41AD-8FB4-D94ABB226DBD}
 	EndGlobalSection
 EndGlobal
