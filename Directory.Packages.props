@@ -2,8 +2,9 @@
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <GoogleProtobufVersion>3.25.2</GoogleProtobufVersion>
+        <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcNetClientVersion>2.60.0</GrpcNetClientVersion>
-        <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
+        <GrpcToolsVersion>2.61.0</GrpcToolsVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
         <TestSdkVersion>17.9.0</TestSdkVersion>
@@ -14,7 +15,7 @@
         <CoverletVersion>6.0.0</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>9.18.0.83559</SonarVersion>
+        <SonarVersion>9.19.0.84025</SonarVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -38,6 +39,9 @@
         <PackageVersion Include="Moq" Version="$(MoqVersion)" />
         <PackageVersion Include="coverlet.msbuild" Version="$(CoverletVersion)" />
         <PackageVersion Include="coverlet.collector" Version="$(CoverletVersion)" />
+
+        <!-- Spiffe.Samples -->
+        <PackageVersion Include="Grpc.AspNetCore" Version="$(GrpcAspNetCoreVersion)" />
 
         <!-- Analyzers -->
         <PackageVersion Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
