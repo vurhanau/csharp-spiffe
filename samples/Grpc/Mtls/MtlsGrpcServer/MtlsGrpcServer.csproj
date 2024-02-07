@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\Spiffe\Spiffe.csproj" />
+    <ProjectReference Include="..\..\GrpcCommon\GrpcCommon.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
   </ItemGroup>
 
 </Project>
