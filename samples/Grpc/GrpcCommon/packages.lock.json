@@ -2,11 +2,33 @@
   "version": 2,
   "dependencies": {
     "net8.0": {
+      "Google.Protobuf": {
+        "type": "Direct",
+        "requested": "[3.25.2, )",
+        "resolved": "3.25.2",
+        "contentHash": "g/xIIeLhR77bl4ajGGbPYRmZf5acJlCRaSBqUnU8+2aQYREnZnv+UccRNndHof4mWO1ORS0b5i6on40VOjBpsg=="
+      },
+      "Grpc.Net.Client": {
+        "type": "Direct",
+        "requested": "[2.60.0, )",
+        "resolved": "2.60.0",
+        "contentHash": "J9U96gjZHOcqSgAThg9vZZhLsbTD005bUggPtMP/RVQnGc3+tQJTpkRUCJtJWq9cykNydsRVoyU38TjPP/VJ4A==",
+        "dependencies": {
+          "Grpc.Net.Common": "2.60.0",
+          "Microsoft.Extensions.Logging.Abstractions": "6.0.0"
+        }
+      },
+      "Grpc.Tools": {
+        "type": "Direct",
+        "requested": "[2.61.0, )",
+        "resolved": "2.61.0",
+        "contentHash": "NwrF+hn8QC5gE7LE3szHEzFWQKisV5tmncitPtWurO58XDINLYzqoDeNczxX3OT/zuSDqcwzisw0Qo4KSzILxQ=="
+      },
       "SonarAnalyzer.CSharp": {
         "type": "Direct",
-        "requested": "[9.19.0.84025, )",
-        "resolved": "9.19.0.84025",
-        "contentHash": "gumqhFh/MHSQBk1aMOmWim+hRSu5FY2H22XI900PyxHOZW+NDmt1c9SgHNMQ141y5FMdoDYy0sHT+xCCzdQeTQ=="
+        "requested": "[9.18.0.83559, )",
+        "resolved": "9.18.0.83559",
+        "contentHash": "JwAYWSdoi8/6VMCUGrVWGdZSLz/8l4xfEUfdeS5K4thna3ZqIYO2IB0MGJViI6Cpk4oPOhL1dCDIMyrbtZJDag=="
       },
       "StyleCop.Analyzers": {
         "type": "Direct",
@@ -39,29 +61,6 @@
         "type": "Transitive",
         "resolved": "1.2.0.556",
         "contentHash": "zvn9Mqs/ox/83cpYPignI8hJEM2A93s2HkHs8HYMOAQW0PkampyoErAiIyKxgTLqbbad29HX/shv/6LGSjPJNQ=="
-      },
-      "spiffe": {
-        "type": "Project",
-        "dependencies": {
-          "Google.Protobuf": "[3.25.2, )",
-          "Grpc.Net.Client": "[2.60.0, )"
-        }
-      },
-      "Google.Protobuf": {
-        "type": "CentralTransitive",
-        "requested": "[3.25.2, )",
-        "resolved": "3.25.2",
-        "contentHash": "g/xIIeLhR77bl4ajGGbPYRmZf5acJlCRaSBqUnU8+2aQYREnZnv+UccRNndHof4mWO1ORS0b5i6on40VOjBpsg=="
-      },
-      "Grpc.Net.Client": {
-        "type": "CentralTransitive",
-        "requested": "[2.60.0, )",
-        "resolved": "2.60.0",
-        "contentHash": "J9U96gjZHOcqSgAThg9vZZhLsbTD005bUggPtMP/RVQnGc3+tQJTpkRUCJtJWq9cykNydsRVoyU38TjPP/VJ4A==",
-        "dependencies": {
-          "Grpc.Net.Common": "2.60.0",
-          "Microsoft.Extensions.Logging.Abstractions": "6.0.0"
-        }
       }
     }
   }
