@@ -20,9 +20,9 @@
       },
       "Grpc.Tools": {
         "type": "Direct",
-        "requested": "[2.60.0, )",
-        "resolved": "2.60.0",
-        "contentHash": "gX2YT08W+4eM25T+ypdbrena91iqz1QywTseu4wVEfYEFpUWbb3G7tDCNU4Fb2D01SS+EipjmRRfXx/BWryrvA=="
+        "requested": "[2.61.0, )",
+        "resolved": "2.61.0",
+        "contentHash": "NwrF+hn8QC5gE7LE3szHEzFWQKisV5tmncitPtWurO58XDINLYzqoDeNczxX3OT/zuSDqcwzisw0Qo4KSzILxQ=="
       },
       "SonarAnalyzer.CSharp": {
         "type": "Direct",

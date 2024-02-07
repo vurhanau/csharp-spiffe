@@ -26,6 +26,12 @@ tls:
 mtls:
 	@echo $(realpath samples/AspNetCore/Mtls)
 
+gtls:
+	@echo $(realpath samples/Grpc/Tls)
+
+gmtls:
+	@echo $(realpath samples/Grpc/Mtls)
+
 curl:
 	@curl -vvv http://localhost:5000/
 
