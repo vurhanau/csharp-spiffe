@@ -2,6 +2,7 @@
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <GoogleProtobufVersion>3.25.2</GoogleProtobufVersion>
+        <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcNetClientVersion>2.60.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.60.0</GrpcToolsVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
@@ -38,6 +39,9 @@
         <PackageVersion Include="Moq" Version="$(MoqVersion)" />
         <PackageVersion Include="coverlet.msbuild" Version="$(CoverletVersion)" />
         <PackageVersion Include="coverlet.collector" Version="$(CoverletVersion)" />
+
+        <!-- Spiffe.Samples -->
+        <PackageVersion Include="Grpc.AspNetCore" Version="$(GrpcAspNetCoreVersion)" />
 
         <!-- Analyzers -->
         <PackageVersion Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
