@@ -45,7 +45,7 @@ public sealed class X509Source : IX509Source
     private bool IsDisposed => _disposed != 0;
 
     /// <summary>
-    /// Creates a new X509Source. It awaits until the initial update
+    /// Creates a new <see cref="X509Source"/>. It awaits until the initial update
     /// has been received from the Workload API for <paramref name="timeoutMillis"/>. The source should be closed when
     /// no longer in use to free underlying resources.
     /// </summary>
