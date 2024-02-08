@@ -46,7 +46,7 @@ public sealed class BundleSource : IX509BundleSource, IDisposable
         _lock.EnterReadLock();
         try
         {
-            bool hasX509Authorities = _x509Bundles.Bundles.ContainsKey(trustDomain);
+            bool hasX509Authorities = _x509Bundles!.Bundles.ContainsKey(trustDomain);
             if (!hasX509Authorities)
             {
                 throw new BundleNotFoundException($"No SPIFFE bundle for trust domain '{trustDomain.Name}'");
@@ -149,10 +149,13 @@ public sealed class BundleSource : IX509BundleSource, IDisposable
                !timeout.IsCancellationRequested &&
                !cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(50);
+            await Task.Delay(50, CancellationToken.None);
         }
 
-        timeout.Token.ThrowIfCancellationRequested();
+        if (!IsInitialized)
+        {
+            timeout.Token.ThrowIfCancellationRequested();
+        }
     }
 
     private void ThrowIfDisposed()

@@ -40,7 +40,7 @@ public class TestX509Source
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
                       .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
-        X509Source s = await X509Source.CreateAsync(c);
+        using X509Source s = await X509Source.CreateAsync(c);
 
         X509Svid svid = s.GetX509Svid();
         VerifyX509SvidRsa(svid, spiffeId, svidCert, hint);
@@ -79,7 +79,7 @@ public class TestX509Source
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
                       .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
-        X509Source s = await X509Source.CreateAsync(c, svids => svids[1]);
+        using X509Source s = await X509Source.CreateAsync(c, svids => svids[1]);
 
         X509Svid svid = s.GetX509Svid();
         VerifyX509SvidRsa(svid, SpiffeId.FromString(s2.SpiffeId), svidCert, "internal2");
@@ -98,7 +98,7 @@ public class TestX509Source
         cancellation.CancelAfter(500);
         Stopwatch stopwatch = Stopwatch.StartNew();
 
-        X509Source s = await X509Source.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
+        using X509Source s = await X509Source.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
 
         stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 5000);
         s.IsInitialized.Should().BeFalse();
