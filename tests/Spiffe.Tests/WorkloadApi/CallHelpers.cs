@@ -4,17 +4,27 @@ namespace Spiffe.Tests.WorkloadApi;
 
 internal class TestAsyncStreamReader<T> : IAsyncStreamReader<T>
 {
-    private readonly IEnumerator<T> enumerator;
+    private readonly TimeSpan _delay;
 
-    public TestAsyncStreamReader(IEnumerable<T> results)
+    private readonly IEnumerator<T> _enumerator;
+
+    public TestAsyncStreamReader(IEnumerable<T> results, TimeSpan delay = default)
     {
-        enumerator = results.GetEnumerator();
+        _enumerator = results.GetEnumerator();
+        _delay = delay;
     }
 
-    public T Current => enumerator.Current;
+    public T Current => _enumerator.Current;
 
-    public Task<bool> MoveNext(CancellationToken cancellationToken) =>
-        Task.Run(enumerator.MoveNext);
+    public async Task<bool> MoveNext(CancellationToken cancellationToken)
+    {
+        if (_delay != default)
+        {
+            await Task.Delay(_delay, cancellationToken);
+        }
+
+        return _enumerator.MoveNext();
+    }
 }
 
 internal class TestErrorAsyncStreamReader<T> : IAsyncStreamReader<T>
@@ -33,17 +43,22 @@ internal class TestErrorAsyncStreamReader<T> : IAsyncStreamReader<T>
 
 internal static class CallHelpers
 {
-    public static AsyncServerStreamingCall<TResponse> CreateAsyncServerStreamingCall<TResponse>(params TResponse[] response)
+    public static AsyncServerStreamingCall<TResponse> Stream<TResponse>(params TResponse[] response)
+    {
+        return Stream<TResponse>(default, response);
+    }
+
+    public static AsyncServerStreamingCall<TResponse> Stream<TResponse>(TimeSpan responseDelay, params TResponse[] response)
     {
         return new AsyncServerStreamingCall<TResponse>(
-            new TestAsyncStreamReader<TResponse>(response),
+            new TestAsyncStreamReader<TResponse>(response, responseDelay),
             Task.FromResult(new Metadata()),
             () => Status.DefaultSuccess,
             () => new Metadata(),
             () => { });
     }
 
-    public static AsyncServerStreamingCall<TResponse> CreateAsyncServerStreamingErrorCall<TResponse>(Exception e)
+    public static AsyncServerStreamingCall<TResponse> StreamError<TResponse>(Exception e)
     {
         return new AsyncServerStreamingCall<TResponse>(
             new TestErrorAsyncStreamReader<TResponse>(e),

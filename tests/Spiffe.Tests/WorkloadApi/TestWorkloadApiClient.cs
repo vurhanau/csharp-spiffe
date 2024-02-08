@@ -25,7 +25,7 @@ public class TestWorkloadApiClient
         var resp = new X509BundlesResponse();
         resp.Bundles.Add("spiffe://example.org", ByteString.CopyFrom(cert.RawData));
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
+                      .Returns(CallHelpers.Stream(resp));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         var b = await c.FetchX509BundlesAsync();
@@ -39,7 +39,7 @@ public class TestWorkloadApiClient
         var err = new Exception("Oops!");
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingErrorCall<X509BundlesResponse>(err));
+                      .Returns(CallHelpers.StreamError<X509BundlesResponse>(err));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<X509BundleSet>> fetch = () => c.FetchX509BundlesAsync();
@@ -64,7 +64,7 @@ public class TestWorkloadApiClient
 
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(
+                      .Returns(CallHelpers.Stream(
                                                 Resp(firstTrustDomain, first),
                                                 Resp(secondTrustDomain, second)));
 
@@ -109,7 +109,7 @@ public class TestWorkloadApiClient
         var err = new Exception("Oops!");
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingErrorCall<X509BundlesResponse>(err));
+                      .Returns(CallHelpers.StreamError<X509BundlesResponse>(err));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
 
@@ -160,7 +160,7 @@ public class TestWorkloadApiClient
         });
 
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
+                      .Returns(CallHelpers.Stream(resp));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         var r = await c.FetchX509ContextAsync();
@@ -178,7 +178,7 @@ public class TestWorkloadApiClient
         var err = new Exception("Oops!");
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingErrorCall<X509SVIDResponse>(err));
+                      .Returns(CallHelpers.StreamError<X509SVIDResponse>(err));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<X509Context>> fetch = () => c.FetchX509ContextAsync();
@@ -217,7 +217,7 @@ public class TestWorkloadApiClient
 
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
+                      .Returns(CallHelpers.Stream(resp));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
@@ -258,7 +258,7 @@ public class TestWorkloadApiClient
         var err = new Exception("Oops!");
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingErrorCall<X509SVIDResponse>(err));
+                      .Returns(CallHelpers.StreamError<X509SVIDResponse>(err));
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
 

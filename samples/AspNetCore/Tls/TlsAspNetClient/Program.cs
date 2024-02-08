@@ -14,8 +14,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 using CancellationTokenSource close = new();
 GrpcChannel channel = GrpcChannelFactory.CreateChannel(spiffeAddress);
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel);
-// TODO: replace with x509 bundle source
-IX509BundleSource x509BundleSource = await X509Source.CreateAsync(workload);
+IX509BundleSource x509BundleSource = await BundleSource.CreateAsync(workload);
 
 using HttpClient http = new(new SocketsHttpHandler()
 {

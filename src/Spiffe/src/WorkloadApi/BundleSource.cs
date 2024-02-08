@@ -1,39 +1,29 @@
-﻿using Spiffe.Bundle.X509;
+using Spiffe.Bundle;
+using Spiffe.Bundle.X509;
+using Spiffe.Error;
 using Spiffe.Id;
-using Spiffe.Svid.X509;
 
 namespace Spiffe.WorkloadApi;
 
 /// <summary>
-/// Represents a source of X.509 SVIDs and X.509 bundles maintained via the Workload API.
-/// <br/>
-/// It handles a <see cref="X509Svid"/> and a <see cref="X509BundleSet"/> that are updated automatically
-/// whenever there is an update from the Workload API.
-/// <br/>
-/// Implements the <see cref="IDisposable"/> interface to close the source.
-/// Other source methods will return an error after close has been called.
+/// Source of SPIFFE bundles maintained via the Workload API
 /// </summary>
-public sealed class X509Source : IX509Source
+public sealed class BundleSource : IX509BundleSource, IDisposable
 {
-    private readonly Func<List<X509Svid>, X509Svid> _picker;
-
     private readonly ReaderWriterLockSlim _lock;
 
-    private X509Svid? _svid;
-
-    private X509BundleSet? _bundles;
+    private X509BundleSet? _x509Bundles;
 
     private volatile int _initialized;
 
     private volatile int _disposed;
 
     /// <summary>
-    /// Constructs X509 source.
+    /// Constructs bundle source.
     /// Visible for testing.
     /// </summary>
-    internal X509Source(Func<List<X509Svid>, X509Svid> picker)
+    internal BundleSource()
     {
-        _picker = picker;
         _lock = new ReaderWriterLockSlim();
     }
 
@@ -45,41 +35,10 @@ public sealed class X509Source : IX509Source
     private bool IsDisposed => _disposed != 0;
 
     /// <summary>
-    /// Creates a new <see cref="X509Source"/>. It awaits until the initial update
-    /// has been received from the Workload API for <paramref name="timeoutMillis"/>. The source should be closed when
-    /// no longer in use to free underlying resources.
+    /// Returns the SPIFFE bundle for the given trust domain.
     /// </summary>
-    public static async Task<X509Source> CreateAsync(IWorkloadApiClient client,
-                                                     Func<List<X509Svid>, X509Svid>? picker = null,
-                                                     int timeoutMillis = 60_000,
-                                                     CancellationToken cancellationToken = default)
-    {
-        _ = client ?? throw new ArgumentNullException(nameof(client));
-        picker ??= svids =>
-        {
-            if (svids.Count == 0)
-            {
-                throw new ArgumentException("SVIDs must be non-empty");
-            }
-
-            return svids[0];
-        };
-
-        X509Source source = new(picker);
-        Watcher<X509Context> watcher = new(source.SetX509Context);
-        _ = Task.Run(
-            () => client.WatchX509ContextAsync(watcher, cancellationToken),
-            cancellationToken);
-
-        await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
-
-        return source;
-    }
-
-    /// <summary>
-    /// Gets a default SVID.
-    /// </summary>
-    public X509Svid GetX509Svid()
+    /// <exception cref="BundleNotFoundException">Thrown if bundle not found.</exception>
+    public SpiffeBundle GetBundle(TrustDomain trustDomain)
     {
         ThrowIfNotInitalized();
         ThrowIfDisposed();
@@ -87,7 +46,18 @@ public sealed class X509Source : IX509Source
         _lock.EnterReadLock();
         try
         {
-            return _svid!;
+            bool hasX509Authorities = _x509Bundles!.Bundles.ContainsKey(trustDomain);
+            if (!hasX509Authorities)
+            {
+                throw new BundleNotFoundException($"No SPIFFE bundle for trust domain '{trustDomain.Name}'");
+            }
+
+            X509Bundle x509Authorities = _x509Bundles.Bundles[trustDomain];
+            return new SpiffeBundle
+            {
+                TrustDomain = trustDomain,
+                X509Authorities = x509Authorities,
+            };
         }
         finally
         {
@@ -96,7 +66,7 @@ public sealed class X509Source : IX509Source
     }
 
     /// <summary>
-    /// Gets a trust bundle associated with trust domain.
+    /// Returns the X.509 bundle for the given trust domain.
     /// </summary>
     public X509Bundle GetX509Bundle(TrustDomain trustDomain)
     {
@@ -106,12 +76,34 @@ public sealed class X509Source : IX509Source
         _lock.EnterReadLock();
         try
         {
-            return _bundles!.GetBundleForTrustDomain(trustDomain);
+            return _x509Bundles!.GetBundleForTrustDomain(trustDomain);
         }
         finally
         {
             _lock.ExitReadLock();
         }
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="BundleSource"/>.
+    /// It blocks until the initial update has been received from the Workload API.
+    /// The source should be closed when no longer in use to free underlying resources.
+    /// </summary>
+    public static async Task<BundleSource> CreateAsync(IWorkloadApiClient client,
+                                                       int timeoutMillis = 60_000,
+                                                       CancellationToken cancellationToken = default)
+    {
+        _ = client ?? throw new ArgumentNullException(nameof(client));
+
+        BundleSource source = new();
+        Watcher<X509Context> watcher = new(source.SetX509Context);
+        _ = Task.Run(
+            () => client.WatchX509ContextAsync(watcher, cancellationToken),
+            cancellationToken);
+
+        await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
+
+        return source;
     }
 
     /// <summary>
@@ -135,8 +127,7 @@ public sealed class X509Source : IX509Source
         _lock.EnterWriteLock();
         try
         {
-            _svid = _picker(x509Context.X509Svids);
-            _bundles = x509Context.X509Bundles;
+            _x509Bundles = x509Context.X509Bundles;
             _initialized = 1;
         }
         finally
@@ -176,7 +167,7 @@ public sealed class X509Source : IX509Source
     {
         if (!IsInitialized)
         {
-            throw new InvalidOperationException("X509 source is not initialized");
+            throw new InvalidOperationException("Bundle source is not initialized");
         }
     }
 }
