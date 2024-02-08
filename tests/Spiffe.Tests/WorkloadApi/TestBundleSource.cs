@@ -37,7 +37,7 @@ public class TestBundleSource
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(resp));
+                      .Returns(CallHelpers.Stream(resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         using BundleSource s = await BundleSource.CreateAsync(c);
 
@@ -51,9 +51,10 @@ public class TestBundleSource
     public async Task TestCreateCancelled()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        X509SVIDResponse resp = new();
+        TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Callback(async () => await Task.Delay(TimeSpan.FromHours(1)))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(new X509SVIDResponse()));
+                      .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         using CancellationTokenSource cancellation = new();
@@ -62,9 +63,8 @@ public class TestBundleSource
 
         using BundleSource s = await BundleSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
 
-        stopwatch.Stop();
-
         stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 5000);
+        cancellation.Token.IsCancellationRequested.Should().BeTrue();
         s.IsInitialized.Should().BeFalse();
     }
 
@@ -72,9 +72,10 @@ public class TestBundleSource
     public async Task TestCreateTimedOut()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        X509SVIDResponse resp = new();
+        TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Callback(async () => await Task.Delay(TimeSpan.FromHours(1)))
-                      .Returns(CallHelpers.CreateAsyncServerStreamingCall(new X509SVIDResponse()));
+                      .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         // Respect timeout
