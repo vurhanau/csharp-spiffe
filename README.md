@@ -1,8 +1,8 @@
-# CSharp SPIFFE Library
+# C# SPIFFE Library
 
 ## Overview
 
-The CSharp SPIFFE library provides functionality to interact with the Workload API to fetch X.509 and JWT SVIDs and Bundles. 
+The C# SPIFFE library provides functionality to interact with the Workload API to fetch X.509 and JWT SVIDs and Bundles. 
 
 This library contains two modules:
 
