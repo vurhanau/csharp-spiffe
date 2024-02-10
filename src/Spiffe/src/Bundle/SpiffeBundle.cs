@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 

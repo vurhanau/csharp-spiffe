@@ -1,5 +1,3 @@
-using Spiffe.Id;
-
 namespace Spiffe.Svid.X509;
 
 /// <summary>

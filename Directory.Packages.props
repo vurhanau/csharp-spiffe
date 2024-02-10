@@ -5,6 +5,7 @@
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcNetClientVersion>2.60.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.61.0</GrpcToolsVersion>
+        <IdentityModelVersion>7.3.1</IdentityModelVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
         <TestSdkVersion>17.9.0</TestSdkVersion>
@@ -23,6 +24,7 @@
         <PackageVersion Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
         <PackageVersion Include="Grpc.Net.Client" Version="$(GrpcNetClientVersion)" />
         <PackageVersion Include="Grpc.Tools" Version="$(GrpcToolsVersion)" />
+        <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="$(IdentityModelVersion)" />
 
         <!-- Spiffe.Client -->
         <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(LoggingVersion)" />
