@@ -40,14 +40,6 @@
         "resolved": "7.3.1",
         "contentHash": "gIw8Sr5ZpuzKFBTfJonh2F54DivTzm5IIK15QB4Y6uE30uQdEO1NnCojTC/b6sWZoZzD0sdBa6SqwMXhucD+nA=="
       },
-      "Microsoft.IdentityModel.JsonWebTokens": {
-        "type": "Transitive",
-        "resolved": "7.3.1",
-        "contentHash": "mXA6AoaD5uZqtsKghgRiupBhyXNii8p9F2BjNLnDGud0tZLS5+4Fio2YAGjFXhnkc80CqgQ61X5U1gUNnDEoKQ==",
-        "dependencies": {
-          "Microsoft.IdentityModel.Tokens": "7.3.1"
-        }
-      },
       "Microsoft.IdentityModel.Logging": {
         "type": "Transitive",
         "resolved": "7.3.1",
@@ -74,7 +66,7 @@
         "dependencies": {
           "Google.Protobuf": "[3.25.2, )",
           "Grpc.Net.Client": "[2.60.0, )",
-          "System.IdentityModel.Tokens.Jwt": "[7.3.1, )"
+          "Microsoft.IdentityModel.JsonWebTokens": "[7.3.1, )"
         }
       },
       "Google.Protobuf": {
@@ -93,13 +85,12 @@
           "Microsoft.Extensions.Logging.Abstractions": "6.0.0"
         }
       },
-      "System.IdentityModel.Tokens.Jwt": {
+      "Microsoft.IdentityModel.JsonWebTokens": {
         "type": "CentralTransitive",
         "requested": "[7.3.1, )",
         "resolved": "7.3.1",
-        "contentHash": "iE8biOWyAC1NnYcZGcgXErNACvIQ6Gcmg5s28gsjVbyyYdF9NdKsYzAPAsO3KGK86EQjpToI1AO82XbG8chkzA==",
+        "contentHash": "mXA6AoaD5uZqtsKghgRiupBhyXNii8p9F2BjNLnDGud0tZLS5+4Fio2YAGjFXhnkc80CqgQ61X5U1gUNnDEoKQ==",
         "dependencies": {
-          "Microsoft.IdentityModel.JsonWebTokens": "7.3.1",
           "Microsoft.IdentityModel.Tokens": "7.3.1"
         }
       }

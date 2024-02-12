@@ -13,7 +13,7 @@ public class JwtSvid
     public JwtSvid(SpiffeId id,
                    List<string> audience,
                    DateTime expiry,
-                   Dictionary<string, object> claims,
+                   Dictionary<string, string> claims,
                    string hint)
     {
         _ = id ?? throw new ArgumentNullException(nameof(id));
@@ -24,7 +24,7 @@ public class JwtSvid
         Id = id;
         Audience = new List<string>(audience);
         Expiry = expiry;
-        Claims = new Dictionary<string, object>(claims);
+        Claims = new Dictionary<string, string>(claims);
         Hint = hint;
     }
 
@@ -46,7 +46,7 @@ public class JwtSvid
     /// <summary>
     /// Claims is the parsed claims from token
     /// </summary>
-    public Dictionary<string, object> Claims { get; }
+    public Dictionary<string, string> Claims { get; }
 
     /// <summary>
     /// Operator-specified string used to provide guidance on how this

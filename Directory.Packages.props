@@ -24,7 +24,7 @@
         <PackageVersion Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
         <PackageVersion Include="Grpc.Net.Client" Version="$(GrpcNetClientVersion)" />
         <PackageVersion Include="Grpc.Tools" Version="$(GrpcToolsVersion)" />
-        <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="$(IdentityModelVersion)" />
+        <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="$(IdentityModelVersion)" />
 
         <!-- Spiffe.Client -->
         <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(LoggingVersion)" />

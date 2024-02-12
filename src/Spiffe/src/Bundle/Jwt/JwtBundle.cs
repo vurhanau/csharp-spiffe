@@ -11,7 +11,7 @@ public class JwtBundle
     /// <summary>
     /// Constructor
     /// </summary>
-    public JwtBundle(TrustDomain trustDomain, X509Certificate2Collection jwtAuthorities)
+    public JwtBundle(TrustDomain trustDomain, Dictionary<string, X509Certificate2> jwtAuthorities)
     {
         TrustDomain = trustDomain ?? throw new ArgumentNullException(nameof(trustDomain));
         JwtAuthorities = jwtAuthorities ?? throw new ArgumentNullException(nameof(jwtAuthorities));
@@ -25,5 +25,5 @@ public class JwtBundle
     /// <summary>
     /// Gets trust domain authorities.
     /// </summary>
-    public X509Certificate2Collection JwtAuthorities { get; }
+    public Dictionary<string, X509Certificate2> JwtAuthorities { get; }
 }
