@@ -1,4 +1,6 @@
-﻿using Spiffe.Bundle.X509;
+﻿using Spiffe.Bundle.Jwt;
+using Spiffe.Bundle.X509;
+using Spiffe.Svid.Jwt;
 
 namespace Spiffe.WorkloadApi;
 
@@ -36,4 +38,32 @@ public interface IWorkloadApiClient
     /// the next update.
     /// </summary>
     Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches a JWT-SVID.
+    /// </summary>
+    Task<JwtSvid> FetchJwtSvidAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches all JWT-SVIDs.
+    /// </summary>
+    Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches the JWT bundles for JWT-SVID validation,
+    /// keyed by a SPIFFE ID of the trust domain to which they belong.
+    /// </summary>
+    Task<JwtBundleSet> FetchJwtBundlesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Watches for changes to the JWT bundles.
+    /// The watcher receives the updated JWT bundles.
+    /// </summary>
+    Task WatchJwtBundlesAsync(IWatcher<JwtBundleSet> watcher, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validates the JWT-SVID token.
+    /// The parsed and validated JWT-SVID is returned.
+    /// </summary>
+    Task<JwtSvid> ValidateJwtSvid(string token, string audience, CancellationToken cancellationToken = default);
 }

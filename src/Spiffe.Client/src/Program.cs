@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Spiffe.Bundle.X509;
 using Spiffe.Client;
 using Spiffe.Grpc;
+using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 using Spiffe.Util;
 using Spiffe.WorkloadApi;
@@ -19,7 +20,8 @@ using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
 });
 
 ILogger logger = loggerFactory.CreateLogger("SPIFFE");
-ParserResult<object> parserResult = Parser.Default.ParseArguments<X509Command, X509BundleCommand, WatchCommand>(args);
+ParserResult<object> parserResult = Parser.Default.ParseArguments<X509SvidCommand, X509BundleCommand, X509WatchCommand,
+                                                                  JwtSvidCommand, JwtBundleCommand, JwtWatchCommand>(args);
 if (parserResult.Errors.Any())
 {
     string err = string.Join(", ", parserResult.Errors);
@@ -50,7 +52,10 @@ IWorkloadApiClient client = WorkloadApiClient.Create(channel, logger);
 using IX509Source x509Source = await X509Source.CreateAsync(client,
                                                             timeoutMillis: 5000,
                                                             cancellationToken: appStopped.Token);
-if (opts is X509Command)
+using IJwtSource jwtSource = await JwtSource.CreateAsync(client,
+                                                         timeoutMillis: 5000,
+                                                         cancellationToken: appStopped.Token);
+if (opts is X509SvidCommand)
 {
     X509Context x509Context = await client.FetchX509ContextAsync();
     logger.LogInformation("X509 context:\n{}", Strings.ToString(x509Context));
@@ -60,7 +65,7 @@ else if (opts is X509BundleCommand)
     X509BundleSet x509Bundles = await client.FetchX509BundlesAsync();
     logger.LogInformation("X509 bundle:\n{}", Strings.ToString(x509Bundles));
 }
-else if (opts is WatchCommand)
+else if (opts is X509WatchCommand)
 {
     X509Svid? svid = null;
     while (true)
@@ -74,6 +79,20 @@ else if (opts is WatchCommand)
 
         await Task.Delay(1000);
     }
+}
+else if (opts is JwtSvidCommand c)
+{
+    if (string.IsNullOrEmpty(c.Audience))
+    {
+        logger.LogError("JWT SVID token audience is null or empty.");
+        return;
+    }
+
+    JwtSvid jwtSvid = await jwtSource.FetchJwtSvidAsync(new JwtSvidParams(
+        audience: c.Audience,
+        extraAudiences: [],
+        subject: null));
+    logger.LogInformation("JWT SVID:\n{}", Strings.ToString(jwtSvid));
 }
 else
 {

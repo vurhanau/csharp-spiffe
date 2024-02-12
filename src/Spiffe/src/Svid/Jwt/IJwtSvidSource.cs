@@ -6,7 +6,12 @@ namespace Spiffe.Svid.Jwt;
 public interface IJwtSvidSource
 {
     /// <summary>
-    /// Gets current SVID.
+    /// Fetches a JWT-SVID from the source with the given parameters.
     /// </summary>
-    JwtSvid FetchJwtSvid(JwtSvidParams param, CancellationToken cancellationToken = default);
+    Task<JwtSvid> FetchJwtSvidAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetches all JWT-SVIDs from the source with the given parameters.
+    /// </summary>
+    Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default);
 }

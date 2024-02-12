@@ -12,11 +12,10 @@ public class JwtSvidParams
     /// </summary>
     public JwtSvidParams(string audience,
                          List<string> extraAudiences,
-                         SpiffeId subject)
+                         SpiffeId? subject)
     {
         _ = audience ?? throw new ArgumentNullException(nameof(audience));
         _ = extraAudiences ?? throw new ArgumentNullException(nameof(extraAudiences));
-        _ = subject ?? throw new ArgumentNullException(nameof(subject));
 
         Audience = audience;
         ExtraAudiences = new List<string>(extraAudiences);
@@ -24,7 +23,8 @@ public class JwtSvidParams
     }
 
     /// <summary>
-    /// Intended recipients of JWT-SVID as present in the 'aud' claim
+    /// Intended recipients of JWT-SVID as present in the 'aud' claim. Required.
+    /// <br/>
     /// </summary>
     public string Audience { get; }
 
@@ -34,7 +34,7 @@ public class JwtSvidParams
     public List<string> ExtraAudiences { get; }
 
     /// <summary>
-    /// SPIFFE ID of the JWT-SVID as present in the 'sub' claim
+    /// SPIFFE ID of the JWT-SVID as present in the 'sub' claim. Optional.
     /// </summary>
-    public SpiffeId Subject { get; }
+    public SpiffeId? Subject { get; }
 }

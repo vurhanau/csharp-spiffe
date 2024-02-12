@@ -1,9 +1,12 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using Google.Protobuf;
+using Microsoft.IdentityModel.Tokens;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
+using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 using Spiffe.WorkloadApi;
 
@@ -56,6 +59,39 @@ public static class Strings
         }
 
         sb.AppendLine(ToString(x509Svid.Certificates, verbose));
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Gets JWT SVID string representation.
+    /// </summary>
+    /// <param name="jwtSvid">JWT SVID</param>
+    /// <param name="verbose">Set if certificate output should contain detailed information.</param>
+    public static string ToString(JwtSvid jwtSvid, bool verbose = false)
+    {
+        StringBuilder sb = new();
+        sb.AppendLine($"Spiffe ID: {jwtSvid.Id?.Id}");
+        if (!string.IsNullOrEmpty(jwtSvid.Hint))
+        {
+            sb.AppendLine($"Hint: {jwtSvid.Hint}");
+        }
+
+        string expiryString = jwtSvid.Expiry.ToString("o", CultureInfo.InvariantCulture);
+        sb.AppendLine($"Expiry: {expiryString}");
+
+        string audienceString = string.Join(", ", jwtSvid.Audience);
+        sb.AppendLine($"Audience: {audienceString}");
+
+        if (!jwtSvid.Claims.IsNullOrEmpty())
+        {
+            sb.AppendLine("Claims:");
+        }
+
+        foreach (KeyValuePair<string, string> claim in jwtSvid.Claims)
+        {
+            sb.AppendLine($" {claim.Key}: {claim.Value}");
+        }
+
         return sb.ToString();
     }
 

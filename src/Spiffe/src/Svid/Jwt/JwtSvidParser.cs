@@ -6,7 +6,7 @@ using Spiffe.Id;
 
 namespace Spiffe.Svid.Jwt;
 
-internal static class JwtParser
+internal static class JwtSvidParser
 {
     // Defines the default leeway for matching NotBefore/Expiry claims.
     private static readonly TimeSpan s_leeway = TimeSpan.FromMinutes(1);
@@ -128,8 +128,9 @@ internal static class JwtParser
     /// </summary>
     private static void ValidateLikeJose(JsonWebToken jwt, List<string> expectedAudience)
     {
-        HashSet<string> s1 = new(jwt.Audiences, StringComparer.OrdinalIgnoreCase);
-        HashSet<string> s2 = new(expectedAudience, StringComparer.OrdinalIgnoreCase);
+        // case-sensitive
+        HashSet<string> s1 = new(jwt.Audiences, StringComparer.Ordinal);
+        HashSet<string> s2 = new(expectedAudience, StringComparer.Ordinal);
         if (!s1.SetEquals(s2))
         {
             string actual = string.Join(", ", s1);
