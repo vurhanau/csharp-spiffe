@@ -2,9 +2,11 @@
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Client;
 using Spiffe.Grpc;
+using Spiffe.Id;
 using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 using Spiffe.Util;
@@ -80,19 +82,43 @@ else if (opts is X509WatchCommand)
         await Task.Delay(1000);
     }
 }
-else if (opts is JwtSvidCommand c)
+else if (opts is JwtSvidCommand j)
 {
-    if (string.IsNullOrEmpty(c.Audience))
-    {
-        logger.LogError("JWT SVID token audience is null or empty.");
-        return;
-    }
-
     JwtSvid jwtSvid = await jwtSource.FetchJwtSvidAsync(new JwtSvidParams(
-        audience: c.Audience,
+        audience: j.Audience!,
         extraAudiences: [],
         subject: null));
     logger.LogInformation("JWT SVID:\n{}", Strings.ToString(jwtSvid));
+    try
+    {
+        await JwtSvidParser.Parse(jwtSvid.Token, jwtSource, [j.Audience!]);
+        logger.LogInformation("JWT SVID is valid");
+    }
+    catch (Exception e)
+    {
+        logger.LogWarning("JWT SVID is invalid: {}", e);
+    }
+}
+else if (opts is JwtBundleCommand)
+{
+    JwtBundleSet bundles = await client.FetchJwtBundlesAsync();
+    logger.LogInformation("JWT bundle set:\n{}", Strings.ToString(bundles));
+}
+else if (opts is JwtWatchCommand w)
+{
+    TrustDomain trustDomain = TrustDomain.FromString(w.TrustDomain!);
+    JwtBundle? bundle = null;
+    while (true)
+    {
+        JwtBundle newBundle = jwtSource.GetJwtBundle(trustDomain);
+        if (bundle != newBundle)
+        {
+            logger.LogInformation("New JWT bundle:\n{}", Strings.ToString(newBundle));
+            bundle = newBundle;
+        }
+
+        await Task.Delay(1000);
+    }
 }
 else
 {

@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Spiffe.Bundle.Jwt;
@@ -6,7 +5,10 @@ using Spiffe.Id;
 
 namespace Spiffe.Svid.Jwt;
 
-internal static class JwtSvidParser
+/// <summary>
+/// Parses JWT SVID.
+/// </summary>
+public static class JwtSvidParser
 {
     // Defines the default leeway for matching NotBefore/Expiry claims.
     private static readonly TimeSpan s_leeway = TimeSpan.FromMinutes(1);
@@ -34,14 +36,13 @@ internal static class JwtSvidParser
                 throw new JwtSvidException($"No JWT authority {kid} found for trust domain {td}");
             }
 
-            X509Certificate2 authority = bundle.JwtAuthorities[kid];
-            X509SecurityKey key = new(authority);
+            SecurityKey key = bundle.JwtAuthorities[kid];
             TokenValidationResult result = await s_jsonHandler.ValidateTokenAsync(jwt, new TokenValidationParameters
             {
                 ClockSkew = s_leeway,
                 ValidateAudience = true,
-                ValidateIssuer = true,
-                ValidateIssuerSigningKey = true,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = false,
                 ValidateTokenReplay = false,
                 ValidateLifetime = true,
                 IssuerSigningKey = key,
@@ -50,7 +51,7 @@ internal static class JwtSvidParser
 
             if (!result.IsValid)
             {
-                throw new JwtSvidException("JWT token validation failed");
+                throw new JwtSvidException("JWT token validation failed", result.Exception);
             }
         });
     }
@@ -59,7 +60,7 @@ internal static class JwtSvidParser
     /// Parses and validates a JWT-SVID token and returns the
     /// JWT-SVID. The JWT-SVID signature is not verified.
     /// </summary>
-    internal static async Task<JwtSvid> ParseInsecure(string token, List<string> audience)
+    public static async Task<JwtSvid> ParseInsecure(string token, List<string> audience)
     {
         return await Parse(token, audience, (jwt, td) =>
         {
@@ -101,6 +102,7 @@ internal static class JwtSvidParser
         ValidateLikeJose(jwt, audience);
 
         return new JwtSvid(
+            token: token,
             id: spiffeId,
             audience: jwt.Audiences.ToList(),
             expiry: jwt.ValidTo,

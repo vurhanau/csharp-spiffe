@@ -12,4 +12,12 @@ public class JwtSvidException : Exception
     : base(message)
     {
     }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JwtSvidException"/> class.
+    /// </summary>
+    public JwtSvidException(string message, Exception inner)
+    : base(message, inner)
+    {
+    }
 }

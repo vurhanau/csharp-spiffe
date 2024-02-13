@@ -26,24 +26,10 @@ internal static class JwtBundleParser
             throw new JwtBundleException("Unable to parse JWKS", e);
         }
 
-        Dictionary<string, X509Certificate2> d = [];
-        for (int i = 0; i < jwks.Keys.Count; i++)
+        Dictionary<string, JsonWebKey> d = [];
+        foreach (JsonWebKey key in jwks.Keys)
         {
-            JsonWebKey key = jwks.Keys[i];
-            try
-            {
-                if (key.X5c.Count == 0)
-                {
-                    continue;
-                }
-
-                byte[] b = Convert.FromBase64String(key.X5c[0]);
-                d[key.Kid] = new X509Certificate2(b);
-            }
-            catch (Exception e)
-            {
-                throw new JwtBundleException($"Error adding authority {i} of JWKS", e);
-            }
+            d[key.Kid] = key;
         }
 
         return new JwtBundle(td, d);

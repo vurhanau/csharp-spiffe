@@ -26,8 +26,11 @@ internal class X509WatchCommand : Options
 [Verb("jwtsvid", HelpText = "Command to fetch JWT SVID from Workload API.")]
 internal class JwtSvidCommand : Options
 {
-    [Option("audience", Required = false, HelpText = "Token audience.")]
+    [Option("audience", Required = true, HelpText = "Token audience.")]
     public string? Audience { get; set; }
+
+    [Option("subject", Required = false, HelpText = "Token subject.")]
+    public string? Subject { get; set; }
 }
 
 [Verb("jwtbundle", HelpText = "Command to fetch JWT bundles from Workload API.")]
@@ -38,4 +41,6 @@ internal class JwtBundleCommand : Options
 [Verb("jwtwatch", HelpText = "Command to watch Workload API JWT bundle update stream.")]
 internal class JwtWatchCommand : Options
 {
+    [Option("trustdomain", Required = true, HelpText = "Bundle trust domain.")]
+    public string? TrustDomain { get; set; }
 }

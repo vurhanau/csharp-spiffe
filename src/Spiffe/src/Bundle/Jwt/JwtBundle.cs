@@ -1,4 +1,5 @@
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.IdentityModel.Tokens;
 using Spiffe.Id;
 
 namespace Spiffe.Bundle.Jwt;
@@ -11,7 +12,7 @@ public class JwtBundle
     /// <summary>
     /// Constructor
     /// </summary>
-    public JwtBundle(TrustDomain trustDomain, Dictionary<string, X509Certificate2> jwtAuthorities)
+    public JwtBundle(TrustDomain trustDomain, Dictionary<string, JsonWebKey> jwtAuthorities)
     {
         TrustDomain = trustDomain ?? throw new ArgumentNullException(nameof(trustDomain));
         JwtAuthorities = jwtAuthorities ?? throw new ArgumentNullException(nameof(jwtAuthorities));
@@ -25,5 +26,5 @@ public class JwtBundle
     /// <summary>
     /// Gets trust domain authorities.
     /// </summary>
-    public Dictionary<string, X509Certificate2> JwtAuthorities { get; }
+    public Dictionary<string, JsonWebKey> JwtAuthorities { get; }
 }

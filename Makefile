@@ -57,7 +57,7 @@ jwtbundle: restore
 	$(RUN) jwtbundle $(AGENT_SOCKET)
 
 jwtwatch: restore
-	$(RUN) jwtwatch $(AGENT_SOCKET)
+	$(RUN) jwtwatch $(AGENT_SOCKET) --trustdomain spiffe://example.org
 
 test: restore
 	@dotnet test

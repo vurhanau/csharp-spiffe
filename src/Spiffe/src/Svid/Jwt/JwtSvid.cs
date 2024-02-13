@@ -10,23 +10,28 @@ public class JwtSvid
     /// <summary>
     /// Constructor
     /// </summary>
-    public JwtSvid(SpiffeId id,
+    public JwtSvid(string token,
+                   SpiffeId id,
                    List<string> audience,
                    DateTime expiry,
                    Dictionary<string, string> claims,
                    string hint)
     {
-        _ = id ?? throw new ArgumentNullException(nameof(id));
+        Token = token ?? throw new ArgumentNullException(nameof(token));
+        Id = id ?? throw new ArgumentNullException(nameof(id));
+        Hint = hint ?? throw new ArgumentNullException(nameof(hint));
+        Expiry = expiry;
+
         _ = audience ?? throw new ArgumentNullException(nameof(audience));
         _ = claims ?? throw new ArgumentNullException(nameof(claims));
-        _ = hint ?? throw new ArgumentNullException(nameof(hint));
-
-        Id = id;
         Audience = new List<string>(audience);
-        Expiry = expiry;
         Claims = new Dictionary<string, string>(claims);
-        Hint = hint;
     }
+
+    /// <summary>
+    /// The serialized JWT token
+    /// </summary>
+    public string Token { get; }
 
     /// <summary>
     /// SPIFFE ID of the JWT-SVID as present in the 'sub' claim

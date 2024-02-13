@@ -75,6 +75,7 @@ internal static class Convertor
 
             JwtSvid to = await JwtSvidParser.ParseInsecure(from.Svid, audience);
             to = new(
+                token: to.Token,
                 id: to.Id,
                 audience: to.Audience,
                 expiry: to.Expiry,

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Google.Protobuf;
 using Microsoft.IdentityModel.Tokens;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.Jwt;
@@ -70,6 +71,7 @@ public static class Strings
     public static string ToString(JwtSvid jwtSvid, bool verbose = false)
     {
         StringBuilder sb = new();
+        sb.AppendLine($"Token: {jwtSvid.Token}");
         sb.AppendLine($"Spiffe ID: {jwtSvid.Id?.Id}");
         if (!string.IsNullOrEmpty(jwtSvid.Hint))
         {
@@ -113,8 +115,47 @@ public static class Strings
         return sb.ToString();
     }
 
-    internal static string ToString(X509Certificate2? certificate)
+    /// <summary>
+    /// Gets JWT bundle set string representation.
+    /// </summary>
+    /// <param name="jwtBundleSet">JWT bundle set</param>
+    /// <param name="verbose">Set if output should contain detailed information.</param>
+    public static string ToString(JwtBundleSet jwtBundleSet, bool verbose = false)
     {
+        StringBuilder sb = new();
+        sb.AppendLine($"Received {jwtBundleSet.Bundles.Count} bundle(s)");
+        foreach ((TrustDomain td, JwtBundle bundle) in jwtBundleSet.Bundles)
+        {
+            sb.AppendLine($"Trust domain: {td}");
+            sb.AppendLine(ToString(bundle, verbose));
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Gets JWT bundle string representation.
+    /// </summary>
+    /// <param name="jwtBundle">JWT bundle</param>
+    /// <param name="verbose">Set if output should contain detailed information.</param>
+    public static string ToString(JwtBundle jwtBundle, bool verbose = false)
+    {
+        StringBuilder sb = new();
+        foreach ((string kid, JsonWebKey key) in jwtBundle.JwtAuthorities)
+        {
+            sb.AppendLine($"{kid} = {ToString(key)}");
+        }
+
+        return sb.ToString();
+    }
+
+    internal static string ToString(X509Certificate2? certificate, bool verbose = false)
+    {
+        if (verbose)
+        {
+            return certificate?.ToString(true) ?? string.Empty;
+        }
+
         return JsonSerializer.Serialize(new
         {
             certificate?.Subject,
@@ -129,6 +170,11 @@ public static class Strings
         s_jsonOpts);
     }
 
+    internal static string ToString(JsonWebKey key)
+    {
+        return JsonSerializer.Serialize(key, s_jsonOpts);
+    }
+
     internal static string ToString(X509Certificate2Collection certificates, bool verbose = false)
     {
         StringBuilder sb = new();
@@ -136,14 +182,8 @@ public static class Strings
         for (int i = 0; i < certificates.Count; i++)
         {
             sb.AppendLine($"[{i + 1}]:");
-            if (verbose)
-            {
-                sb.AppendLine(certificates[i].ToString(true));
-            }
-            else
-            {
-                sb.AppendLine(ToString(certificates[i]));
-            }
+            X509Certificate2 c = certificates[i];
+            sb.AppendLine(ToString(c, verbose));
         }
 
         return sb.ToString();
