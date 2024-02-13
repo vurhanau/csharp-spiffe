@@ -26,6 +26,9 @@ tls:
 mtls:
 	@echo $(realpath samples/AspNetCore/Mtls)
 
+jwt:
+	@echo $(realpath samples/AspNetCore/Jwt)
+
 gtls:
 	@echo $(realpath samples/Grpc/Tls)
 

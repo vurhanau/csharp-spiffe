@@ -17,6 +17,7 @@
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
         <SonarVersion>9.19.0.84025</SonarVersion>
+        <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVerions>
     </PropertyGroup>
 
     <ItemGroup>
@@ -44,6 +45,7 @@
 
         <!-- Spiffe.Samples -->
         <PackageVersion Include="Grpc.AspNetCore" Version="$(GrpcAspNetCoreVersion)" />
+        <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="$(AspNetCoreJwtAuthenticationVersion)" />
 
         <!-- Analyzers -->
         <PackageVersion Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />

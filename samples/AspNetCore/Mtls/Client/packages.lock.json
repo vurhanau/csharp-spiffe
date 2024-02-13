@@ -2,9 +2,20 @@
   "version": 1,
   "dependencies": {
     "net8.0": {
-      "Google.Protobuf": {
+      "SonarAnalyzer.CSharp": {
         "type": "Direct",
         "requested": "(, )",
+        "resolved": "1.10.0",
+        "contentHash": "yBo5PMNdth4FhSvgj1yjqH/gNdgZAf69E28gT6/koW2jrBX0GpJybXUFuKgV0PM4VjhvtuJSlqdC8tO2Ci69VA=="
+      },
+      "StyleCop.Analyzers": {
+        "type": "Direct",
+        "requested": "(, )",
+        "resolved": "1.0.0",
+        "contentHash": "NT0qdVF8gfXn6YcajL/s9orWNbO9NAr9AM8MDHIxXHstMvxi7+viLxAlZIoWRAA25Cs4O91qFcMt06cL/61TjQ=="
+      },
+      "Google.Protobuf": {
+        "type": "Transitive",
         "resolved": "3.0.0",
         "contentHash": "dR2aOri7pW74e1mKgA7/+ocXnfDIW5fb+FrexPsxA9xx8EijQQp7ps09llRoF+M3D75GFVhusjlIMQ5We+ow/w==",
         "dependencies": {
@@ -24,9 +35,16 @@
           "System.Threading": "4.0.11"
         }
       },
+      "Grpc.Core.Api": {
+        "type": "Transitive",
+        "resolved": "2.23.0",
+        "contentHash": "PBu5HmZqkg5t13HA3ZKZi3tjHQI7MSpxPnL1+5c9ewgGT6Eg0eXrK+Klf/FPXzl4sz15aFQv7gSjvd8h07PK3Q==",
+        "dependencies": {
+          "System.Memory": "4.5.3"
+        }
+      },
       "Grpc.Net.Client": {
-        "type": "Direct",
-        "requested": "(, )",
+        "type": "Transitive",
         "resolved": "2.23.0",
         "contentHash": "hT6gF/rXziDyjrO6Yfhh7U8CXSSSVUuPi0lJgmcMD0hpztxy4JAbfqkg7Jx0E7oT9l9iPoGrGpw2EEONz4Ebmg==",
         "dependencies": {
@@ -34,43 +52,6 @@
           "Grpc.Net.Common": "2.23.0",
           "Microsoft.Extensions.Logging.Abstractions": "2.1.1",
           "System.Diagnostics.DiagnosticSource": "4.5.1"
-        }
-      },
-      "Grpc.Tools": {
-        "type": "Direct",
-        "requested": "(, )",
-        "resolved": "0.5.0",
-        "contentHash": "MGoMgqVrBquWvATom64wfrLfSUWuU12aJboKWQ5oDFM6WELszB6llxNUVVgDZxK8ZYeu0ncmmnsXt/oOGlC/qA=="
-      },
-      "Microsoft.IdentityModel.JsonWebTokens": {
-        "type": "Direct",
-        "requested": "(, )",
-        "resolved": "5.2.4",
-        "contentHash": "494JCwsMINjjmrl/kOTdOtcsm3ESh8W16zg0b3nNJBgnpOu9eDgs8KDOtP3kRjSQtHcLrTsBI1XJ5FbhKm1TrA==",
-        "dependencies": {
-          "Microsoft.IdentityModel.Tokens": "5.2.4",
-          "NETStandard.Library": "1.6.1",
-          "Newtonsoft.Json": "10.0.1"
-        }
-      },
-      "SonarAnalyzer.CSharp": {
-        "type": "Direct",
-        "requested": "(, )",
-        "resolved": "1.10.0",
-        "contentHash": "yBo5PMNdth4FhSvgj1yjqH/gNdgZAf69E28gT6/koW2jrBX0GpJybXUFuKgV0PM4VjhvtuJSlqdC8tO2Ci69VA=="
-      },
-      "StyleCop.Analyzers": {
-        "type": "Direct",
-        "requested": "(, )",
-        "resolved": "1.0.0",
-        "contentHash": "NT0qdVF8gfXn6YcajL/s9orWNbO9NAr9AM8MDHIxXHstMvxi7+viLxAlZIoWRAA25Cs4O91qFcMt06cL/61TjQ=="
-      },
-      "Grpc.Core.Api": {
-        "type": "Transitive",
-        "resolved": "2.23.0",
-        "contentHash": "PBu5HmZqkg5t13HA3ZKZi3tjHQI7MSpxPnL1+5c9ewgGT6Eg0eXrK+Klf/FPXzl4sz15aFQv7gSjvd8h07PK3Q==",
-        "dependencies": {
-          "System.Memory": "4.5.3"
         }
       },
       "Grpc.Net.Common": {
@@ -108,6 +89,16 @@
         "type": "Transitive",
         "resolved": "2.1.1",
         "contentHash": "XRzK7ZF+O6FzdfWrlFTi1Rgj2080ZDsd46vzOjadHUB0Cz5kOvDG8vI7caa5YFrsHQpcfn0DxtjS4E46N4FZsA=="
+      },
+      "Microsoft.IdentityModel.JsonWebTokens": {
+        "type": "Transitive",
+        "resolved": "5.2.4",
+        "contentHash": "494JCwsMINjjmrl/kOTdOtcsm3ESh8W16zg0b3nNJBgnpOu9eDgs8KDOtP3kRjSQtHcLrTsBI1XJ5FbhKm1TrA==",
+        "dependencies": {
+          "Microsoft.IdentityModel.Tokens": "5.2.4",
+          "NETStandard.Library": "1.6.1",
+          "Newtonsoft.Json": "10.0.1"
+        }
       },
       "Microsoft.IdentityModel.Logging": {
         "type": "Transitive",
@@ -1288,6 +1279,14 @@
           "System.Threading": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0",
           "System.Xml.XmlDocument": "4.3.0"
+        }
+      },
+      "spiffe": {
+        "type": "Project",
+        "dependencies": {
+          "Google.Protobuf": "(, )",
+          "Grpc.Net.Client": "(, )",
+          "Microsoft.IdentityModel.JsonWebTokens": "(, )"
         }
       }
     }
