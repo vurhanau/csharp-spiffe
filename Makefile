@@ -41,14 +41,23 @@ restore:
 build: restore
 	@dotnet build
 
-x509: restore
+x509svid: restore
 	$(RUN) x509svid $(AGENT_SOCKET)
 
-bundle: restore
+x509bundle: restore
 	$(RUN) x509bundle $(AGENT_SOCKET)
 
-watch: restore
+x509watch: restore
 	$(RUN) x509watch $(AGENT_SOCKET)
+
+jwtsvid: restore
+	$(RUN) jwtsvid $(AGENT_SOCKET) --audience spiffe://example.org/myservice
+
+jwtbundle: restore
+	$(RUN) jwtbundle $(AGENT_SOCKET)
+
+jwtwatch: restore
+	$(RUN) jwtwatch $(AGENT_SOCKET) --trustdomain spiffe://example.org
 
 test: restore
 	@dotnet test

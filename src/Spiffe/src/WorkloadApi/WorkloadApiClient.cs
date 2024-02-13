@@ -3,7 +3,9 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
+using Spiffe.Svid.Jwt;
 using Spiffe.Util;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
@@ -25,6 +27,8 @@ public class WorkloadApiClient : IWorkloadApiClient
     private static readonly X509SVIDRequest s_x509SvidRequest = new();
 
     private static readonly X509BundlesRequest s_x509BundlesRequest = new();
+
+    private static readonly JWTBundlesRequest s_jwtBundlesRequest = new();
 
     internal WorkloadApiClient(SpiffeWorkloadAPIClient client,
                                Action<CallOptions> configureCall,
@@ -53,7 +57,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task<X509Context> FetchX509ContextAsync(CancellationToken cancellationToken = default)
     {
-        return await FetchX509(
+        return await Fetch(
             opts => _client.FetchX509SVID(s_x509SvidRequest, opts),
             Convertor.ParseX509Context,
             cancellationToken);
@@ -62,13 +66,13 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task WatchX509ContextAsync(IWatcher<X509Context> watcher, CancellationToken cancellationToken = default)
     {
-        await WatchX509(watcher, WatchX509ContextInternal, cancellationToken);
+        await Watch(watcher, WatchX509ContextInternal, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<X509BundleSet> FetchX509BundlesAsync(CancellationToken cancellationToken = default)
     {
-        return await FetchX509(
+        return await Fetch(
             opts => _client.FetchX509Bundles(s_x509BundlesRequest, opts),
             Convertor.ParseX509BundleSet,
             cancellationToken);
@@ -77,12 +81,73 @@ public class WorkloadApiClient : IWorkloadApiClient
     /// <inheritdoc/>
     public async Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default)
     {
-        await WatchX509(watcher, WatchX509BundlesInternal, cancellationToken);
+        await Watch(watcher, WatchX509BundlesInternal, cancellationToken);
     }
 
-    private async Task<TResult> FetchX509<TFrom, TResult>(Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
-                                                          Func<TFrom, TResult> mapperFunc,
-                                                          CancellationToken cancellationToken)
+    /// <inheritdoc/>
+    public async Task<JwtSvid> FetchJwtSvidAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
+    {
+        List<JwtSvid> svids = await FetchJwtSvidsInternal(jwtParams, n: 1, cancellationToken);
+        return svids[0];
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
+    {
+        return await FetchJwtSvidsInternal(jwtParams, n: -1, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<JwtBundleSet> FetchJwtBundlesAsync(CancellationToken cancellationToken = default)
+    {
+        return await Fetch(
+            opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
+            Convertor.ParseJwtSvidBundles,
+            cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task WatchJwtBundlesAsync(IWatcher<JwtBundleSet> watcher, CancellationToken cancellationToken = default)
+    {
+        await Watch(watcher, WatchJwtBundlesInternal, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<JwtSvid> ValidateJwtSvid(string token, string audience, CancellationToken cancellationToken = default)
+    {
+        ValidateJWTSVIDRequest req = new()
+        {
+            Svid = token,
+            Audience = audience,
+        };
+        CallOptions opts = GetCallOptions(cancellationToken);
+        _ = await _client.ValidateJWTSVIDAsync(req, opts);
+
+        return await JwtSvidParser.ParseInsecure(token, [audience]);
+    }
+
+    private async Task<List<JwtSvid>> FetchJwtSvidsInternal(JwtSvidParams jwtParams, int n = -1, CancellationToken cancellationToken = default)
+    {
+        List<string> aud = [jwtParams.Audience];
+        aud.AddRange(jwtParams.ExtraAudiences);
+
+        JWTSVIDRequest request = new();
+        request.Audience.AddRange(aud);
+        if (jwtParams.Subject != null)
+        {
+            request.SpiffeId = jwtParams.Subject.ToString();
+        }
+
+        CallOptions opts = GetCallOptions(cancellationToken);
+        JWTSVIDResponse response = await _client.FetchJWTSVIDAsync(request, opts);
+        List<JwtSvid> svids = await Convertor.ParseJwtSvidsAsync(response, aud, n: n);
+
+        return svids;
+    }
+
+    private async Task<TResult> Fetch<TFrom, TResult>(Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
+                                                      Func<TFrom, TResult> mapperFunc,
+                                                      CancellationToken cancellationToken)
     {
         CallOptions callOptions = GetCallOptions(cancellationToken);
         using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
@@ -130,9 +195,22 @@ public class WorkloadApiClient : IWorkloadApiClient
             cancellationToken);
     }
 
-    private async Task WatchX509<T>(IWatcher<T> watcher,
-                                    Func<IWatcher<T>, Backoff, CancellationToken, Task> watchInternalFunc,
-                                    CancellationToken cancellationToken)
+    private async Task WatchJwtBundlesInternal(IWatcher<JwtBundleSet> watcher,
+                                               Backoff backoff,
+                                               CancellationToken cancellationToken)
+    {
+        await WatchX509Internal<JWTBundlesResponse, JwtBundleSet>(
+            watcher,
+            opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
+            Convertor.ParseJwtSvidBundles,
+            (bundle, versbose) => "TODO", // TODO: jwt bundle to string
+            backoff,
+            cancellationToken);
+    }
+
+    private async Task Watch<T>(IWatcher<T> watcher,
+                                Func<IWatcher<T>, Backoff, CancellationToken, Task> watchInternalFunc,
+                                CancellationToken cancellationToken)
     {
         string ty = typeof(T).Name;
         _logger.LogTrace("Start watching {}", ty);

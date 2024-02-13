@@ -16,3 +16,15 @@ Commands:
     ```
     dotnet run x509watch --address <agent-socket-path>
     ```
+- Fetch JWT SVID
+    ```
+    dotnet run jwtsvid --address <agent-socket-path> --audience spiffe://example.org/myservice
+    ```
+- Fetch JWT Bundles
+    ```
+    dotnet run jwtbundle --address <agent-socket-path>
+    ```
+- Watch JWT bundle update stream
+    ```
+    dotnet run jwtwatch --address <agent-socket-path>
+    ```
