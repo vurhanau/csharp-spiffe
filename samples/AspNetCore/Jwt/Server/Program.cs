@@ -1,7 +1,9 @@
+using System.Text;
 using Grpc.Net.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Spiffe.Grpc;
 using Spiffe.WorkloadApi;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 string serverUrl = "http://localhost:5001";
 string spiffeAddress = "unix:///tmp/spire-agent/public/api.sock";
@@ -23,10 +25,8 @@ builder.Services.AddAuthentication(options =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey
-            (Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        ValidAudience = "spiffe://example.org/myservice",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = false,

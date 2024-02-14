@@ -17,7 +17,7 @@
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
         <SonarVersion>9.19.0.84025</SonarVersion>
-        <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVerions>
+        <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
     </PropertyGroup>
 
     <ItemGroup>
