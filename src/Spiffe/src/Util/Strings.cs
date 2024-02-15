@@ -71,7 +71,11 @@ public static class Strings
     public static string ToString(JwtSvid jwtSvid, bool verbose = false)
     {
         StringBuilder sb = new();
-        sb.AppendLine($"Token: {jwtSvid.Token}");
+        if (verbose)
+        {
+            sb.AppendLine($"Token: {jwtSvid.Token}");
+        }
+
         sb.AppendLine($"Spiffe ID: {jwtSvid.Id?.Id}");
         if (!string.IsNullOrEmpty(jwtSvid.Hint))
         {

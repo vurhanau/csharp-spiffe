@@ -16,65 +16,45 @@ public static class JwtSvidParser
     private static readonly JsonWebTokenHandler s_jsonHandler = new();
 
     /// <summary>
-    /// ParseAndValidate parses and validates a JWT-SVID token and returns the
-    /// JWT-SVID. The JWT-SVID signature is verified using the JWT bundle source.
+    /// Parses and validates a JWT-SVID token and returns the JWT-SVID.
+    /// The JWT-SVID signature is verified using the JWT bundle source.
     /// </summary>
-    public static async Task<JwtSvid> Parse(string token, IJwtBundleSource bundleSource, List<string> audience)
+    public static async Task<JwtSvid> Parse(string token, IJwtBundleSource bundleSource, IEnumerable<string> audience)
     {
-        return await Parse(token, audience, async (jwt, td) =>
+        (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, audience);
+        TokenValidationResult result = await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, audience);
+        if (!result.IsValid)
         {
-            string kid = jwt.Kid;
-            if (string.IsNullOrEmpty(kid))
-            {
-                throw new JwtSvidException("Token header missing key id");
-            }
+            throw new JwtSvidException("JWT token validation failed", result.Exception);
+        }
 
-            JwtBundle bundle = bundleSource.GetJwtBundle(td);
-            bool ok = bundle.JwtAuthorities.ContainsKey(kid);
-            if (!ok)
-            {
-                throw new JwtSvidException($"No JWT authority {kid} found for trust domain {td}");
-            }
-
-            SecurityKey key = bundle.JwtAuthorities[kid];
-            TokenValidationResult result = await s_jsonHandler.ValidateTokenAsync(jwt, new TokenValidationParameters
-            {
-                ClockSkew = s_leeway,
-                ValidateAudience = true,
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = false,
-                ValidateTokenReplay = false,
-                ValidateLifetime = true,
-                IssuerSigningKey = key,
-                ValidAudiences = audience,
-            });
-
-            if (!result.IsValid)
-            {
-                throw new JwtSvidException("JWT token validation failed", result.Exception);
-            }
-        });
+        return CreateJwtSvid(parsed.Id, parsed.Jwt);
     }
 
     /// <summary>
     /// Parses and validates a JWT-SVID token and returns the
     /// JWT-SVID. The JWT-SVID signature is not verified.
     /// </summary>
-    public static async Task<JwtSvid> ParseInsecure(string token, List<string> audience)
+    public static JwtSvid ParseInsecure(string token, List<string> audience)
     {
-        return await Parse(token, audience, (jwt, td) =>
-        {
-            // no signature verification
-            return Task.CompletedTask;
-        });
+        (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, audience);
+        return CreateJwtSvid(parsed.Id, parsed.Jwt);
     }
 
-    private static async Task<JwtSvid> Parse(string token,
-                                             List<string> audience,
-                                             Func<JsonWebToken, TrustDomain, Task> validateAsync)
+    /// <summary>
+    /// Parses and validate JWT-SVID.
+    /// </summary>
+    public static async Task<TokenValidationResult> ValidateAsync(string token,
+                                                                  IJwtBundleSource bundleSource,
+                                                                  IEnumerable<string> validAudience)
+    {
+        (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, validAudience);
+        return await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, validAudience);
+    }
+
+    private static (SpiffeId Id, JsonWebToken Jwt) ParseValidate(string token, IEnumerable<string> validAudience)
     {
         JsonWebToken jwt = s_jsonHandler.ReadJsonWebToken(token);
-
         ValidateTokenAlgorithm(jwt);
 
         if (string.IsNullOrEmpty(jwt.Subject))
@@ -97,17 +77,41 @@ public static class JwtSvidParser
             throw new JwtSvidException($"Token has an invalid subject claim: '{jwt.Subject}'");
         }
 
-        await validateAsync(jwt, spiffeId.TrustDomain);
+        ValidateLikeJose(jwt, validAudience);
 
-        ValidateLikeJose(jwt, audience);
+        return (spiffeId, jwt);
+    }
 
-        return new JwtSvid(
-            token: token,
-            id: spiffeId,
-            audience: jwt.Audiences.ToList(),
-            expiry: jwt.ValidTo,
-            claims: jwt.Claims.ToDictionary(c => c.Type, c => c.Value),
-            hint: string.Empty);
+    private static async Task<TokenValidationResult> ValidateSignature(JsonWebToken jwt,
+                                                                       TrustDomain trustDomain,
+                                                                       IJwtBundleSource bundleSource,
+                                                                       IEnumerable<string> validAudiences)
+    {
+        string kid = jwt.Kid;
+        if (string.IsNullOrEmpty(kid))
+        {
+            throw new JwtSvidException("Token header missing key id");
+        }
+
+        JwtBundle bundle = bundleSource.GetJwtBundle(trustDomain);
+        bool ok = bundle.JwtAuthorities.ContainsKey(kid);
+        if (!ok)
+        {
+            throw new JwtSvidException($"No JWT authority {kid} found for trust domain {trustDomain}");
+        }
+
+        SecurityKey key = bundle.JwtAuthorities[kid];
+        return await s_jsonHandler.ValidateTokenAsync(jwt, new TokenValidationParameters
+        {
+            ClockSkew = s_leeway,
+            ValidateAudience = true,
+            ValidateIssuer = false,
+            ValidateIssuerSigningKey = true,
+            ValidateTokenReplay = false,
+            ValidateLifetime = true,
+            IssuerSigningKey = key,
+            ValidAudiences = validAudiences,
+        });
     }
 
     /// <summary>
@@ -128,7 +132,7 @@ public static class JwtSvidParser
     /// <br/>
     /// See: <seealso href="https://github.com/go-jose/go-jose/blob/v3.0.1/jwt/validation.go#L78"/>
     /// </summary>
-    private static void ValidateLikeJose(JsonWebToken jwt, List<string> expectedAudience)
+    private static void ValidateLikeJose(JsonWebToken jwt, IEnumerable<string> expectedAudience)
     {
         // case-sensitive
         HashSet<string> s1 = new(jwt.Audiences, StringComparer.Ordinal);
@@ -173,5 +177,16 @@ public static class JwtSvidParser
         {
             throw new JwtSvidException($"Unsupported token signature algorithm '{alg}'");
         }
+    }
+
+    private static JwtSvid CreateJwtSvid(SpiffeId id, JsonWebToken jwt)
+    {
+        return new JwtSvid(
+            token: jwt.EncodedToken,
+            id: id,
+            audience: jwt.Audiences.ToList(),
+            expiry: jwt.ValidTo,
+            claims: jwt.Claims.ToDictionary(c => c.Type, c => c.Value),
+            hint: string.Empty);
     }
 }
