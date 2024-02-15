@@ -1,7 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Spiffe.Grpc;
 using Spiffe.WorkloadApi;
 
@@ -16,27 +17,22 @@ using GrpcChannel channel = GrpcChannelFactory.CreateChannel(spiffeAddress);
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel);
 using JwtSource jwtSource = await JwtSource.CreateAsync(workload);
 
-builder.Services.AddAuthentication(options =>
+string audience = "spiffe://example.org/myservice";
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(o =>
-{
-    o.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidAudience = "spiffe://example.org/myservice",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = false,
-        ValidateIssuerSigningKey = true,
-    };
+    o.TokenHandlers.Clear();
+    o.TokenHandlers.Add(new JwtSvidTokenHandler(jwtSource, audience));
 });
 
 WebApplication app = builder.Build();
 app.Lifetime.ApplicationStopped.Register(close.Cancel);
 
-app.MapGet("/", () => "Hello World!").RequireAuthorization();
+app.MapGet("/", (ClaimsPrincipal principal) =>
+{
+    string claimString = string.Join("\n", principal.Claims.Select(c => c.ToString()));
+    app.Logger.LogInformation("Principal:\n{}", claimString);
+    return "Hello world!";
+}).RequireAuthorization();
 
 app.Run(serverUrl);

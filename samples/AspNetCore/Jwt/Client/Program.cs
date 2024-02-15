@@ -1,36 +1,44 @@
+using System.Net.Http.Headers;
 using Grpc.Net.Client;
 using Spiffe.Grpc;
-using Spiffe.Ssl;
+using Spiffe.Svid.Jwt;
+using Spiffe.Util;
 using Spiffe.WorkloadApi;
 
 string clientUrl = "http://localhost:5000";
-string serverUrl = "https://localhost:5001";
+string serverUrl = "http://localhost:5001";
 string spiffeAddress = "unix:///tmp/spire-agent/public/api.sock";
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Configure Spiffe client
 using CancellationTokenSource close = new();
 GrpcChannel channel = GrpcChannelFactory.CreateChannel(spiffeAddress);
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel);
-X509Source x509Source = await X509Source.CreateAsync(workload);
+JwtSource jwtSource = await JwtSource.CreateAsync(workload);
 
-using HttpClient http = new(new SocketsHttpHandler()
-{
-    SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source),
-});
+using HttpClient http = new();
 
 WebApplication app = builder.Build();
 app.Lifetime.ApplicationStopped.Register(close.Cancel);
 
-string clientCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
-app.Logger.LogInformation("Client certificate:\n {}", clientCertificate);
-
+string audience = "spiffe://example.org/myservice";
 app.MapGet("/", async () =>
 {
-    HttpResponseMessage r = await http.GetAsync(serverUrl);
-    string str = await r.Content.ReadAsStringAsync();
-    return str;
+    JwtSvid svid = await jwtSource.FetchJwtSvidAsync(new JwtSvidParams(
+        audience: audience,
+        extraAudiences: [],
+        subject: null));
+
+    HttpRequestMessage req = new()
+    {
+        Method = HttpMethod.Get,
+        RequestUri = new Uri(serverUrl),
+    };
+    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", svid.Token);
+    app.Logger.LogInformation("JWT SVID:\n{}", Strings.ToString(svid));
+    HttpResponseMessage resp = await http.SendAsync(req);
+    string str = await resp.Content.ReadAsStringAsync();
+    return Results.Text(str, statusCode: (int)resp.StatusCode);
 });
 
 app.Run(clientUrl);
