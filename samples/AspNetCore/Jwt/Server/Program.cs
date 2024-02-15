@@ -1,8 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Spiffe.AspNetCore;
 using Spiffe.Grpc;
 using Spiffe.WorkloadApi;
 

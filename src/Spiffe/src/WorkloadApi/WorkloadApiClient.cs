@@ -123,7 +123,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         CallOptions opts = GetCallOptions(cancellationToken);
         _ = await _client.ValidateJWTSVIDAsync(req, opts);
 
-        return await JwtSvidParser.ParseInsecure(token, [audience]);
+        return JwtSvidParser.ParseInsecure(token, [audience]);
     }
 
     private async Task<List<JwtSvid>> FetchJwtSvidsInternal(JwtSvidParams jwtParams, int n = -1, CancellationToken cancellationToken = default)
@@ -140,7 +140,7 @@ public class WorkloadApiClient : IWorkloadApiClient
 
         CallOptions opts = GetCallOptions(cancellationToken);
         JWTSVIDResponse response = await _client.FetchJWTSVIDAsync(request, opts);
-        List<JwtSvid> svids = await Convertor.ParseJwtSvidsAsync(response, aud, n: n);
+        List<JwtSvid> svids = Convertor.ParseJwtSvids(response, aud, n: n);
 
         return svids;
     }

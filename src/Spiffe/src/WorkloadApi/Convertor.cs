@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Google.Protobuf;
-using Microsoft.IdentityModel.Tokens;
 using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
@@ -51,7 +50,7 @@ internal static class Convertor
         return new(bundles);
     }
 
-    public static async Task<List<JwtSvid>> ParseJwtSvidsAsync(JWTSVIDResponse response, List<string> audience, int n = -1)
+    public static List<JwtSvid> ParseJwtSvids(JWTSVIDResponse response, List<string> audience, int n = -1)
     {
         _ = response ?? throw new ArgumentNullException(nameof(response));
         if (response.Svids.Count == 0)
@@ -73,7 +72,7 @@ internal static class Convertor
                 continue;
             }
 
-            JwtSvid to = await JwtSvidParser.ParseInsecure(from.Svid, audience);
+            JwtSvid to = JwtSvidParser.ParseInsecure(from.Svid, audience);
             to = new(
                 token: to.Token,
                 id: to.Id,
