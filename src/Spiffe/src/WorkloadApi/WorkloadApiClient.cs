@@ -203,7 +203,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             watcher,
             opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
             Convertor.ParseJwtSvidBundles,
-            (bundle, versbose) => "TODO", // TODO: jwt bundle to string
+            Strings.ToString,
             backoff,
             cancellationToken);
     }
