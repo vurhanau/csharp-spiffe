@@ -1,24 +1,32 @@
 ﻿namespace Spiffe.WorkloadApi;
 
 // <inheritdoc/>
-internal class Watcher<T> : IWatcher<T>
+public class Watcher<T> : IWatcher<T>
 {
     private readonly Action<T> _onUpdate;
 
     private readonly Action<Exception> _onError;
 
-    internal Watcher(Action<T> onUpdate, Action<Exception> onError)
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    public Watcher(Action<T> onUpdate, Action<Exception> onError)
     {
         _onUpdate = onUpdate ?? throw new ArgumentNullException(nameof(onUpdate));
         _onError = onError ?? throw new ArgumentNullException(nameof(onError));
     }
 
-    internal Watcher(Action<T> onUpdate)
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    public Watcher(Action<T> onUpdate)
     : this(onUpdate, _ => { })
     {
     }
 
+    /// <inheritdoc/>
     public void OnUpdate(T update) => _onUpdate(update);
 
+    /// <inheritdoc/>
     public void OnError(Exception e) => _onError(e);
 }

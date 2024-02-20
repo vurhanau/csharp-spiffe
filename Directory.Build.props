@@ -1,9 +1,6 @@
 <Project>
     <PropertyGroup>
         <TargetFrameworks>net8.0</TargetFrameworks>
-        <LangVersion>12</LangVersion>
-        <RestoreLockedMode>true</RestoreLockedMode>
-        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
