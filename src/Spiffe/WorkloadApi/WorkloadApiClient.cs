@@ -85,16 +85,9 @@ public class WorkloadApiClient : IWorkloadApiClient
     }
 
     /// <inheritdoc/>
-    public async Task<JwtSvid> FetchJwtSvidAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
-    {
-        List<JwtSvid> svids = await FetchJwtSvidsInternal(jwtParams, n: 1, cancellationToken);
-        return svids[0];
-    }
-
-    /// <inheritdoc/>
     public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
     {
-        return await FetchJwtSvidsInternal(jwtParams, n: -1, cancellationToken);
+        return await FetchJwtSvidsInternal(jwtParams, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -126,7 +119,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         return JwtSvidParser.ParseInsecure(token, [audience]);
     }
 
-    private async Task<List<JwtSvid>> FetchJwtSvidsInternal(JwtSvidParams jwtParams, int n = -1, CancellationToken cancellationToken = default)
+    private async Task<List<JwtSvid>> FetchJwtSvidsInternal(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
     {
         List<string> aud = [jwtParams.Audience];
         aud.AddRange(jwtParams.ExtraAudiences);
@@ -140,7 +133,7 @@ public class WorkloadApiClient : IWorkloadApiClient
 
         CallOptions opts = GetCallOptions(cancellationToken);
         JWTSVIDResponse response = await _client.FetchJWTSVIDAsync(request, opts);
-        List<JwtSvid> svids = Convertor.ParseJwtSvids(response, aud, n: n);
+        List<JwtSvid> svids = Convertor.ParseJwtSvids(response, aud);
 
         return svids;
     }

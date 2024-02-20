@@ -40,11 +40,6 @@ public interface IWorkloadApiClient
     Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Fetches a JWT-SVID.
-    /// </summary>
-    Task<JwtSvid> FetchJwtSvidAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Fetches all JWT-SVIDs.
     /// </summary>
     Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default);

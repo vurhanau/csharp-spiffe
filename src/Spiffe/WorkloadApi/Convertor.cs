@@ -50,7 +50,7 @@ internal static class Convertor
         return new(bundles);
     }
 
-    public static List<JwtSvid> ParseJwtSvids(JWTSVIDResponse response, List<string> audience, int n = -1)
+    public static List<JwtSvid> ParseJwtSvids(JWTSVIDResponse response, List<string> audience)
     {
         _ = response ?? throw new ArgumentNullException(nameof(response));
         if (response.Svids.Count == 0)
@@ -60,12 +60,9 @@ internal static class Convertor
 
         HashSet<string> hints = [];
         List<JwtSvid> svids = [];
-        n = n == -1 ? response.Svids.Count : n;
-        for (int i = 0; i < n; i++)
+        foreach (JWTSVID from in response.Svids)
         {
-            JWTSVID from = response.Svids[i];
-
-            // In the event of more than one X509SVID message with the same hint value set, then the first message in the
+            // In the event of more than one JWTSVID message with the same hint value set, then the first message in the
             // list SHOULD be selected.
             if (!string.IsNullOrEmpty(from.Hint) && !hints.Add(from.Hint))
             {

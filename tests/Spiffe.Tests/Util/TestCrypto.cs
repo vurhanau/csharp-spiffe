@@ -10,8 +10,8 @@ public class TestCrypto
     [Fact]
     public void TestGetCertificateWithRsaPrivateKey()
     {
-        string certPath = "TestData/good-leaf-only.pem";
-        string keyPath = "TestData/key-pkcs8-rsa.pem";
+        string certPath = "TestData/X509/good-leaf-only.pem";
+        string keyPath = "TestData/X509/key-pkcs8-rsa.pem";
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         byte[] rsaPrivateKey = expected.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
@@ -25,8 +25,8 @@ public class TestCrypto
     [Fact]
     public void TestGetCertificateWithEcdsaPrivateKey()
     {
-        string certPath = "TestData/good-leaf-and-intermediate.pem";
-        string keyPath = "TestData/key-pkcs8-ecdsa.pem";
+        string certPath = "TestData/X509/good-leaf-and-intermediate.pem";
+        string keyPath = "TestData/X509/key-pkcs8-ecdsa.pem";
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
         byte[] ecdsaPrivateKey = expected.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey();
@@ -40,7 +40,7 @@ public class TestCrypto
     [Fact]
     public void TestGetCertificateWithInvalidPrivateKey()
     {
-        string certPath = "TestData/good-leaf-only.pem";
+        string certPath = "TestData/X509/good-leaf-only.pem";
 
         using X509Certificate2 cert = FirstFromPemFile(certPath);
         byte[] invalidPrivateKey = "not-DER-encoded"u8.ToArray();
@@ -51,7 +51,7 @@ public class TestCrypto
     [Fact]
     public void TestParseGood()
     {
-        string certAndKeyPath = "TestData/good-cert-and-key.pem";
+        string certAndKeyPath = "TestData/X509/good-cert-and-key.pem";
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certAndKeyPath);
         X509Certificate2Collection actual = Crypto.ParseCertificates(expected.RawData);
@@ -64,7 +64,7 @@ public class TestCrypto
     [Fact]
     public void TestParseGoodLeafAndIntermediate()
     {
-        string leafAndIntermediatePath = "TestData/good-leaf-and-intermediate.pem";
+        string leafAndIntermediatePath = "TestData/X509/good-leaf-and-intermediate.pem";
         X509Certificate2Collection expected = [];
         expected.ImportFromPemFile(leafAndIntermediatePath);
 

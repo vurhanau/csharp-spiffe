@@ -19,10 +19,10 @@ public class TestBundleSource
     public async Task TestGetX509Bundle()
     {
         SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
-        using X509Certificate2 bundleCert = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 bundleCert = CertUtil.FirstFromPemFile("TestData/X509/good-leaf-only.pem");
         using X509Certificate2 svidCert = X509Certificate2.CreateFromPemFile(
-            "TestData/good-leaf-only.pem",
-            "TestData/key-pkcs8-rsa.pem");
+            "TestData/X509/good-leaf-only.pem",
+            "TestData/X509/key-pkcs8-rsa.pem");
         byte[] svidKey = svidCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         string hint = "internal";
         X509SVIDResponse resp = new();
@@ -78,7 +78,6 @@ public class TestBundleSource
                       .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        // Respect timeout
         await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
