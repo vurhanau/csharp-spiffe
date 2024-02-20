@@ -20,47 +20,22 @@ policy:
 		-spiffeID spiffe://example.org/myservice \
 		-selector unix:uid:$$(id -u)
 
-tls:
-	@echo $(realpath samples/AspNetCore/Tls)
-
-mtls:
-	@echo $(realpath samples/AspNetCore/Mtls)
-
-jwt:
-	@echo $(realpath samples/AspNetCore/Jwt)
-
-gtls:
-	@echo $(realpath samples/Grpc/Tls)
-
-gmtls:
-	@echo $(realpath samples/Grpc/Mtls)
-
 curl:
 	@curl -vvv http://localhost:5000/
 
 restore:
-	@dotnet restore --locked-mode --force-evaluate
+	@dotnet restore
 
 build: restore
 	@dotnet build
 
-x509svid: restore
-	$(RUN) x509svid $(AGENT_SOCKET)
-
-x509bundle: restore
-	$(RUN) x509bundle $(AGENT_SOCKET)
-
-x509watch: restore
-	$(RUN) x509watch $(AGENT_SOCKET)
-
-jwtsvid: restore
-	$(RUN) jwtsvid $(AGENT_SOCKET) --audience spiffe://example.org/myservice
-
-jwtbundle: restore
-	$(RUN) jwtbundle $(AGENT_SOCKET)
-
-jwtwatch: restore
-	$(RUN) jwtwatch $(AGENT_SOCKET) --trustdomain spiffe://example.org
+build-samples:
+	@cd samples/Spiffe.Sample.AspNetCore.Jwt && dotnet build
+	@cd samples/Spiffe.Sample.AspNetCore.Mtls && dotnet build
+	@cd samples/Spiffe.Sample.AspNetCore.Tls && dotnet build
+	@cd samples/Spiffe.Sample.Grpc.Mtls && dotnet build
+	@cd samples/Spiffe.Sample.Grpc.Tls && dotnet build
+	@cd samples/Spiffe.Sample.Watcher && dotnet build
 
 test: restore
 	@dotnet test
