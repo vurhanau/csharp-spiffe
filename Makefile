@@ -37,6 +37,9 @@ build-samples:
 	@cd samples/Spiffe.Sample.Grpc.Tls && dotnet build
 	@cd samples/Spiffe.Sample.Watcher && dotnet build
 
+watch:
+	@cd samples/Spiffe.Sample.Watcher && dotnet run
+
 test: restore
 	@dotnet test
 
