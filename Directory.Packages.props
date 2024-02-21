@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <GoogleProtobufVersion>3.25.2</GoogleProtobufVersion>
+        <GoogleProtobufVersion>3.25.3</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcNetClientVersion>2.60.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.61.0</GrpcToolsVersion>
