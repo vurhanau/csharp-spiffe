@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace Spiffe.Tests.Util;
+namespace Spiffe.Tests.Helper;
 
 internal static class Keys
 {

@@ -1,5 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -10,7 +9,7 @@ using Spiffe.Id;
 using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 
-namespace Spiffe.Tests.Util;
+namespace Spiffe.Tests.Helper;
 
 internal class CertificateCreationOptions
 {
@@ -27,7 +26,7 @@ internal class CertificateCreationOptions
     public Uri? SubjectAlternateName { get; set; }
 }
 
-internal class CA
+internal sealed class CA : IDisposable
 {
     public TrustDomain? TrustDomain { get; set; }
 
@@ -38,6 +37,12 @@ internal class CA
     public ECDsa? JwtKey { get; set; }
 
     public string? JwtKid { get; set; }
+
+    public void Dispose()
+    {
+        Cert?.Dispose();
+        JwtKey?.Dispose();
+    }
 
     internal static CA Create(TrustDomain trustDomain)
     {
@@ -83,7 +88,6 @@ internal class CA
             new(JwtRegisteredClaimNames.Iat, iat),
             new(JwtRegisteredClaimNames.Exp, exp),
         ];
-
         claims.AddRange(audience.Select(aud => new Claim(JwtRegisteredClaimNames.Aud, aud)));
 
         ECDsaSecurityKey securityKey = new(JwtKey);
@@ -103,10 +107,8 @@ internal class CA
 
     internal Dictionary<string, JsonWebKey> JwtAuthorities()
     {
-        return new()
-        {
-            { JwtKid!, JsonWebKeyConverter.ConvertFromECDsaSecurityKey(new ECDsaSecurityKey(JwtKey)) },
-        };
+        JsonWebKey jwtKey = JsonWebKeyConverter.ConvertFromECDsaSecurityKey(new ECDsaSecurityKey(JwtKey));
+        return new() { { JwtKid!,  jwtKey } };
     }
 
     internal X509Certificate2Collection X509Authorities()
