@@ -35,7 +35,7 @@ public static class JwtSvidParser
     /// Parses and validates a JWT-SVID token and returns the
     /// JWT-SVID. The JWT-SVID signature is not verified.
     /// </summary>
-    public static JwtSvid ParseInsecure(string token, List<string> audience)
+    public static JwtSvid ParseInsecure(string token, IEnumerable<string> audience)
     {
         (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, audience);
         return CreateJwtSvid(parsed.Id, parsed.Jwt);

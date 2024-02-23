@@ -13,7 +13,7 @@ public class TestX509Verify
     public void TestVerifyPass()
     {
         TrustDomain td = TrustDomain.FromString("domain1.test");
-        CA ca1 = CA.NewCA(td);
+        CA ca1 = CA.Create(td);
         CA ca2 = ca1.ChildCA();
         IX509BundleSource bundleSource = new TestX509BundleSource(ca1.X509Bundle());
         X509Certificate2Collection certs = ca2.CreateX509Svid(SpiffeId.FromPath(td, "/workload")).Certificates;
@@ -28,8 +28,8 @@ public class TestX509Verify
     public void TestVerifyFails()
     {
         TrustDomain td = TrustDomain.FromString("domain1.test");
-        CA ca0 = CA.NewCA(td);
-        CA ca1 = CA.NewCA(td);
+        CA ca0 = CA.Create(td);
+        CA ca1 = CA.Create(td);
         CA ca2 = ca1.ChildCA();
         IX509BundleSource bundleSource = new TestX509BundleSource(ca0.X509Bundle());
         X509Certificate2Collection certs = ca2.CreateX509Svid(SpiffeId.FromPath(td, "/workload")).Certificates;
@@ -51,7 +51,7 @@ public class TestX509Verify
     public void TestVerifyThrows()
     {
         TrustDomain td = TrustDomain.FromString("domain1.test");
-        CA ca = CA.NewCA(td);
+        CA ca = CA.Create(td);
         IX509BundleSource bundleSource = new TestX509BundleSource(ca.X509Bundle());
         X509Certificate2Collection certs = ca.CreateX509Svid(SpiffeId.FromPath(td, "/workload")).Certificates;
         X509Certificate2 leaf = certs[0];

@@ -1,7 +1,13 @@
-﻿using System.Security.Cryptography;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.IdentityModel.Tokens;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
+using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 
 namespace Spiffe.Tests.Util;
@@ -29,13 +35,18 @@ internal class CA
 
     public X509Certificate2? Cert { get; set; }
 
-    internal static CA NewCA(TrustDomain trustDomain)
+    public ECDsa? JwtKey { get; set; }
+
+    public string? JwtKid { get; set; }
+
+    internal static CA Create(TrustDomain trustDomain)
     {
-        X509Certificate2 cert = CreateCACertificate();
         return new CA
         {
             TrustDomain = trustDomain,
-            Cert = cert,
+            Cert = CreateCACertificate(),
+            JwtKey = Keys.CreateEC256Key(),
+            JwtKid = Keys.GenerateKeyId(),
         };
     }
 
@@ -46,6 +57,8 @@ internal class CA
         {
             Parent = this,
             Cert = cert,
+            JwtKey = Keys.CreateEC256Key(),
+            JwtKid = Keys.GenerateKeyId(),
         };
     }
 
@@ -55,6 +68,45 @@ internal class CA
         X509Certificate2Collection chain = [cert];
         chain.AddRange(Chain(false));
         return new(id, chain, string.Empty);
+    }
+
+    internal JwtSvid CreateJwtSvid(SpiffeId id, IEnumerable<string> audience, string hint = "")
+    {
+        DateTime now = DateTime.UtcNow;
+        DateTime then = now.AddHours(1);
+        string iat = ToNumericDate(now);
+        string exp = ToNumericDate(then);
+        string iss = "FAKECA";
+        List<Claim> claims = [
+            new(JwtRegisteredClaimNames.Sub, id.Id),
+            new(JwtRegisteredClaimNames.Iss, iss),
+            new(JwtRegisteredClaimNames.Iat, iat),
+            new(JwtRegisteredClaimNames.Exp, exp),
+        ];
+
+        claims.AddRange(audience.Select(aud => new Claim(JwtRegisteredClaimNames.Aud, aud)));
+
+        ECDsaSecurityKey securityKey = new(JwtKey);
+        SigningCredentials credentials = new(securityKey, SecurityAlgorithms.EcdsaSha256);
+        JwtSecurityToken jwt = new(claims: claims, signingCredentials: credentials);
+        string token = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+        JwtSvid svid = JwtSvidParser.ParseInsecure(token, audience);
+        return new JwtSvid(
+            token: svid.Token,
+            id: svid.Id,
+            audience: audience,
+            expiry: then,
+            claims: claims.ToDictionary(c => c.Type, c => c.Value),
+            hint: hint);
+    }
+
+    internal Dictionary<string, JsonWebKey> JwtAuthorities()
+    {
+        return new()
+        {
+            { JwtKid!, JsonWebKeyConverter.ConvertFromECDsaSecurityKey(new ECDsaSecurityKey(JwtKey)) },
+        };
     }
 
     internal X509Certificate2Collection X509Authorities()
@@ -72,6 +124,11 @@ internal class CA
     internal X509Bundle X509Bundle()
     {
         return new X509Bundle(TrustDomain!, X509Authorities());
+    }
+
+    internal JwtBundle JwtBundle()
+    {
+        return new JwtBundle(TrustDomain!, JwtAuthorities());
     }
 
     internal X509Certificate2Collection Chain(bool includeRoot)
@@ -94,7 +151,7 @@ internal class CA
     internal static X509Certificate2 CreateCACertificate(X509Certificate2? parent = null,
                                                          Action<CertificateRequest>? csrConfigure = null)
     {
-        using ECDsa key = CreateEC256Key();
+        using ECDsa key = Keys.CreateEC256Key();
         byte[] serial = CreateSerial();
         string subjectName = $"CN=CA {Convert.ToHexString(serial)}";
 
@@ -137,11 +194,6 @@ internal class CA
         return ca.CopyWithPrivateKey(key);
     }
 
-    private static ECDsa CreateEC256Key()
-    {
-        return ECDsa.Create(ECCurve.NamedCurves.nistP256);
-    }
-
     private static byte[] CreateSerial()
     {
         return BitConverter.GetBytes(Random.Shared.NextInt64());
@@ -157,7 +209,7 @@ internal class CA
         }
 
         byte[] serial = options?.SerialNumber ?? CreateSerial();
-        using ECDsa key = CreateEC256Key();
+        using ECDsa key = Keys.CreateEC256Key();
         string subjectName = options?.SubjectName ?? $"CN=X509-Certificate {Convert.ToHexString(serial)}";
         CertificateRequest request = new(subjectName, key, HashAlgorithmName.SHA256);
 
@@ -239,5 +291,10 @@ internal class CA
             oid: "2.5.29.35",
             rawData: authorityKeyIdentifer,
             critical: false);
+    }
+
+    private static string ToNumericDate(DateTime d)
+    {
+        return new DateTimeOffset(d).ToUnixTimeSeconds().ToString();
     }
 }
