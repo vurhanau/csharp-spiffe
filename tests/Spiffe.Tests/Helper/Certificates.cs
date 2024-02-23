@@ -1,9 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Spiffe.Tests.Util;
+namespace Spiffe.Tests.Helper;
 
-internal static class CertUtil
+internal static class Certificates
 {
     internal static X509Certificate2 FirstFromPemFile(string pemFile)
     {

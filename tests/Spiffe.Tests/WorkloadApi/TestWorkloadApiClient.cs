@@ -3,11 +3,13 @@ using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
-using Spiffe.Tests.Util;
+using Spiffe.Tests.Helper;
 using Spiffe.WorkloadApi;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
@@ -20,7 +22,7 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestFetchX509Bundles()
     {
-        using X509Certificate2 cert = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 cert = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
         var resp = new X509BundlesResponse();
         resp.Bundles.Add("spiffe://example.org", ByteString.CopyFrom(cert.RawData));
@@ -50,10 +52,10 @@ public class TestWorkloadApiClient
     public async Task TestWatchX509Bundles()
     {
         TrustDomain firstTrustDomain = TrustDomain.FromString("spiffe://example1.org");
-        using X509Certificate2 first = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 first = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
 
         TrustDomain secondTrustDomain = TrustDomain.FromString("spiffe://example2.org");
-        using X509Certificate2 second = CertUtil.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
+        using X509Certificate2 second = Certificates.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
 
         static X509BundlesResponse Resp(TrustDomain trustDomain, X509Certificate2 cert)
         {
@@ -142,7 +144,7 @@ public class TestWorkloadApiClient
     {
         var spiffeId = SpiffeId.FromPath(TrustDomain, "/workload");
         var hint = "internal";
-        using X509Certificate2 bundleCert = CertUtil.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
+        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
         using X509Certificate2 cert = X509Certificate2.CreateFromPemFile(
             "TestData/good-leaf-only.pem",
             "TestData/key-pkcs8-rsa.pem");
@@ -188,7 +190,7 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestWatchX509Context()
     {
-        using X509Certificate2 bundleCert = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
 
         SpiffeId spiffeId = SpiffeId.FromPath(TrustDomain, "/workload");
         string hint = "internal";
@@ -198,7 +200,7 @@ public class TestWorkloadApiClient
         byte[] svidKey = svidCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
 
         TrustDomain federatedTrustDomain = TrustDomain.FromString("spiffe://example-federated.org");
-        X509Certificate2 federatedCert = CertUtil.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
+        X509Certificate2 federatedCert = Certificates.FirstFromPemFile("TestData/good-leaf-and-intermediate.pem");
 
         // TODO: add CRL test
         var resp = new X509SVIDResponse();

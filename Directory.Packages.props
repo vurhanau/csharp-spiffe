@@ -42,6 +42,7 @@
         <PackageVersion Include="Moq" Version="$(MoqVersion)" />
         <PackageVersion Include="coverlet.msbuild" Version="$(CoverletVersion)" />
         <PackageVersion Include="coverlet.collector" Version="$(CoverletVersion)" />
+        <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="$(IdentityModelVersion)" />
 
         <!-- Spiffe.Samples -->
         <PackageVersion Include="Grpc.AspNetCore" Version="$(GrpcAspNetCoreVersion)" />

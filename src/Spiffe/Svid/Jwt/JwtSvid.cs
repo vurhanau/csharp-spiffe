@@ -12,7 +12,7 @@ public class JwtSvid
     /// </summary>
     public JwtSvid(string token,
                    SpiffeId id,
-                   List<string> audience,
+                   IEnumerable<string> audience,
                    DateTime expiry,
                    Dictionary<string, string> claims,
                    string hint)

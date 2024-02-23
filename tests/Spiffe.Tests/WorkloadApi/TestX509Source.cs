@@ -8,7 +8,7 @@ using Moq;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
-using Spiffe.Tests.Util;
+using Spiffe.Tests.Helper;
 using Spiffe.WorkloadApi;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
@@ -20,7 +20,7 @@ public class TestX509Source
     public async Task TestGetBundleAndSvid()
     {
         SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
-        using X509Certificate2 bundleCert = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
         using X509Certificate2 svidCert = X509Certificate2.CreateFromPemFile(
             "TestData/good-leaf-only.pem",
             "TestData/key-pkcs8-rsa.pem");
@@ -53,7 +53,7 @@ public class TestX509Source
     public async Task TestPickSvid()
     {
         SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
-        using X509Certificate2 bundleCert = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
         using X509Certificate2 svidCert = X509Certificate2.CreateFromPemFile(
             "TestData/good-leaf-only.pem",
             "TestData/key-pkcs8-rsa.pem");

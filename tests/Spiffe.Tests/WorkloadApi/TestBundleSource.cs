@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
-using Spiffe.Tests.Util;
+using Spiffe.Tests.Helper;
 using Spiffe.WorkloadApi;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
@@ -19,7 +19,7 @@ public class TestBundleSource
     public async Task TestGetX509Bundle()
     {
         SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
-        using X509Certificate2 bundleCert = CertUtil.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
         using X509Certificate2 svidCert = X509Certificate2.CreateFromPemFile(
             "TestData/good-leaf-only.pem",
             "TestData/key-pkcs8-rsa.pem");

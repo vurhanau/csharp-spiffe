@@ -1,3 +1,4 @@
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 
@@ -9,7 +10,7 @@ namespace Spiffe.Bundle;
 /// and Bundle specification:
 /// <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE_Trust_Domain_and_Bundle.md"/>
 /// </summary>
-public class SpiffeBundle : IX509BundleSource
+public class SpiffeBundle : IX509BundleSource, IJwtBundleSource
 {
     internal TrustDomain TrustDomain { get; init; }
 
@@ -18,6 +19,13 @@ public class SpiffeBundle : IX509BundleSource
     internal long SequenceNumber { get; init; }
 
     internal X509Bundle X509Authorities { get; init; }
+
+    internal JwtBundle JwtAuthorities { get; init; }
+
+    public JwtBundle GetJwtBundle(TrustDomain trustDomain)
+    {
+        return JwtAuthorities;
+    }
 
     public X509Bundle GetX509Bundle(TrustDomain trustDomain)
     {
