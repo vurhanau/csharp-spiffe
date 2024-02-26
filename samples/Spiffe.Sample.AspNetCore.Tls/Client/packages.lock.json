@@ -4,9 +4,9 @@
     "net8.0": {
       "SonarAnalyzer.CSharp": {
         "type": "Direct",
-        "requested": "[9.19.0.84025, )",
-        "resolved": "9.19.0.84025",
-        "contentHash": "gumqhFh/MHSQBk1aMOmWim+hRSu5FY2H22XI900PyxHOZW+NDmt1c9SgHNMQ141y5FMdoDYy0sHT+xCCzdQeTQ=="
+        "requested": "[9.20.0.85982, )",
+        "resolved": "9.20.0.85982",
+        "contentHash": "c0IYtFg4mYusTafTy0Bs5wev45vRKNShkuoWyQyPMbC6imEFHL7tY/7xbbUJd6JNLYx5vP8wyi2LgiBsMHqb2Q=="
       },
       "StyleCop.Analyzers": {
         "type": "Direct",
@@ -64,16 +64,16 @@
       "spiffe": {
         "type": "Project",
         "dependencies": {
-          "Google.Protobuf": "[3.25.2, )",
+          "Google.Protobuf": "[3.25.3, )",
           "Grpc.Net.Client": "[2.60.0, )",
           "Microsoft.IdentityModel.JsonWebTokens": "[7.3.1, )"
         }
       },
       "Google.Protobuf": {
         "type": "CentralTransitive",
-        "requested": "[3.25.2, )",
-        "resolved": "3.25.2",
-        "contentHash": "g/xIIeLhR77bl4ajGGbPYRmZf5acJlCRaSBqUnU8+2aQYREnZnv+UccRNndHof4mWO1ORS0b5i6on40VOjBpsg=="
+        "requested": "[3.25.3, )",
+        "resolved": "3.25.3",
+        "contentHash": "fDY/kt0gy2nVcoeMmiyDMtwgvDJG5qaU7+Ic77szKTvVkIvoo7tyf+d+QDlKSosB+FjoKocX/ObObxqKCq60uA=="
       },
       "Grpc.Net.Client": {
         "type": "CentralTransitive",

@@ -20,10 +20,10 @@ public class TestX509Source
     public async Task TestGetBundleAndSvid()
     {
         SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
-        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/X509/good-leaf-only.pem");
         using X509Certificate2 svidCert = X509Certificate2.CreateFromPemFile(
-            "TestData/good-leaf-only.pem",
-            "TestData/key-pkcs8-rsa.pem");
+            "TestData/X509/good-leaf-only.pem",
+            "TestData/X509/key-pkcs8-rsa.pem");
         byte[] svidKey = svidCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         string hint = "internal";
         X509SVIDResponse resp = new();
@@ -53,10 +53,10 @@ public class TestX509Source
     public async Task TestPickSvid()
     {
         SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
-        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/X509/good-leaf-only.pem");
         using X509Certificate2 svidCert = X509Certificate2.CreateFromPemFile(
-            "TestData/good-leaf-only.pem",
-            "TestData/key-pkcs8-rsa.pem");
+            "TestData/X509/good-leaf-only.pem",
+            "TestData/X509/key-pkcs8-rsa.pem");
         byte[] svidKey = svidCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         X509SVIDResponse resp = new();
         X509SVID s1 = new()

@@ -18,7 +18,7 @@ public class TestConvertor
         // Parse valid bundle set
         TrustDomain td1 = TrustDomain.FromString("spiffe://example1.org");
         TrustDomain td2 = TrustDomain.FromString("spiffe://example2.org");
-        using X509Certificate2 cert1 = Certificates.FirstFromPemFile("TestData/good-leaf-only.pem");
+        using X509Certificate2 cert1 = Certificates.FirstFromPemFile("TestData/X509/good-leaf-only.pem");
         byte[] cert1Raw = cert1.RawData;
         byte[] cert2Raw = Certificates.Concat(cert1, cert1);
 
@@ -70,14 +70,14 @@ public class TestConvertor
     {
         // Parse 2 SVIDs and 1 federated bundle
         SpiffeId id1 = SpiffeId.FromString("spiffe://example1.org/workload1");
-        byte[][] cert1 = Certificates.GetCertBytes("TestData/good-leaf-and-intermediate.pem");
-        using ECDsa key1 = Certificates.GetEcdsaFromPemFile("TestData/key-pkcs8-ecdsa.pem");
+        byte[][] cert1 = Certificates.GetCertBytes("TestData/X509/good-leaf-and-intermediate.pem");
+        using ECDsa key1 = Certificates.GetEcdsaFromPemFile("TestData/X509/key-pkcs8-ecdsa.pem");
         byte[] bundle1 = Certificates.Concat(cert1[1], cert1[0]);
         string hint1 = "internal1";
 
         SpiffeId id2 = SpiffeId.FromString("spiffe://example2.org/workload2");
-        byte[] cert2 = Certificates.GetCertBytes("TestData/good-leaf-only.pem")[0];
-        byte[] key2 = Certificates.GetRsaBytesFromPemFile("TestData/key-pkcs8-rsa.pem");
+        byte[] cert2 = Certificates.GetCertBytes("TestData/X509/good-leaf-only.pem")[0];
+        byte[] key2 = Certificates.GetRsaBytesFromPemFile("TestData/X509/key-pkcs8-rsa.pem");
         byte[] bundle2 = Certificates.Concat(cert2, cert2);
         string hint2 = "internal2";
 

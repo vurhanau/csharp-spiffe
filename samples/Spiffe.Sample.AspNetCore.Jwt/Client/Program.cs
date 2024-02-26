@@ -24,11 +24,12 @@ app.Lifetime.ApplicationStopped.Register(close.Cancel);
 string audience = "spiffe://example.org/myservice";
 app.MapGet("/", async () =>
 {
-    JwtSvid svid = await jwtSource.FetchJwtSvidAsync(new JwtSvidParams(
+    List<JwtSvid> svids = await jwtSource.FetchJwtSvidsAsync(new JwtSvidParams(
         audience: audience,
         extraAudiences: [],
         subject: null));
 
+    JwtSvid svid = svids[0];
     HttpRequestMessage req = new()
     {
         Method = HttpMethod.Get,

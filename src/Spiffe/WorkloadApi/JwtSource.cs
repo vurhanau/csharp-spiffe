@@ -31,12 +31,6 @@ public sealed class JwtSource : IJwtSource
     private bool IsDisposed => _disposed != 0;
 
     /// <inheritdoc/>
-    public async Task<JwtSvid> FetchJwtSvidAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
-    {
-        return await _client.FetchJwtSvidAsync(jwtParams, cancellationToken);
-    }
-
-    /// <inheritdoc/>
     public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
     {
         return await _client.FetchJwtSvidsAsync(jwtParams, cancellationToken);

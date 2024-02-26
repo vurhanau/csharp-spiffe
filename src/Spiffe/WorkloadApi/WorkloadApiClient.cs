@@ -85,16 +85,9 @@ public class WorkloadApiClient : IWorkloadApiClient
     }
 
     /// <inheritdoc/>
-    public async Task<JwtSvid> FetchJwtSvidAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
-    {
-        List<JwtSvid> svids = await FetchJwtSvidsInternal(jwtParams, n: 1, cancellationToken);
-        return svids[0];
-    }
-
-    /// <inheritdoc/>
     public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
     {
-        return await FetchJwtSvidsInternal(jwtParams, n: -1, cancellationToken);
+        return await FetchJwtSvidsInternal(jwtParams, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -126,7 +119,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         return JwtSvidParser.ParseInsecure(token, [audience]);
     }
 
-    private async Task<List<JwtSvid>> FetchJwtSvidsInternal(JwtSvidParams jwtParams, int n = -1, CancellationToken cancellationToken = default)
+    private async Task<List<JwtSvid>> FetchJwtSvidsInternal(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
     {
         List<string> aud = [jwtParams.Audience];
         aud.AddRange(jwtParams.ExtraAudiences);
@@ -140,7 +133,7 @@ public class WorkloadApiClient : IWorkloadApiClient
 
         CallOptions opts = GetCallOptions(cancellationToken);
         JWTSVIDResponse response = await _client.FetchJWTSVIDAsync(request, opts);
-        List<JwtSvid> svids = Convertor.ParseJwtSvids(response, aud, n: n);
+        List<JwtSvid> svids = Convertor.ParseJwtSvids(response, aud);
 
         return svids;
     }
@@ -173,7 +166,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                                                 Backoff backoff,
                                                 CancellationToken cancellationToken)
     {
-        await WatchX509Internal<X509SVIDResponse, X509Context>(
+        await WatchInternal<X509SVIDResponse, X509Context>(
             watcher,
             opts => _client.FetchX509SVID(s_x509SvidRequest, opts),
             Convertor.ParseX509Context,
@@ -186,7 +179,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                                                 Backoff backoff,
                                                 CancellationToken cancellationToken)
     {
-        await WatchX509Internal<X509BundlesResponse, X509BundleSet>(
+        await WatchInternal<X509BundlesResponse, X509BundleSet>(
             watcher,
             opts => _client.FetchX509Bundles(s_x509BundlesRequest, opts),
             Convertor.ParseX509BundleSet,
@@ -199,7 +192,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                                                Backoff backoff,
                                                CancellationToken cancellationToken)
     {
-        await WatchX509Internal<JWTBundlesResponse, JwtBundleSet>(
+        await WatchInternal<JWTBundlesResponse, JwtBundleSet>(
             watcher,
             opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
             Convertor.ParseJwtSvidBundles,
@@ -239,13 +232,13 @@ public class WorkloadApiClient : IWorkloadApiClient
         _logger.LogTrace("Stopped watching {}", ty);
     }
 
-    private async Task WatchX509Internal<TFrom, TResult>(IWatcher<TResult> watcher,
-                                                         Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
-                                                         Func<TFrom, TResult> parserFunc,
-                                                         Func<TResult, bool, string> stringFunc,
-                                                         Backoff backoff,
-                                                         CancellationToken cancellationToken)
-                                                         where TFrom : IMessage
+    private async Task WatchInternal<TFrom, TResult>(IWatcher<TResult> watcher,
+                                                     Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
+                                                     Func<TFrom, TResult> parserFunc,
+                                                     Func<TResult, bool, string> stringFunc,
+                                                     Backoff backoff,
+                                                     CancellationToken cancellationToken)
+                                                     where TFrom : IMessage
     {
         string fty = typeof(TFrom).Name;
         string rty = typeof(TResult).Name;
