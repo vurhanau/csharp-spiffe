@@ -3,7 +3,7 @@ using FluentAssertions;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
-using Spiffe.Tests.Util;
+using Spiffe.Tests.Helper;
 
 namespace Spiffe.Tests.Svid.X509;
 
@@ -13,8 +13,8 @@ public class TestX509Verify
     public void TestVerifyPass()
     {
         TrustDomain td = TrustDomain.FromString("domain1.test");
-        CA ca1 = CA.NewCA(td);
-        CA ca2 = ca1.ChildCA();
+        using CA ca1 = CA.Create(td);
+        using CA ca2 = ca1.ChildCA();
         IX509BundleSource bundleSource = new TestX509BundleSource(ca1.X509Bundle());
         X509Certificate2Collection certs = ca2.CreateX509Svid(SpiffeId.FromPath(td, "/workload")).Certificates;
         X509Certificate2 leaf = certs[0];
@@ -28,9 +28,9 @@ public class TestX509Verify
     public void TestVerifyFails()
     {
         TrustDomain td = TrustDomain.FromString("domain1.test");
-        CA ca0 = CA.NewCA(td);
-        CA ca1 = CA.NewCA(td);
-        CA ca2 = ca1.ChildCA();
+        using CA ca0 = CA.Create(td);
+        using CA ca1 = CA.Create(td);
+        using CA ca2 = ca1.ChildCA();
         IX509BundleSource bundleSource = new TestX509BundleSource(ca0.X509Bundle());
         X509Certificate2Collection certs = ca2.CreateX509Svid(SpiffeId.FromPath(td, "/workload")).Certificates;
         X509Certificate2 leaf = certs[0];
@@ -41,7 +41,7 @@ public class TestX509Verify
         ok.Should().BeFalse();
 
         // leaf -x-> intermediate ---> root
-        CA ca3 = ca1.ChildCA();
+        using CA ca3 = ca1.ChildCA();
         intermediates = [ca3.Cert!];
         ok = X509Verify.Verify(leaf, intermediates, bundleSource);
         ok.Should().BeFalse();
@@ -51,7 +51,7 @@ public class TestX509Verify
     public void TestVerifyThrows()
     {
         TrustDomain td = TrustDomain.FromString("domain1.test");
-        CA ca = CA.NewCA(td);
+        using CA ca = CA.Create(td);
         IX509BundleSource bundleSource = new TestX509BundleSource(ca.X509Bundle());
         X509Certificate2Collection certs = ca.CreateX509Svid(SpiffeId.FromPath(td, "/workload")).Certificates;
         X509Certificate2 leaf = certs[0];
@@ -62,7 +62,7 @@ public class TestX509Verify
         f.Should().Throw<ArgumentException>("Leaf certificate with CA flag set to true");
 
         // Leaf with key usage KeyCertSign
-        X509Certificate2 leafKeyCertSign = CA.CreateCACertificate(null, csr =>
+        using X509Certificate2 leafKeyCertSign = CA.CreateCACertificate(null, csr =>
         {
             csr.CertificateExtensions.Clear();
             csr.CertificateExtensions.Add(
@@ -74,7 +74,7 @@ public class TestX509Verify
         f.Should().Throw<ArgumentException>("Leaf certificate with KeyCertSign key usage");
 
         // Leaf with key usage CrlSign
-        X509Certificate2 leafCrlSign = CA.CreateCACertificate(null, csr =>
+        using X509Certificate2 leafCrlSign = CA.CreateCACertificate(null, csr =>
         {
             csr.CertificateExtensions.Clear();
             csr.CertificateExtensions.Add(

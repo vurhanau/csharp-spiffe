@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Spiffe.Util;
-using static Spiffe.Tests.Util.CertUtil;
+using static Spiffe.Tests.Helper.Certificates;
 
 namespace Spiffe.Tests.Util;
 
