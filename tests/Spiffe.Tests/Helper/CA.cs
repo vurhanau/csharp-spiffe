@@ -107,7 +107,9 @@ internal sealed class CA : IDisposable
 
     internal Dictionary<string, JsonWebKey> JwtAuthorities()
     {
-        JsonWebKey jwtKey = JsonWebKeyConverter.ConvertFromECDsaSecurityKey(new ECDsaSecurityKey(JwtKey));
+        ECDsaSecurityKey ecdsa = new(JwtKey);
+        JsonWebKey jwtKey = JsonWebKeyConverter.ConvertFromECDsaSecurityKey(ecdsa);
+        jwtKey.KeyId = JwtKid!;
         return new() { { JwtKid!,  jwtKey } };
     }
 

@@ -1,6 +1,6 @@
 ﻿namespace Spiffe.WorkloadApi;
 
-// <inheritdoc/>
+/// <inheritdoc/>
 public class Watcher<T> : IWatcher<T>
 {
     private readonly Action<T> _onUpdate;

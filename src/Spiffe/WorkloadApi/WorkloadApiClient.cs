@@ -166,7 +166,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                                                 Backoff backoff,
                                                 CancellationToken cancellationToken)
     {
-        await WatchX509Internal<X509SVIDResponse, X509Context>(
+        await WatchInternal<X509SVIDResponse, X509Context>(
             watcher,
             opts => _client.FetchX509SVID(s_x509SvidRequest, opts),
             Convertor.ParseX509Context,
@@ -179,7 +179,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                                                 Backoff backoff,
                                                 CancellationToken cancellationToken)
     {
-        await WatchX509Internal<X509BundlesResponse, X509BundleSet>(
+        await WatchInternal<X509BundlesResponse, X509BundleSet>(
             watcher,
             opts => _client.FetchX509Bundles(s_x509BundlesRequest, opts),
             Convertor.ParseX509BundleSet,
@@ -192,7 +192,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                                                Backoff backoff,
                                                CancellationToken cancellationToken)
     {
-        await WatchX509Internal<JWTBundlesResponse, JwtBundleSet>(
+        await WatchInternal<JWTBundlesResponse, JwtBundleSet>(
             watcher,
             opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
             Convertor.ParseJwtSvidBundles,
@@ -232,13 +232,13 @@ public class WorkloadApiClient : IWorkloadApiClient
         _logger.LogTrace("Stopped watching {}", ty);
     }
 
-    private async Task WatchX509Internal<TFrom, TResult>(IWatcher<TResult> watcher,
-                                                         Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
-                                                         Func<TFrom, TResult> parserFunc,
-                                                         Func<TResult, bool, string> stringFunc,
-                                                         Backoff backoff,
-                                                         CancellationToken cancellationToken)
-                                                         where TFrom : IMessage
+    private async Task WatchInternal<TFrom, TResult>(IWatcher<TResult> watcher,
+                                                     Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
+                                                     Func<TFrom, TResult> parserFunc,
+                                                     Func<TResult, bool, string> stringFunc,
+                                                     Backoff backoff,
+                                                     CancellationToken cancellationToken)
+                                                     where TFrom : IMessage
     {
         string fty = typeof(TFrom).Name;
         string rty = typeof(TResult).Name;
