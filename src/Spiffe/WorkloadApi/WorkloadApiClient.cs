@@ -95,7 +95,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     {
         return await Fetch(
             opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
-            Convertor.ParseJwtSvidBundles,
+            Convertor.ParseJwtBundleSet,
             cancellationToken);
     }
 
@@ -195,7 +195,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         await WatchInternal<JWTBundlesResponse, JwtBundleSet>(
             watcher,
             opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
-            Convertor.ParseJwtSvidBundles,
+            Convertor.ParseJwtBundleSet,
             Strings.ToString,
             backoff,
             cancellationToken);

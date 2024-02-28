@@ -1,7 +1,10 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
+using Microsoft.IdentityModel.Tokens;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
@@ -174,6 +177,67 @@ public class TestConvertor
         // Parse null
         Action nullSvidResponse = () => Convertor.ParseX509Context(null);
         nullSvidResponse.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task TestParseJwtBundleSet()
+    {
+        // Parse valid bundle set
+        TrustDomain td1 = TrustDomain.FromString("spiffe://example1.org");
+        string jwksJson1 = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_1.json");
+        JsonWebKeySet jwks1 = JsonWebKeySet.Create(jwksJson1);
+        byte[] jwksBytes1 = Encoding.UTF8.GetBytes(jwksJson1);
+
+        TrustDomain td2 = TrustDomain.FromString("spiffe://example2.org");
+        string jwksJson2 = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_2.json");
+        JsonWebKeySet jwks2 = JsonWebKeySet.Create(jwksJson2);
+        byte[] jwksBytes2 = Encoding.UTF8.GetBytes(jwksJson2);
+
+        JWTBundlesResponse r = new();
+        r.Bundles.Add(td1.Name, ByteString.CopyFrom(jwksBytes1));
+        r.Bundles.Add(td2.Name, ByteString.CopyFrom(jwksBytes2));
+
+        JwtBundleSet bs = Convertor.ParseJwtBundleSet(r);
+
+        bs.Bundles.Should().HaveCount(2);
+        bs.Bundles.Should().ContainKey(td1);
+        bs.Bundles.Should().ContainKey(td2);
+        bs.GetBundleForTrustDomain(td1).TrustDomain.Should().Be(td1);
+        bs.GetBundleForTrustDomain(td2).TrustDomain.Should().Be(td2);
+
+        void VerifyJwtBundle(TrustDomain td, JsonWebKeySet jwks)
+        {
+            Dictionary<string, JsonWebKey> b = bs.GetBundleForTrustDomain(td).JwtAuthorities;
+            b.Should().HaveCount(jwks.Keys.Count);
+            foreach (JsonWebKey k in jwks.Keys)
+            {
+                Keys.EqualJwk(b[k.KeyId], k).Should().BeTrue();
+            }
+        }
+
+        VerifyJwtBundle(td1, jwks1);
+        VerifyJwtBundle(td2, jwks2);
+
+        // Parse empty bundle set
+        r = new();
+        bs = Convertor.ParseJwtBundleSet(r);
+        bs.Bundles.Should().BeEmpty();
+
+        // Parse malformed bundle set with a malformed trust domain name
+        r = new();
+        r.Bundles.Add("$#_=malformed-domain", ByteString.CopyFrom(jwksBytes1));
+        Action malformedTrustDomainName = () => Convertor.ParseJwtBundleSet(r);
+        malformedTrustDomainName.Should().Throw<Exception>();
+
+        // Parse malformed bundle set with a malformed bundle
+        r = new();
+        r.Bundles.Add(td1.Name, ByteString.CopyFromUtf8("malformed"));
+        Action malformedCert = () => Convertor.ParseJwtBundleSet(r);
+        malformedCert.Should().Throw<Exception>();
+
+        // Parse null bundle set
+        Action nullBundleResponse = () => Convertor.ParseJwtBundleSet(null);
+        nullBundleResponse.Should().Throw<ArgumentNullException>();
     }
 
     // Verify ECDsa by verifying signatures, not by PKCS binary:
