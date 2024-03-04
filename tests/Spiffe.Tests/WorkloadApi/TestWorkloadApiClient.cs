@@ -1,11 +1,15 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
+using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 using Spiffe.Tests.Helper;
 using Spiffe.WorkloadApi;
@@ -34,6 +38,24 @@ public class TestWorkloadApiClient
     }
 
     [Fact]
+    public async Task TestFetchJwtBundles()
+    {
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        var resp = new JWTBundlesResponse();
+        var jwksJson = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_1.json");
+        var jwks = JsonWebKeySet.Create(jwksJson);
+        var jwksBytes = Encoding.UTF8.GetBytes(jwksJson);
+        var td = TrustDomain.FromString("spiffe://example.org");
+        resp.Bundles.Add(td.SpiffeId.Id, ByteString.CopyFrom(jwksBytes));
+        mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.Stream(resp));
+
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        var b = await c.FetchJwtBundlesAsync();
+        VerifyJwtBundleSet(b, td, jwks);
+    }
+
+    [Fact]
     public async Task TestFetchX509BundlesError()
     {
         var err = new Exception("Oops!");
@@ -43,6 +65,19 @@ public class TestWorkloadApiClient
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<X509BundleSet>> fetch = () => c.FetchX509BundlesAsync();
+        await fetch.Should().ThrowAsync<Exception>(err.Message);
+    }
+
+    [Fact]
+    public async Task TestFetchJwtBundlesError()
+    {
+        var err = new Exception("Oops!");
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.StreamError<JWTBundlesResponse>(err));
+
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        Func<Task<JwtBundleSet>> fetch = () => c.FetchJwtBundlesAsync();
         await fetch.Should().ThrowAsync<Exception>(err.Message);
     }
 
@@ -104,6 +139,61 @@ public class TestWorkloadApiClient
     }
 
     [Fact]
+    public async Task TestWatchJwtBundles()
+    {
+        TrustDomain firstTrustDomain = TrustDomain.FromString("spiffe://example1.org");
+        string firstJwksJson = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_1.json");
+        JsonWebKeySet firstJwks = JsonWebKeySet.Create(firstJwksJson);
+
+        TrustDomain secondTrustDomain = TrustDomain.FromString("spiffe://example2.org");
+        string secondJwksJson = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_2.json");
+        JsonWebKeySet secondJwks = JsonWebKeySet.Create(secondJwksJson);
+
+        static JWTBundlesResponse Resp(TrustDomain trustDomain, string jwks)
+        {
+            JWTBundlesResponse r = new();
+            byte[] jwksBytes = Encoding.UTF8.GetBytes(jwks);
+            r.Bundles.Add(trustDomain.SpiffeId.Id, ByteString.CopyFrom(jwksBytes));
+            return r;
+        }
+
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.Stream(
+                                                Resp(firstTrustDomain, firstJwksJson),
+                                                Resp(secondTrustDomain, secondJwksJson)));
+
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+
+        List<JwtBundleSet> received = [];
+        List<Exception> exceptions = [];
+
+        using CancellationTokenSource done = new();
+        var watcher = new Watcher<JwtBundleSet>(
+            b =>
+            {
+                received.Add(b);
+                if (received.Count == 2)
+                {
+                    done.Cancel();
+                }
+            },
+            ex =>
+            {
+                exceptions.Add(ex);
+                done.Cancel();
+            });
+
+        done.CancelAfter(1000);
+        await c.WatchJwtBundlesAsync(watcher, done.Token);
+
+        received.Should().HaveCount(2);
+        VerifyJwtBundleSet(received[0], firstTrustDomain, firstJwks);
+        VerifyJwtBundleSet(received[1], secondTrustDomain, secondJwks);
+        exceptions.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task TestWatchX509BundlesError()
     {
         var err = new Exception("Oops!");
@@ -131,6 +221,40 @@ public class TestWorkloadApiClient
 
         done.CancelAfter(1000);
         await c.WatchX509BundlesAsync(watcher, done.Token);
+
+        exceptions.Should().ContainSingle();
+        exceptions[0].Should().Be(err);
+        received.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task TestWatchJwtBundlesError()
+    {
+        var err = new Exception("Oops!");
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.StreamError<JWTBundlesResponse>(err));
+
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+
+        List<JwtBundleSet> received = [];
+        List<Exception> exceptions = [];
+
+        using CancellationTokenSource done = new();
+        var watcher = new Watcher<JwtBundleSet>(
+            b =>
+            {
+                received.Add(b);
+                done.Cancel();
+            },
+            ex =>
+            {
+                exceptions.Add(ex);
+                done.Cancel();
+            });
+
+        done.CancelAfter(1000);
+        await c.WatchJwtBundlesAsync(watcher, done.Token);
 
         exceptions.Should().ContainSingle();
         exceptions[0].Should().Be(err);
@@ -170,6 +294,32 @@ public class TestWorkloadApiClient
         r.X509Svids.Should().ContainSingle();
         var svid = r.X509Svids[0];
         VerifyX509SvidRsa(svid, spiffeId, cert, hint);
+    }
+
+    [Fact]
+    public async Task TestFetchJwtSvids()
+    {
+        CA ca = CA.Create(TrustDomain);
+        SpiffeId spiffeId = SpiffeId.FromPath(TrustDomain, "/workload");
+        string aud = "audience";
+
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        JWTSVIDResponse resp = new();
+        JwtSvid expectedSvid = ca.CreateJwtSvid(spiffeId, [aud], "internal");
+        resp.Svids.Add(new JWTSVID
+        {
+            SpiffeId = expectedSvid.Id.Id,
+            Svid = expectedSvid.Token,
+            Hint = expectedSvid.Hint,
+        });
+
+        mockGrpcClient.Setup(c => c.FetchJWTSVIDAsync(It.IsAny<JWTSVIDRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.Unary(resp));
+
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        List<JwtSvid> r = await c.FetchJwtSvidsAsync(new JwtSvidParams(aud, [], null));
+        r.Should().ContainSingle();
+        r[0].Should().Be(expectedSvid);
     }
 
     [Fact]
@@ -289,10 +439,24 @@ public class TestWorkloadApiClient
     private static void VerifyX509BundleSet(X509BundleSet b, TrustDomain expectedTrustDomain, X509Certificate2 expectedCert)
     {
         b.Bundles.Should().ContainKey(expectedTrustDomain);
-        var bundle = b.GetBundleForTrustDomain(expectedTrustDomain);
+        var bundle = b.GetX509Bundle(expectedTrustDomain);
         bundle.TrustDomain.Should().Be(expectedTrustDomain);
         bundle.X509Authorities.Should().ContainSingle();
         bundle.X509Authorities[0].RawData.Should().Equal(expectedCert.RawData);
+    }
+
+    private static void VerifyJwtBundleSet(JwtBundleSet b, TrustDomain expectedTrustDomain, JsonWebKeySet expectedJwks)
+    {
+        b.Bundles.Should().ContainSingle();
+        b.Bundles.Should().ContainKey(expectedTrustDomain);
+        JwtBundle bundle = b.GetJwtBundle(expectedTrustDomain);
+        bundle.TrustDomain.Should().Be(expectedTrustDomain);
+        bundle.JwtAuthorities.Should().HaveCount(expectedJwks.Keys.Count);
+        foreach ((string kid, JsonWebKey k1) in bundle.JwtAuthorities)
+        {
+            JsonWebKey k2 = expectedJwks.Keys.First(k => k.Kid == kid);
+            Keys.EqualJwk(k1, k2).Should().BeTrue();
+        }
     }
 
     private static void VerifyX509SvidRsa(X509Svid svid,

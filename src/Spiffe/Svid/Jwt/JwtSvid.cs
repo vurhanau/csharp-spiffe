@@ -58,4 +58,20 @@ public class JwtSvid
     /// identity should be used by a workload when more than one SVID is returned.
     /// </summary>
     public string Hint { get; }
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => Token.GetHashCode();
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj)
+    {
+        return obj is JwtSvid svid &&
+               Id.Equals(svid.Id) &&
+               string.Equals(Token, svid.Token, StringComparison.Ordinal) &&
+               Audience.SequenceEqual(svid.Audience) &&
+               Math.Abs((Expiry - svid.Expiry).TotalSeconds) < 1 &&
+               Claims.Count == svid.Claims.Count &&
+               !Claims.Except(svid.Claims).Any() &&
+               string.Equals(Hint, svid.Hint, StringComparison.Ordinal);
+    }
 }

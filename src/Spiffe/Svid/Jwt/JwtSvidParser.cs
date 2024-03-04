@@ -141,7 +141,7 @@ public static class JwtSvidParser
         {
             string actual = string.Join(", ", s1);
             string expected = string.Join(", ", s2);
-            throw new JwtSvidException($"Expected audience in ${expected} (audience=${actual})");
+            throw new JwtSvidException($"Expected audience in {expected} (audience={actual})");
         }
 
         DateTime now = DateTime.Now;

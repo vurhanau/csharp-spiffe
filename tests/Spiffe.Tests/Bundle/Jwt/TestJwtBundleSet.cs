@@ -19,10 +19,10 @@ public class TestJwtBundleSet
             { td1, b1 },
             { td2, b2 },
         });
-        bs.GetBundleForTrustDomain(td1).Should().Be(b1);
-        bs.GetBundleForTrustDomain(td2).Should().Be(b2);
+        bs.GetJwtBundle(td1).Should().Be(b1);
+        bs.GetJwtBundle(td2).Should().Be(b2);
 
-        Action notFound = () => bs.GetBundleForTrustDomain(TrustDomain.FromString("spiffe://example3.org"));
+        Action notFound = () => bs.GetJwtBundle(TrustDomain.FromString("spiffe://example3.org"));
         notFound.Should().Throw<BundleNotFoundException>();
 
         Action nullCtor = () => new JwtBundleSet(null);

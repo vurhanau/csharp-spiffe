@@ -15,6 +15,8 @@ internal static class JwtBundleParser
     /// </summary>
     public static JwtBundle Parse(TrustDomain td, ReadOnlySpan<byte> bundleBytes)
     {
+        _ = td ?? throw new ArgumentNullException(nameof(td));
+
         string json = Encoding.UTF8.GetString(bundleBytes);
         JsonWebKeySet jwks;
         try

@@ -43,6 +43,16 @@ internal class TestErrorAsyncStreamReader<T> : IAsyncStreamReader<T>
 
 internal static class CallHelpers
 {
+    public static AsyncUnaryCall<TResponse> Unary<TResponse>(TResponse response)
+    {
+        return new AsyncUnaryCall<TResponse>(
+            Task.FromResult(response),
+            Task.FromResult(new Metadata()),
+            () => Status.DefaultSuccess,
+            () => new Metadata(),
+            () => { });
+    }
+
     public static AsyncServerStreamingCall<TResponse> Stream<TResponse>(params TResponse[] response)
     {
         return Stream<TResponse>(default, response);

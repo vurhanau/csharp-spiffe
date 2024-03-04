@@ -83,7 +83,7 @@ internal static class Convertor
         return svids;
     }
 
-    public static JwtBundleSet ParseJwtSvidBundles(JWTBundlesResponse response)
+    public static JwtBundleSet ParseJwtBundleSet(JWTBundlesResponse response)
     {
         _ = response ?? throw new ArgumentNullException(nameof(response));
 

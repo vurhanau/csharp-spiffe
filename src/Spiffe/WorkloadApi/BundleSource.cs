@@ -76,7 +76,7 @@ public sealed class BundleSource : IX509BundleSource, IDisposable
         _lock.EnterReadLock();
         try
         {
-            return _x509Bundles!.GetBundleForTrustDomain(trustDomain);
+            return _x509Bundles!.GetX509Bundle(trustDomain);
         }
         finally
         {

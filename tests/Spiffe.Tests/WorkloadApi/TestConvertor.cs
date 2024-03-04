@@ -1,9 +1,14 @@
-﻿using System.Security.Cryptography;
+﻿using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
+using Microsoft.IdentityModel.Tokens;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
+using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 using Spiffe.Tests.Helper;
 using Spiffe.WorkloadApi;
@@ -31,14 +36,14 @@ public class TestConvertor
         bs.Bundles.Should().HaveCount(2);
         bs.Bundles.Should().ContainKey(td1);
         bs.Bundles.Should().ContainKey(td2);
-        bs.GetBundleForTrustDomain(td1).TrustDomain.Should().Be(td1);
-        bs.GetBundleForTrustDomain(td2).TrustDomain.Should().Be(td2);
+        bs.GetX509Bundle(td1).TrustDomain.Should().Be(td1);
+        bs.GetX509Bundle(td2).TrustDomain.Should().Be(td2);
 
-        X509Certificate2Collection b1 = bs.GetBundleForTrustDomain(td1).X509Authorities;
+        X509Certificate2Collection b1 = bs.GetX509Bundle(td1).X509Authorities;
         b1.Should().HaveCount(1);
         b1[0].RawData.Should().Equal(cert1Raw);
 
-        X509Certificate2Collection b2 = bs.GetBundleForTrustDomain(td2).X509Authorities;
+        X509Certificate2Collection b2 = bs.GetX509Bundle(td2).X509Authorities;
         b2.Should().HaveCount(2);
         b2[0].RawData.Should().Equal(cert1Raw);
         b2[0].RawData.Should().Equal(cert1Raw);
@@ -111,19 +116,19 @@ public class TestConvertor
         X509BundleSet b = x509Context.X509Bundles;
         b.Bundles.Should().HaveCount(3);
         b.Bundles.Should().ContainKeys(id1.TrustDomain, id2.TrustDomain, federatedTd);
-        X509Bundle b1 = b.GetBundleForTrustDomain(id1.TrustDomain);
+        X509Bundle b1 = b.GetX509Bundle(id1.TrustDomain);
         b1.TrustDomain.Should().Be(id1.TrustDomain);
         b1.X509Authorities.Should().HaveCount(2);
         b1.X509Authorities[0].RawData.Should().Equal(cert1[1]);
         b1.X509Authorities[1].RawData.Should().Equal(cert1[0]);
 
-        X509Bundle b2 = b.GetBundleForTrustDomain(id2.TrustDomain);
+        X509Bundle b2 = b.GetX509Bundle(id2.TrustDomain);
         b2.TrustDomain.Should().Be(id2.TrustDomain);
         b2.X509Authorities.Should().HaveCount(2);
         b2.X509Authorities[0].RawData.Should().Equal(cert2);
         b2.X509Authorities[1].RawData.Should().Equal(cert2);
 
-        X509Bundle fb = b.GetBundleForTrustDomain(federatedTd);
+        X509Bundle fb = b.GetX509Bundle(federatedTd);
         fb.TrustDomain.Should().Be(federatedTd);
         fb.X509Authorities.Should().HaveCount(2);
         fb.X509Authorities[0].RawData.Should().Equal(cert1[0]);
@@ -174,6 +179,140 @@ public class TestConvertor
         // Parse null
         Action nullSvidResponse = () => Convertor.ParseX509Context(null);
         nullSvidResponse.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public async Task TestParseJwtBundleSet()
+    {
+        // Parse valid bundle set
+        TrustDomain td1 = TrustDomain.FromString("spiffe://example1.org");
+        string jwksJson1 = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_1.json");
+        JsonWebKeySet jwks1 = JsonWebKeySet.Create(jwksJson1);
+        byte[] jwksBytes1 = Encoding.UTF8.GetBytes(jwksJson1);
+
+        TrustDomain td2 = TrustDomain.FromString("spiffe://example2.org");
+        string jwksJson2 = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_2.json");
+        JsonWebKeySet jwks2 = JsonWebKeySet.Create(jwksJson2);
+        byte[] jwksBytes2 = Encoding.UTF8.GetBytes(jwksJson2);
+
+        JWTBundlesResponse r = new();
+        r.Bundles.Add(td1.Name, ByteString.CopyFrom(jwksBytes1));
+        r.Bundles.Add(td2.Name, ByteString.CopyFrom(jwksBytes2));
+
+        JwtBundleSet bs = Convertor.ParseJwtBundleSet(r);
+
+        bs.Bundles.Should().HaveCount(2);
+        bs.Bundles.Should().ContainKey(td1);
+        bs.Bundles.Should().ContainKey(td2);
+        bs.GetJwtBundle(td1).TrustDomain.Should().Be(td1);
+        bs.GetJwtBundle(td2).TrustDomain.Should().Be(td2);
+
+        void VerifyJwtBundle(TrustDomain td, JsonWebKeySet jwks)
+        {
+            Dictionary<string, JsonWebKey> b = bs.GetJwtBundle(td).JwtAuthorities;
+            b.Should().HaveCount(jwks.Keys.Count);
+            foreach (JsonWebKey k in jwks.Keys)
+            {
+                Keys.EqualJwk(b[k.KeyId], k).Should().BeTrue();
+            }
+        }
+
+        VerifyJwtBundle(td1, jwks1);
+        VerifyJwtBundle(td2, jwks2);
+
+        // Parse empty bundle set
+        r = new();
+        bs = Convertor.ParseJwtBundleSet(r);
+        bs.Bundles.Should().BeEmpty();
+
+        // Parse malformed bundle set with a malformed trust domain name
+        r = new();
+        r.Bundles.Add("$#_=malformed-domain", ByteString.CopyFrom(jwksBytes1));
+        Action malformedTrustDomainName = () => Convertor.ParseJwtBundleSet(r);
+        malformedTrustDomainName.Should().Throw<Exception>();
+
+        // Parse malformed bundle set with a malformed bundle
+        r = new();
+        r.Bundles.Add(td1.Name, ByteString.CopyFromUtf8("malformed"));
+        Action malformedCert = () => Convertor.ParseJwtBundleSet(r);
+        malformedCert.Should().Throw<Exception>();
+
+        // Parse null bundle set
+        Action nullBundleResponse = () => Convertor.ParseJwtBundleSet(null);
+        nullBundleResponse.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void TestParseJwtSvid()
+    {
+        using ECDsa signingKey = Keys.CreateEC256Key();
+        DateTime expiry = DateTime.Now.AddHours(1);
+        string workload1 = "spiffe://example1.org/workload1";
+        string workload2 = "spiffe://example2.org/workload2";
+        string hint1 = "internal1";
+        string hint2 = "internal2";
+        IEnumerable<Claim> claims1 = Jwt.GetClaims(workload1, [workload2], expiry);
+        IEnumerable<Claim> claims2 = Jwt.GetClaims(workload1, [workload2], expiry);
+        string jwt1 = Jwt.Generate(claims1, signingKey);
+        string jwt2 = Jwt.Generate(claims2, signingKey);
+
+        JWTSVIDResponse r = new();
+        JWTSVID s0 = new()
+        {
+            SpiffeId = workload1,
+            Svid = jwt1,
+            Hint = hint1,
+        };
+        JWTSVID s1 = new()
+        {
+            SpiffeId = workload1,
+            Svid = jwt2,
+            Hint = hint2,
+        };
+        r.Svids.Add(s0);
+        r.Svids.Add(s1);
+
+        // Parse 2 SVIDs
+        List<JwtSvid> svids = Convertor.ParseJwtSvids(r, [workload2]);
+        svids.Should().NotBeNull();
+        svids.Should().HaveCount(2);
+        JwtSvid expected0 = new(
+            token: jwt1,
+            id: SpiffeId.FromString(workload1),
+            audience: [workload2],
+            expiry: expiry,
+            claims: claims1.ToDictionary(c => c.Type, c => c.Value),
+            hint: hint1);
+        JwtSvid expected1 = new(
+            token: jwt2,
+            id: SpiffeId.FromString(workload1),
+            audience: [workload2],
+            expiry: expiry,
+            claims: claims2.ToDictionary(c => c.Type, c => c.Value),
+            hint: hint2);
+        svids.Should().Equal(expected0, expected1);
+
+        // Parse 2 SVIDs with the same hint -> 1 SVID
+        r = new();
+        r.Svids.Add(s0);
+        r.Svids.Add(new JWTSVID(s1)
+        {
+            Hint = hint1,
+        });
+        svids = Convertor.ParseJwtSvids(r, [workload2]);
+        svids.Should().NotBeNull();
+        svids.Should().ContainSingle();
+        svids.Should().Equal(expected0);
+
+        // Null response
+        Action f = () => Convertor.ParseJwtSvids(null, []);
+        f.Should().Throw<ArgumentNullException>();
+
+        // No SVIDs in response
+        JWTSVIDResponse noSvids = new(r);
+        noSvids.Svids.Clear();
+        f = () => Convertor.ParseJwtSvids(noSvids, null);
+        f.Should().Throw<JwtSvidException>("There were no SVIDs in the response");
     }
 
     // Verify ECDsa by verifying signatures, not by PKCS binary:
