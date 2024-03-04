@@ -75,32 +75,17 @@ internal sealed class CA : IDisposable
         return new(id, chain, string.Empty);
     }
 
-    internal JwtSvid CreateJwtSvid(SpiffeId id, IEnumerable<string> audience, string hint = "")
+    internal JwtSvid CreateJwtSvid(SpiffeId spiffeId, IEnumerable<string> audience, string hint = "")
     {
-        DateTime now = DateTime.UtcNow;
-        DateTime then = now.AddHours(1);
-        string iat = ToNumericDate(now);
-        string exp = ToNumericDate(then);
-        string iss = "FAKECA";
-        List<Claim> claims = [
-            new(JwtRegisteredClaimNames.Sub, id.Id),
-            new(JwtRegisteredClaimNames.Iss, iss),
-            new(JwtRegisteredClaimNames.Iat, iat),
-            new(JwtRegisteredClaimNames.Exp, exp),
-        ];
-        claims.AddRange(audience.Select(aud => new Claim(JwtRegisteredClaimNames.Aud, aud)));
-
-        ECDsaSecurityKey securityKey = new(JwtKey);
-        SigningCredentials credentials = new(securityKey, SecurityAlgorithms.EcdsaSha256);
-        JwtSecurityToken jwt = new(claims: claims, signingCredentials: credentials);
-        string token = new JwtSecurityTokenHandler().WriteToken(jwt);
-
+        DateTime expiry = DateTime.Now.AddHours(1);
+        List<Claim> claims = Jwt.GetClaims(spiffeId.Id, audience, expiry);
+        string token = Jwt.Generate(claims, JwtKey);
         JwtSvid svid = JwtSvidParser.ParseInsecure(token, audience);
         return new JwtSvid(
             token: svid.Token,
             id: svid.Id,
             audience: audience,
-            expiry: then,
+            expiry: expiry,
             claims: claims.ToDictionary(c => c.Type, c => c.Value),
             hint: hint);
     }
@@ -295,10 +280,5 @@ internal sealed class CA : IDisposable
             oid: "2.5.29.35",
             rawData: authorityKeyIdentifer,
             critical: false);
-    }
-
-    private static string ToNumericDate(DateTime d)
-    {
-        return new DateTimeOffset(d).ToUnixTimeSeconds().ToString();
     }
 }

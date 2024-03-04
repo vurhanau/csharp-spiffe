@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using FluentAssertions;
@@ -7,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
+using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 using Spiffe.Tests.Helper;
 using Spiffe.WorkloadApi;
@@ -238,6 +240,79 @@ public class TestConvertor
         // Parse null bundle set
         Action nullBundleResponse = () => Convertor.ParseJwtBundleSet(null);
         nullBundleResponse.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void TestParseJwtSvid()
+    {
+        using ECDsa signingKey = Keys.CreateEC256Key();
+        DateTime expiry = DateTime.Now.AddHours(1);
+        string workload1 = "spiffe://example1.org/workload1";
+        string workload2 = "spiffe://example2.org/workload2";
+        string hint1 = "internal1";
+        string hint2 = "internal2";
+        IEnumerable<Claim> claims1 = Jwt.GetClaims(workload1, [workload2], expiry);
+        IEnumerable<Claim> claims2 = Jwt.GetClaims(workload1, [workload2], expiry);
+        string jwt1 = Jwt.Generate(claims1, signingKey);
+        string jwt2 = Jwt.Generate(claims2, signingKey);
+
+        JWTSVIDResponse r = new();
+        JWTSVID s0 = new()
+        {
+            SpiffeId = workload1,
+            Svid = jwt1,
+            Hint = hint1,
+        };
+        JWTSVID s1 = new()
+        {
+            SpiffeId = workload1,
+            Svid = jwt2,
+            Hint = hint2,
+        };
+        r.Svids.Add(s0);
+        r.Svids.Add(s1);
+
+        // Parse 2 SVIDs
+        List<JwtSvid> svids = Convertor.ParseJwtSvids(r, [workload2]);
+        svids.Should().NotBeNull();
+        svids.Should().HaveCount(2);
+        JwtSvid expected0 = new(
+            token: jwt1,
+            id: SpiffeId.FromString(workload1),
+            audience: [workload2],
+            expiry: expiry,
+            claims: claims1.ToDictionary(c => c.Type, c => c.Value),
+            hint: hint1);
+        JwtSvid expected1 = new(
+            token: jwt2,
+            id: SpiffeId.FromString(workload1),
+            audience: [workload2],
+            expiry: expiry,
+            claims: claims2.ToDictionary(c => c.Type, c => c.Value),
+            hint: hint2);
+        svids.Should().Equal(expected0, expected1);
+
+        // Parse 2 SVIDs with the same hint -> 1 SVID
+        r = new();
+        r.Svids.Add(s0);
+        r.Svids.Add(new JWTSVID(s1)
+        {
+            Hint = hint1,
+        });
+        svids = Convertor.ParseJwtSvids(r, [workload2]);
+        svids.Should().NotBeNull();
+        svids.Should().ContainSingle();
+        svids.Should().Equal(expected0);
+
+        // Null response
+        Action f = () => Convertor.ParseJwtSvids(null, []);
+        f.Should().Throw<ArgumentNullException>();
+
+        // No SVIDs in response
+        JWTSVIDResponse noSvids = new(r);
+        noSvids.Svids.Clear();
+        f = () => Convertor.ParseJwtSvids(noSvids, null);
+        f.Should().Throw<JwtSvidException>("There were no SVIDs in the response");
     }
 
     // Verify ECDsa by verifying signatures, not by PKCS binary:
