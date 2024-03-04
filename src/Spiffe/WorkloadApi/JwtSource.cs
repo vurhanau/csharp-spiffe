@@ -47,7 +47,7 @@ public sealed class JwtSource : IJwtSource
         _lock.EnterReadLock();
         try
         {
-            return _bundles!.GetBundleForTrustDomain(trustDomain);
+            return _bundles!.GetJwtBundle(trustDomain);
         }
         finally
         {

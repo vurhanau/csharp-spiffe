@@ -439,7 +439,7 @@ public class TestWorkloadApiClient
     private static void VerifyX509BundleSet(X509BundleSet b, TrustDomain expectedTrustDomain, X509Certificate2 expectedCert)
     {
         b.Bundles.Should().ContainKey(expectedTrustDomain);
-        var bundle = b.GetBundleForTrustDomain(expectedTrustDomain);
+        var bundle = b.GetX509Bundle(expectedTrustDomain);
         bundle.TrustDomain.Should().Be(expectedTrustDomain);
         bundle.X509Authorities.Should().ContainSingle();
         bundle.X509Authorities[0].RawData.Should().Equal(expectedCert.RawData);
@@ -449,7 +449,7 @@ public class TestWorkloadApiClient
     {
         b.Bundles.Should().ContainSingle();
         b.Bundles.Should().ContainKey(expectedTrustDomain);
-        JwtBundle bundle = b.GetBundleForTrustDomain(expectedTrustDomain);
+        JwtBundle bundle = b.GetJwtBundle(expectedTrustDomain);
         bundle.TrustDomain.Should().Be(expectedTrustDomain);
         bundle.JwtAuthorities.Should().HaveCount(expectedJwks.Keys.Count);
         foreach ((string kid, JsonWebKey k1) in bundle.JwtAuthorities)

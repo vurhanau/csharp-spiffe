@@ -106,7 +106,7 @@ public sealed class X509Source : IX509Source
         _lock.EnterReadLock();
         try
         {
-            return _bundles!.GetBundleForTrustDomain(trustDomain);
+            return _bundles!.GetX509Bundle(trustDomain);
         }
         finally
         {

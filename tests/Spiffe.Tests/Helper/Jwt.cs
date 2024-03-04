@@ -24,11 +24,16 @@ internal static class Jwt
         return claims;
     }
 
-    internal static string Generate(IEnumerable<Claim> claims, ECDsa signingKey)
+    internal static string Generate(IEnumerable<Claim> claims, ECDsa signingKey, string kid = null)
     {
-        ECDsaSecurityKey securityKey = new(signingKey);
+        ECDsaSecurityKey securityKey = new(signingKey)
+        {
+            KeyId = kid,
+        };
         SigningCredentials credentials = new(securityKey, SecurityAlgorithms.EcdsaSha256);
-        JwtSecurityToken jwt = new(claims: claims, signingCredentials: credentials);
+        JwtHeader header = new JwtHeader(credentials);
+        JwtPayload payload = new JwtPayload(claims);
+        JwtSecurityToken jwt = new(header, payload);
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 

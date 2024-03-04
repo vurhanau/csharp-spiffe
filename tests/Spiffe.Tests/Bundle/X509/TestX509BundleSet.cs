@@ -19,10 +19,10 @@ public class TestX509BundleSet
             { td1, b1 },
             { td2, b2 },
         });
-        bs.GetBundleForTrustDomain(td1).Should().Be(b1);
-        bs.GetBundleForTrustDomain(td2).Should().Be(b2);
+        bs.GetX509Bundle(td1).Should().Be(b1);
+        bs.GetX509Bundle(td2).Should().Be(b2);
 
-        Action notFound = () => bs.GetBundleForTrustDomain(TrustDomain.FromString("spiffe://example3.org"));
+        Action notFound = () => bs.GetX509Bundle(TrustDomain.FromString("spiffe://example3.org"));
         notFound.Should().Throw<BundleNotFoundException>();
 
         Action nullCtor = () => new X509BundleSet(null);

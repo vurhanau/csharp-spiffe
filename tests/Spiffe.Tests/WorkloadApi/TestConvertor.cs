@@ -36,14 +36,14 @@ public class TestConvertor
         bs.Bundles.Should().HaveCount(2);
         bs.Bundles.Should().ContainKey(td1);
         bs.Bundles.Should().ContainKey(td2);
-        bs.GetBundleForTrustDomain(td1).TrustDomain.Should().Be(td1);
-        bs.GetBundleForTrustDomain(td2).TrustDomain.Should().Be(td2);
+        bs.GetX509Bundle(td1).TrustDomain.Should().Be(td1);
+        bs.GetX509Bundle(td2).TrustDomain.Should().Be(td2);
 
-        X509Certificate2Collection b1 = bs.GetBundleForTrustDomain(td1).X509Authorities;
+        X509Certificate2Collection b1 = bs.GetX509Bundle(td1).X509Authorities;
         b1.Should().HaveCount(1);
         b1[0].RawData.Should().Equal(cert1Raw);
 
-        X509Certificate2Collection b2 = bs.GetBundleForTrustDomain(td2).X509Authorities;
+        X509Certificate2Collection b2 = bs.GetX509Bundle(td2).X509Authorities;
         b2.Should().HaveCount(2);
         b2[0].RawData.Should().Equal(cert1Raw);
         b2[0].RawData.Should().Equal(cert1Raw);
@@ -116,19 +116,19 @@ public class TestConvertor
         X509BundleSet b = x509Context.X509Bundles;
         b.Bundles.Should().HaveCount(3);
         b.Bundles.Should().ContainKeys(id1.TrustDomain, id2.TrustDomain, federatedTd);
-        X509Bundle b1 = b.GetBundleForTrustDomain(id1.TrustDomain);
+        X509Bundle b1 = b.GetX509Bundle(id1.TrustDomain);
         b1.TrustDomain.Should().Be(id1.TrustDomain);
         b1.X509Authorities.Should().HaveCount(2);
         b1.X509Authorities[0].RawData.Should().Equal(cert1[1]);
         b1.X509Authorities[1].RawData.Should().Equal(cert1[0]);
 
-        X509Bundle b2 = b.GetBundleForTrustDomain(id2.TrustDomain);
+        X509Bundle b2 = b.GetX509Bundle(id2.TrustDomain);
         b2.TrustDomain.Should().Be(id2.TrustDomain);
         b2.X509Authorities.Should().HaveCount(2);
         b2.X509Authorities[0].RawData.Should().Equal(cert2);
         b2.X509Authorities[1].RawData.Should().Equal(cert2);
 
-        X509Bundle fb = b.GetBundleForTrustDomain(federatedTd);
+        X509Bundle fb = b.GetX509Bundle(federatedTd);
         fb.TrustDomain.Should().Be(federatedTd);
         fb.X509Authorities.Should().HaveCount(2);
         fb.X509Authorities[0].RawData.Should().Equal(cert1[0]);
@@ -204,12 +204,12 @@ public class TestConvertor
         bs.Bundles.Should().HaveCount(2);
         bs.Bundles.Should().ContainKey(td1);
         bs.Bundles.Should().ContainKey(td2);
-        bs.GetBundleForTrustDomain(td1).TrustDomain.Should().Be(td1);
-        bs.GetBundleForTrustDomain(td2).TrustDomain.Should().Be(td2);
+        bs.GetJwtBundle(td1).TrustDomain.Should().Be(td1);
+        bs.GetJwtBundle(td2).TrustDomain.Should().Be(td2);
 
         void VerifyJwtBundle(TrustDomain td, JsonWebKeySet jwks)
         {
-            Dictionary<string, JsonWebKey> b = bs.GetBundleForTrustDomain(td).JwtAuthorities;
+            Dictionary<string, JsonWebKey> b = bs.GetJwtBundle(td).JwtAuthorities;
             b.Should().HaveCount(jwks.Keys.Count);
             foreach (JsonWebKey k in jwks.Keys)
             {
