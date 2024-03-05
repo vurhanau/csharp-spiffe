@@ -159,7 +159,7 @@ public static class JwtSvidParser
         // something is misconfigured if this happens and we should not trust it.
         if (jwt.IssuedAt != DateTime.MinValue && now.Add(s_leeway) < jwt.IssuedAt)
         {
-            throw new JwtSvidException("validation field, token issued in the future (iat)");
+            throw new JwtSvidException("Validation field, token issued in the future (iat)");
         }
     }
 
