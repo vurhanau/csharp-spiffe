@@ -37,7 +37,7 @@ internal static class Jwt
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 
-    private static string ToNumericDate(DateTime d)
+    internal static string ToNumericDate(DateTime d)
     {
         return new DateTimeOffset(d).ToUnixTimeSeconds().ToString();
     }
