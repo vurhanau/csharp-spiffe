@@ -18,11 +18,15 @@ public class TestJwtSvidParser
 
     private static readonly SpiffeId s_workload2 = SpiffeId.FromPath(s_td, "/workload2");
 
+    private static readonly CA s_ca = CA.Create(s_td);
+
+    private static readonly IJwtBundleSource s_source = new JwtBundleSet(new() { { s_td, s_ca.JwtBundle() } });
+
+    private static Func<List<Claim>, string> Jwt => c => J.Generate(c, s_ca.JwtKey, s_ca.JwtKid);
+
     [Fact]
     public async Task TestParse()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
         DateTime now = DateTime.UtcNow;
         List<Claim> claims = [
             new(Claims.Iss, "FAKECA"),
@@ -31,9 +35,8 @@ public class TestJwtSvidParser
             new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string jwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
-
-        JwtSvid parsed = await JwtSvidParser.Parse(jwt, source, [s_workload2.Id]);
+        string jwt = Jwt(claims);
+        JwtSvid parsed = await JwtSvidParser.Parse(jwt, s_source, [s_workload2.Id]);
         parsed.Should().Be(new JwtSvid(
             token: jwt,
             id: s_workload1,
@@ -46,8 +49,6 @@ public class TestJwtSvidParser
     [Fact]
     public async Task TestParseFailsIfMissingSubject()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
         DateTime now = DateTime.UtcNow;
         List<Claim> claims = [
             new(Claims.Iss, "FAKECA"),
@@ -55,16 +56,14 @@ public class TestJwtSvidParser
             new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string badJwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
+        string badJwt = Jwt(claims);
+        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>("Token missing sub claim");
     }
 
     [Fact]
     public async Task TestParseFailsIfMissingExp()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
         DateTime now = DateTime.UtcNow;
         List<Claim> claims = [
             new(Claims.Iss, "FAKECA"),
@@ -72,16 +71,14 @@ public class TestJwtSvidParser
             new(Claims.Iat, J.ToNumericDate(now)),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string badJwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
+        string badJwt = Jwt(claims);
+        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>("Token missing exp claim");
     }
 
     [Fact]
     public async Task TestParseFailsIfSubjectInvalid()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
         DateTime now = DateTime.UtcNow;
         string sub = "invalid spiffe id";
         List<Claim> claims = [
@@ -91,16 +88,14 @@ public class TestJwtSvidParser
             new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string badJwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
+        string badJwt = Jwt(claims);
+        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>($"Token has an invalid subject claim: '{sub}'");
     }
 
     [Fact]
     public async Task TestParseFailsIfAudienceInvalid()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
         DateTime now = DateTime.UtcNow;
         List<Claim> claims = [
             new(Claims.Iss, "FAKECA"),
@@ -109,17 +104,15 @@ public class TestJwtSvidParser
             new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string badJwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
+        string badJwt = Jwt(claims);
         SpiffeId workload3 = SpiffeId.FromPath(s_td, "/workload3");
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [workload3.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [workload3.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>($"Expected audience in {s_workload2.Id} (audience={workload3.Id})");
     }
 
     [Fact]
     public async Task TestParseFailsIfValidFromInvalid()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
         DateTime now = DateTime.UtcNow;
         List<Claim> claims = [
             new(Claims.Iss, "FAKECA"),
@@ -129,8 +122,8 @@ public class TestJwtSvidParser
             new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string badJwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
+        string badJwt = Jwt(claims);
+        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>("Validation failed, token not valid yet (nbf)");
     }
 
@@ -147,7 +140,7 @@ public class TestJwtSvidParser
             new(Claims.Exp, J.ToNumericDate(now.AddYears(-1))),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string badJwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
+        string badJwt = Jwt(claims);
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>("Validation failed, token is expired (exp)");
     }
@@ -155,8 +148,6 @@ public class TestJwtSvidParser
     [Fact]
     public async Task TestParseFailsIfIssuedAtInvalid()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
         DateTime now = DateTime.UtcNow;
         List<Claim> claims = [
             new(Claims.Iss, "FAKECA"),
@@ -165,20 +156,18 @@ public class TestJwtSvidParser
             new(Claims.Exp, J.ToNumericDate(now.AddYears(2))),
             new(Claims.Aud, s_workload2.Id),
         ];
-        string badJwt = J.Generate(claims, ca.JwtKey, ca.JwtKid);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
+        string badJwt = Jwt(claims);
+        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>("Validation field, token issued in the future (iat)");
     }
 
     [Fact]
     public async Task TestParseWithInvalidSignature()
     {
-        CA ca = CA.Create(s_td);
-        IJwtBundleSource source = new JwtBundleSet(new() { { s_td, ca.JwtBundle() } });
-        string jwt1 = ca.CreateJwtSvid(s_workload1, [s_workload2.Id]).Token;
-        string jwt2 = ca.CreateJwtSvid(s_workload1, [s_workload1.Id]).Token;
+        string jwt1 = s_ca.CreateJwtSvid(s_workload1, [s_workload2.Id]).Token;
+        string jwt2 = s_ca.CreateJwtSvid(s_workload1, [s_workload1.Id]).Token;
         string badJwt = jwt2[..jwt2.LastIndexOf('.')] + jwt1[jwt1.LastIndexOf('.')..];
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>();
     }
 
