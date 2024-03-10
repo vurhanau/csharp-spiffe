@@ -1,6 +1,5 @@
-using Spiffe.Bundle;
+using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
-using Spiffe.Error;
 using Spiffe.Id;
 
 namespace Spiffe.WorkloadApi;
@@ -8,11 +7,13 @@ namespace Spiffe.WorkloadApi;
 /// <summary>
 /// Source of SPIFFE bundles maintained via the Workload API
 /// </summary>
-public sealed class BundleSource : IX509BundleSource, IDisposable
+public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposable
 {
     private readonly ReaderWriterLockSlim _lock;
 
     private X509BundleSet? _x509Bundles;
+
+    private JwtBundleSet? _jwtBundles;
 
     private volatile int _initialized;
 
@@ -30,40 +31,9 @@ public sealed class BundleSource : IX509BundleSource, IDisposable
     /// <summary>
     /// Indicates if source is initialized.
     /// </summary>
-    public bool IsInitialized => _initialized == 1;
+    public bool IsInitialized => _initialized == 3;
 
     private bool IsDisposed => _disposed != 0;
-
-    /// <summary>
-    /// Returns the SPIFFE bundle for the given trust domain.
-    /// </summary>
-    /// <exception cref="BundleNotFoundException">Thrown if bundle not found.</exception>
-    public SpiffeBundle GetBundle(TrustDomain trustDomain)
-    {
-        ThrowIfNotInitalized();
-        ThrowIfDisposed();
-
-        _lock.EnterReadLock();
-        try
-        {
-            bool hasX509Authorities = _x509Bundles!.Bundles.ContainsKey(trustDomain);
-            if (!hasX509Authorities)
-            {
-                throw new BundleNotFoundException($"No SPIFFE bundle for trust domain '{trustDomain.Name}'");
-            }
-
-            X509Bundle x509Authorities = _x509Bundles.Bundles[trustDomain];
-            return new SpiffeBundle
-            {
-                TrustDomain = trustDomain,
-                X509Authorities = x509Authorities,
-            };
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
 
     /// <summary>
     /// Returns the X.509 bundle for the given trust domain.
@@ -85,6 +55,25 @@ public sealed class BundleSource : IX509BundleSource, IDisposable
     }
 
     /// <summary>
+    /// Returns the JWT bundle for the given trust domain.
+    /// </summary>
+    public JwtBundle GetJwtBundle(TrustDomain trustDomain)
+    {
+        ThrowIfNotInitalized();
+        ThrowIfDisposed();
+
+        _lock.EnterReadLock();
+        try
+        {
+            return _jwtBundles!.GetJwtBundle(trustDomain);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    /// <summary>
     /// Creates a new <see cref="BundleSource"/>.
     /// It blocks until the initial update has been received from the Workload API.
     /// The source should be closed when no longer in use to free underlying resources.
@@ -96,9 +85,14 @@ public sealed class BundleSource : IX509BundleSource, IDisposable
         _ = client ?? throw new ArgumentNullException(nameof(client));
 
         BundleSource source = new();
-        Watcher<X509Context> watcher = new(source.SetX509Context);
+        Watcher<X509Context> x509Watcher = new(source.SetX509Context);
         _ = Task.Run(
-            () => client.WatchX509ContextAsync(watcher, cancellationToken),
+            () => client.WatchX509ContextAsync(x509Watcher, cancellationToken),
+            cancellationToken);
+
+        Watcher<JwtBundleSet> jwtWatcher = new(source.SetJwtBundles);
+        _ = Task.Run(
+            () => client.WatchJwtBundlesAsync(jwtWatcher, cancellationToken),
             cancellationToken);
 
         await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
@@ -128,7 +122,26 @@ public sealed class BundleSource : IX509BundleSource, IDisposable
         try
         {
             _x509Bundles = x509Context.X509Bundles;
-            _initialized = 1;
+            _initialized |= 1;
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    /// <summary>
+    /// Visible for testing.
+    /// </summary>
+    internal void SetJwtBundles(JwtBundleSet jwtBundles)
+    {
+        ThrowIfDisposed();
+
+        _lock.EnterWriteLock();
+        try
+        {
+            _jwtBundles = jwtBundles;
+            _initialized |= 2;
         }
         finally
         {
