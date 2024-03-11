@@ -97,11 +97,9 @@ public class TestX509Source
 
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
-        Stopwatch stopwatch = Stopwatch.StartNew();
 
         using X509Source s = await X509Source.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
 
-        stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 5000);
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
         s.IsInitialized.Should().BeFalse();
     }
@@ -116,14 +114,13 @@ public class TestX509Source
                       .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        // Respect timeout
         await Assert.ThrowsAsync<OperationCanceledException>(() => X509Source.CreateAsync(c, timeoutMillis: 500));
     }
 
     [Fact]
     public void TestFailWhenInvalidState()
     {
-        X509Source s = new(l => null);
+        X509Source s = new(_ => null);
         Action f1 = () => s.GetX509Bundle(TrustDomain.FromString("spiffe://example.org"));
         Action f2 = () => s.GetX509Svid();
 

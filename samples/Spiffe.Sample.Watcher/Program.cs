@@ -2,10 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Spiffe.Bundle.Jwt;
-using Spiffe.Bundle.X509;
 using Spiffe.Grpc;
 using Spiffe.Id;
-using Spiffe.Svid.Jwt;
 using Spiffe.Svid.X509;
 using Spiffe.Util;
 using Spiffe.WorkloadApi;
@@ -40,7 +38,7 @@ Task watchX509 = Task.Run(() => client.WatchX509ContextAsync(new Watcher<X509Con
         foreach (X509Svid svid in x509Context.X509Svids)
         {
             string svidString = Strings.ToString(svid);
-            logger.LogInformation("SVID updated for '{}':\n{}\n", svid.Id, svidString);
+            logger.LogInformation("SVID updated for '{Id}':\n{Svid}\n", svid.Id, svidString);
         }
     },
     err =>
@@ -54,7 +52,7 @@ Task watchJwt = Task.Run(() => client.WatchJwtBundlesAsync(new Watcher<JwtBundle
         foreach ((TrustDomain td, JwtBundle b) in jwtBundles.Bundles)
         {
             string bundleString = Strings.ToString(b);
-            logger.LogInformation("JWT bundle updated '{}': {}", b.TrustDomain, bundleString);
+            logger.LogInformation("JWT bundle updated '{Td}': {Bundle}", b.TrustDomain, bundleString);
         }
     },
     err =>

@@ -9,7 +9,7 @@ namespace Spiffe.Id;
 /// </summary>
 public class SpiffeId
 {
-    internal const string SchemePrefix = "spiffe://";
+    private const string SchemePrefix = "spiffe://";
 
     private static readonly int s_schemePrefixLength = SchemePrefix.Length;
 

@@ -57,7 +57,6 @@ fmt:
 
 lint:
 	@jb inspectcode Spiffe.sln -o=jb.xml --build
-# 	@jb cleanupcode Spiffe.sln
 
 dependabot:
 	@dependadotnet . > .github/dependabot.yml

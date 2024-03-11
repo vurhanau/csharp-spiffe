@@ -1,4 +1,5 @@
-﻿using Spiffe.Error;
+﻿using System.Collections.ObjectModel;
+using Spiffe.Error;
 using Spiffe.Id;
 
 namespace Spiffe.Bundle.X509;
@@ -15,13 +16,13 @@ public class X509BundleSet : IX509BundleSource
     {
         _ = bundles ?? throw new ArgumentNullException(nameof(bundles));
 
-        Bundles = new(bundles);
+        Bundles = new ReadOnlyDictionary<TrustDomain, X509Bundle>(bundles);
     }
 
     /// <summary>
     /// Gets a trust domain to X.509 bundle mapping.
     /// </summary>
-    internal Dictionary<TrustDomain, X509Bundle> Bundles { get; }
+    public IDictionary<TrustDomain, X509Bundle> Bundles { get; }
 
     /// <summary>
     /// Gets a bundle associated with the trust domain.

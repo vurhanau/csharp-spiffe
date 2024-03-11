@@ -31,7 +31,7 @@ app.Lifetime.ApplicationStopped.Register(close.Cancel);
 app.MapGet("/", (ClaimsPrincipal principal) =>
 {
     string claimString = string.Join("\n", principal.Claims.Select(c => c.ToString()));
-    app.Logger.LogInformation("Principal:\n{}", claimString);
+    app.Logger.LogInformation("Principal:\n{Claims}", claimString);
     return "Hello world!";
 }).RequireAuthorization();
 

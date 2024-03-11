@@ -39,7 +39,7 @@ WebApplication app = builder.Build();
 app.Lifetime.ApplicationStopped.Register(close.Cancel);
 
 string serverCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
-app.Logger.LogInformation("Server certificate:\n {}", serverCertificate);
+app.Logger.LogInformation("Server certificate:\n {Cert}", serverCertificate);
 
 app.MapGrpcService<GreetService>();
 

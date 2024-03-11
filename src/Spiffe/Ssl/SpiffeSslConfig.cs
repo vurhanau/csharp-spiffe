@@ -1,7 +1,6 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Spiffe.Bundle.X509;
-using Spiffe.Id;
 using Spiffe.Svid.X509;
 using Spiffe.WorkloadApi;
 
