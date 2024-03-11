@@ -169,9 +169,9 @@ public static class JwtSvidParser
     private static void ValidateTokenAlgorithm(JsonWebToken jwt)
     {
         string alg = jwt.Alg;
-        bool ok = alg == JwtAlgorithm.RS256 || alg == JwtAlgorithm.RS384 || alg == JwtAlgorithm.RS512 ||
-                  alg == JwtAlgorithm.ES256 || alg == JwtAlgorithm.ES384 || alg == JwtAlgorithm.ES512 ||
-                  alg == JwtAlgorithm.PS256 || alg == JwtAlgorithm.PS384 || alg == JwtAlgorithm.PS512;
+        bool ok = alg == JwtAlgorithm.Rs256 || alg == JwtAlgorithm.Rs384 || alg == JwtAlgorithm.Rs512 ||
+                  alg == JwtAlgorithm.Es256 || alg == JwtAlgorithm.Es384 || alg == JwtAlgorithm.Es512 ||
+                  alg == JwtAlgorithm.Ps256 || alg == JwtAlgorithm.Ps384 || alg == JwtAlgorithm.Ps512;
 
         if (!ok)
         {

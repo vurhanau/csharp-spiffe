@@ -120,7 +120,7 @@ public class TestX509Source
     [Fact]
     public void TestFailWhenInvalidState()
     {
-        X509Source s = new(l => null);
+        X509Source s = new(_ => null);
         Action f1 = () => s.GetX509Bundle(TrustDomain.FromString("spiffe://example.org"));
         Action f2 = () => s.GetX509Svid();
 

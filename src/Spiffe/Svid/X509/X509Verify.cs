@@ -24,7 +24,7 @@ public static class X509Verify
 
         SpiffeId id = GetSpiffeIdFromCertificate(leaf);
 
-        if (IsCA(leaf))
+        if (IsCertificateAuthority(leaf))
         {
             throw new ArgumentException("Leaf certificate with CA flag set to true");
         }
@@ -61,7 +61,7 @@ public static class X509Verify
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="certificate"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="certificate"/> doesn't have exactly 1 SAN.</exception>
-    public static SpiffeId GetSpiffeIdFromCertificate(X509Certificate2 certificate)
+    private static SpiffeId GetSpiffeIdFromCertificate(X509Certificate2 certificate)
     {
         _ = certificate ?? throw new ArgumentNullException(nameof(certificate));
 
@@ -75,7 +75,7 @@ public static class X509Verify
         return cert.Extensions.OfType<X509KeyUsageExtension>().Any(ku => (ku.KeyUsages & flag) == flag);
     }
 
-    private static bool IsCA(X509Certificate2 cert)
+    private static bool IsCertificateAuthority(X509Certificate2 cert)
     {
         return cert.Extensions.OfType<X509BasicConstraintsExtension>().Any(c => c.CertificateAuthority);
     }

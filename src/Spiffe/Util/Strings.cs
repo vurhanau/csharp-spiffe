@@ -52,6 +52,11 @@ public static class Strings
     /// <param name="verbose">Set if certificate output should contain detailed information.</param>
     public static string ToString(X509Svid x509Svid, bool verbose = false)
     {
+        if (x509Svid == null)
+        {
+            return "null";
+        }
+
         StringBuilder sb = new();
         sb.AppendLine($"Spiffe ID: {x509Svid.Id?.Id}");
         if (!string.IsNullOrEmpty(x509Svid.Hint))
@@ -71,6 +76,11 @@ public static class Strings
     public static string ToString(JwtSvid jwtSvid, bool verbose = false)
     {
         StringBuilder sb = new();
+        if (jwtSvid == null)
+        {
+            return "null";
+        }
+
         if (verbose)
         {
             sb.AppendLine($"Token: {jwtSvid.Token}");
@@ -131,7 +141,7 @@ public static class Strings
         foreach ((TrustDomain td, JwtBundle bundle) in jwtBundleSet.Bundles)
         {
             sb.AppendLine($"Trust domain: {td}");
-            sb.AppendLine(ToString(bundle, verbose));
+            sb.AppendLine(ToString(bundle));
         }
 
         return sb.ToString();
@@ -141,8 +151,7 @@ public static class Strings
     /// Gets JWT bundle string representation.
     /// </summary>
     /// <param name="jwtBundle">JWT bundle</param>
-    /// <param name="verbose">Set if output should contain detailed information.</param>
-    public static string ToString(JwtBundle jwtBundle, bool verbose = false)
+    public static string ToString(JwtBundle jwtBundle)
     {
         StringBuilder sb = new();
         foreach ((string kid, JsonWebKey key) in jwtBundle.JwtAuthorities)
