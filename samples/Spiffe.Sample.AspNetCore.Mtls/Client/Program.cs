@@ -24,7 +24,7 @@ WebApplication app = builder.Build();
 app.Lifetime.ApplicationStopped.Register(close.Cancel);
 
 string clientCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
-app.Logger.LogInformation("Client certificate:\n {}", clientCertificate);
+app.Logger.LogInformation("Client certificate:\n {Cert}", clientCertificate);
 
 app.MapGet("/", async () =>
 {

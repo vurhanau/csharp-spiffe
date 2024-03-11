@@ -206,7 +206,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                                 CancellationToken cancellationToken)
     {
         string ty = typeof(T).Name;
-        _logger.LogTrace("Start watching {}", ty);
+        _logger.LogTrace("Start watching {Type}", ty);
 
         Backoff backoff = _backoffFunc();
         while (!cancellationToken.IsCancellationRequested)
@@ -217,7 +217,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             }
             catch (Exception e)
             {
-                _logger.LogDebug("Watch {ty} error: {}", ty, e);
+                _logger.LogDebug(e, "Watch {Type}", ty);
 
                 watcher.OnError(e);
 
@@ -229,7 +229,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             }
         }
 
-        _logger.LogTrace("Stopped watching {}", ty);
+        _logger.LogTrace("Stopped watching {Type}", ty);
     }
 
     private async Task WatchInternal<TFrom, TResult>(IWatcher<TResult> watcher,
@@ -243,7 +243,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         string fty = typeof(TFrom).Name;
         string rty = typeof(TResult).Name;
 
-        _logger.LogDebug("Watching {}", fty);
+        _logger.LogDebug("Watching {FType}", fty);
 
         CallOptions callOptions = GetCallOptions(cancellationToken);
         using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
@@ -255,17 +255,17 @@ public class WorkloadApiClient : IWorkloadApiClient
 
             if (_logger.IsEnabled(LogLevel.Trace))
             {
-                _logger.LogTrace("{} response: {}", fty, Strings.ToString(response));
+                _logger.LogTrace("{FType} response: {Resp}", fty, Strings.ToString(response));
             }
 
             TResult parsed = parserFunc(response);
             if (_logger.IsEnabled(LogLevel.Trace))
             {
-                _logger.LogTrace("{} parsed response: {}", rty, stringFunc(parsed, true));
+                _logger.LogTrace("{RType} parsed response: {Resp}", rty, stringFunc(parsed, true));
             }
 
             watcher.OnUpdate(parsed);
-            _logger.LogDebug("{} updated", rty);
+            _logger.LogDebug("{RType} updated", rty);
         }
     }
 
@@ -293,7 +293,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         }
 
         TimeSpan retryAfter = backoff.Duration();
-        _logger.LogWarning(e, "Failed to watch the Workload API, retrying in {} seconds", retryAfter.TotalSeconds);
+        _logger.LogWarning(e, "Failed to watch the Workload API, retrying in {RetryIn} seconds", retryAfter.TotalSeconds);
 
         try
         {

@@ -77,7 +77,8 @@ internal static class Crypto
     internal static X509Certificate2Collection ParseCertificates(ReadOnlySpan<byte> der)
     {
         X509Certificate2Collection certs = [];
-        for (int offset = 0; offset < der.Length;)
+        int offset = 0;
+        while (offset < der.Length)
         {
             // If there are multiple certs are in blob - this code fails on MacOS for < .NET8.
             // https://github.com/dotnet/runtime/issues/82682

@@ -1,4 +1,5 @@
-﻿using Spiffe.Error;
+﻿using System.Collections.ObjectModel;
+using Spiffe.Error;
 using Spiffe.Id;
 
 namespace Spiffe.Bundle.Jwt;
@@ -15,13 +16,13 @@ public class JwtBundleSet : IJwtBundleSource
     {
         _ = bundles ?? throw new ArgumentNullException(nameof(bundles));
 
-        Bundles = new(bundles);
+        Bundles = new ReadOnlyDictionary<TrustDomain, JwtBundle>(bundles);
     }
 
     /// <summary>
     /// Gets a trust domain to X.509 bundle mapping.
     /// </summary>
-    internal Dictionary<TrustDomain, JwtBundle> Bundles { get; }
+    public IDictionary<TrustDomain, JwtBundle> Bundles { get; }
 
     /// <summary>
     /// Gets a bundle associated with the trust domain.

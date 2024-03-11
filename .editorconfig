@@ -15,9 +15,10 @@ indent_size = 4
 indent_size = 2
 
 # Ignore generated proto
-[**/proto/**]
+[**/obj/**]
 dotnet_diagnostic.CS1570.severity = none
 dotnet_diagnostic.CS1587.severity = none
+
 
 # C# and Visual Basic files
 [*.{cs,vb}]

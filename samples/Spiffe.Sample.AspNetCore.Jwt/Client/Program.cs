@@ -36,7 +36,7 @@ app.MapGet("/", async () =>
         RequestUri = new Uri(serverUrl),
     };
     req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", svid.Token);
-    app.Logger.LogInformation("JWT SVID:\n{}", Strings.ToString(svid));
+    app.Logger.LogInformation("JWT SVID:\n{Svid}", Strings.ToString(svid));
     HttpResponseMessage resp = await http.SendAsync(req);
     string str = await resp.Content.ReadAsStringAsync();
     return Results.Text(str, statusCode: (int)resp.StatusCode);

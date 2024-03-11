@@ -26,18 +26,21 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/Directory.Packages.props') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
       
       - name: Restore
-        run: dotnet restore --locked-mode
+        run: dotnet restore
 
       - name: Build
         run: dotnet build --no-restore
 
       - name: Test
         run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+      - name: Build Samples
+        run: make build-samples
 
       - name: Coverage
         uses: irongut/CodeCoverageSummary@v1.3.0

@@ -42,7 +42,6 @@ public static class X509Verify
         // TODO: add ExtKeyUsageAny validation
         // TODO: add use validation
         // https://github.com/dotnet/aspnetcore/blob/main/src/Security/Authentication/Certificate/src/CertificateAuthenticationHandler.cs#L208
-
         X509Bundle bundle = bundleSource.GetX509Bundle(id.TrustDomain);
 
         X509Chain chain = new();
