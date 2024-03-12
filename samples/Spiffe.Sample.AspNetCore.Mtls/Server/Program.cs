@@ -15,7 +15,6 @@ using CancellationTokenSource close = new();
 using GrpcChannel channel = GrpcChannelFactory.CreateChannel(spiffeAddress);
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel);
 using X509Source x509Source = await X509Source.CreateAsync(workload);
-
 builder.WebHost.UseKestrel(kestrel =>
 {
     kestrel.Listen(IPAddress.Any, port, listenOptions =>
@@ -24,7 +23,7 @@ builder.WebHost.UseKestrel(kestrel =>
         {
             // Configure mTLS server options
             OnConnection = ctx => ValueTask.FromResult(
-                SpiffeSslConfig.GetMtlsServerOptions(x509Source)),
+                SpiffeSslConfig.GetMtlsServerOptions(x509Source, Authorizers.AuthorizeAny())),
         });
     });
 });

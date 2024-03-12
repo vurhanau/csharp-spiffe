@@ -39,9 +39,6 @@ public static class X509Verify
             throw new ArgumentException("Leaf certificate with KeyCrlSign key usage");
         }
 
-        // TODO: add ExtKeyUsageAny validation
-        // TODO: add use validation
-        // https://github.com/dotnet/aspnetcore/blob/main/src/Security/Authentication/Certificate/src/CertificateAuthenticationHandler.cs#L208
         X509Bundle bundle = bundleSource.GetX509Bundle(id.TrustDomain);
 
         X509Chain chain = new();
@@ -61,7 +58,7 @@ public static class X509Verify
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="certificate"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown if <paramref name="certificate"/> doesn't have exactly 1 SAN.</exception>
-    private static SpiffeId GetSpiffeIdFromCertificate(X509Certificate2 certificate)
+    internal static SpiffeId GetSpiffeIdFromCertificate(X509Certificate2 certificate)
     {
         _ = certificate ?? throw new ArgumentNullException(nameof(certificate));
 

@@ -1,6 +1,7 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Spiffe.Bundle.X509;
+using Spiffe.Id;
 using Spiffe.Svid.X509;
 using Spiffe.WorkloadApi;
 
@@ -27,12 +28,13 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates MTLS server authentication config backed by X509 SVID.
     /// </summary>
-    public static SslServerAuthenticationOptions GetMtlsServerOptions(X509Source x509Source)
+    public static SslServerAuthenticationOptions GetMtlsServerOptions(X509Source x509Source, IAuthorizer authorizer)
     {
         return new SslServerAuthenticationOptions
         {
             ClientCertificateRequired = true,
-            RemoteCertificateValidationCallback = (_, cert, chain, _) => ValidateRemoteCertificate(cert, chain, x509Source),
+            RemoteCertificateValidationCallback = (_, cert, chain, _) =>
+                                                        ValidateRemoteCertificate(cert, chain, x509Source, authorizer),
             ServerCertificateContext = CreateContext(x509Source),
         };
     }
@@ -40,27 +42,33 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates TLS client authentication config backed by X509 SVID.
     /// </summary>
-    public static SslClientAuthenticationOptions GetTlsClientOptions(IX509BundleSource x509BundleSource)
+    public static SslClientAuthenticationOptions GetTlsClientOptions(IX509BundleSource x509BundleSource, IAuthorizer authorizer)
     {
         return new SslClientAuthenticationOptions
         {
-            RemoteCertificateValidationCallback = (_, cert, chain, _) => ValidateRemoteCertificate(cert, chain, x509BundleSource),
+            RemoteCertificateValidationCallback = (_, cert, chain, _) =>
+                                                        ValidateRemoteCertificate(cert, chain, x509BundleSource, authorizer),
         };
     }
 
     /// <summary>
     /// Creates MTLS client authentication config backed by X509 SVID.
     /// </summary>
-    public static SslClientAuthenticationOptions GetMtlsClientOptions(X509Source x509Source)
+    public static SslClientAuthenticationOptions GetMtlsClientOptions(X509Source x509Source, IAuthorizer authorizer)
     {
         return new SslClientAuthenticationOptions
         {
-            RemoteCertificateValidationCallback = (_, cert, chain, _) => ValidateRemoteCertificate(cert, chain, x509Source),
+            RemoteCertificateValidationCallback = (_, cert, chain, _) =>
+                                                        ValidateRemoteCertificate(cert, chain, x509Source, authorizer),
             ClientCertificateContext = CreateContext(x509Source),
         };
     }
 
-    private static bool ValidateRemoteCertificate(X509Certificate? cert, X509Chain? chain, IX509BundleSource x509BundleSource)
+    private static bool ValidateRemoteCertificate(
+        X509Certificate? cert,
+        X509Chain? chain,
+        IX509BundleSource x509BundleSource,
+        IAuthorizer authorizer)
     {
         if (cert == null || chain == null)
         {
@@ -70,7 +78,16 @@ public static class SpiffeSslConfig
         X509Certificate2 leaf = new(cert);
         X509Certificate2Collection intermediates = chain.ChainPolicy.ExtraStore;
 
-        return X509Verify.Verify(leaf, intermediates, x509BundleSource);
+        bool ok = X509Verify.Verify(leaf, intermediates, x509BundleSource);
+        if (!ok)
+        {
+            return false;
+        }
+
+        SpiffeId id = X509Verify.GetSpiffeIdFromCertificate(leaf);
+        ok = authorizer.Authorize(id);
+
+        return ok;
     }
 
     private static SslStreamCertificateContext CreateContext(X509Source x509Source)

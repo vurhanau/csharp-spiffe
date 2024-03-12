@@ -28,7 +28,7 @@ builder.WebHost.UseKestrel(kestrel =>
         {
             // Configure mTLS server options
             OnConnection = ctx => ValueTask.FromResult(
-                SpiffeSslConfig.GetMtlsServerOptions(x509Source)),
+                SpiffeSslConfig.GetMtlsServerOptions(x509Source, Authorizers.AuthorizeAny())),
         });
     });
 });
