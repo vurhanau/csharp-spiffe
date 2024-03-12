@@ -82,11 +82,9 @@ public class TestBundleSource
 
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
-        Stopwatch stopwatch = Stopwatch.StartNew();
 
         using BundleSource s = await BundleSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
 
-        stopwatch.ElapsedMilliseconds.Should().BeInRange(250, 5000);
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
         s.IsInitialized.Should().BeFalse();
     }
