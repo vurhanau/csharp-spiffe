@@ -49,7 +49,7 @@ public static class Authorizers
     /// <summary>
     /// Allows any SPIFFE ID that matches the given predicate.
     /// </summary>
-    public static IAuthorizer UseFunc(Func<SpiffeId, bool> predicate)
+    public static IAuthorizer AuthorizeIf(Func<SpiffeId, bool> predicate)
     {
         _ = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
