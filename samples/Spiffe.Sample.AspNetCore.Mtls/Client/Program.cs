@@ -17,7 +17,7 @@ X509Source x509Source = await X509Source.CreateAsync(workload);
 
 using HttpClient http = new(new SocketsHttpHandler()
 {
-    SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source),
+    SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source, Authorizers.AuthorizeAny()),
 });
 
 WebApplication app = builder.Build();

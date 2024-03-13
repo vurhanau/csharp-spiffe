@@ -21,7 +21,7 @@ using GrpcChannel channel = GrpcChannel.ForAddress(serverUrl, new GrpcChannelOpt
 {
     HttpHandler = new SocketsHttpHandler()
     {
-        SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source),
+        SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source, Authorizers.AuthorizeAny()),
     },
     DisposeHttpClient = true,
 });

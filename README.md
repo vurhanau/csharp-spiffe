@@ -28,7 +28,7 @@ builder.WebHost.UseKestrel(kestrel =>
         {
             // Configure mTLS server options
             OnConnection = ctx => ValueTask.FromResult(
-                SpiffeSslConfig.GetMtlsServerOptions(x509Source)),
+                SpiffeSslConfig.GetMtlsServerOptions(x509Source, Authorizers.AuthorizeAny())),
         });
     });
 });
@@ -43,7 +43,7 @@ X509Source x509Source = await X509Source.CreateAsync(workload);
 HttpClient http = new(new SocketsHttpHandler()
 {
     // Configure mTLS client options
-    SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source),
+    SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source, Authorizers.AuthorizeAny()),
 });
 ```
 
