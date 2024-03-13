@@ -122,7 +122,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         try
         {
             _x509Bundles = x509Context.X509Bundles;
-            _initialized |= 1;
+            Interlocked.Or(ref _initialized, 1);
         }
         finally
         {
@@ -141,7 +141,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         try
         {
             _jwtBundles = jwtBundles;
-            _initialized |= 2;
+            Interlocked.Or(ref _initialized, 2);
         }
         finally
         {

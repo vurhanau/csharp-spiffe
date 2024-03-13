@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
+using Spiffe.Bundle;
 using Spiffe.Bundle.X509;
-using Spiffe.Error;
 using Spiffe.Id;
 
 namespace Spiffe.Tests.Bundle.X509;

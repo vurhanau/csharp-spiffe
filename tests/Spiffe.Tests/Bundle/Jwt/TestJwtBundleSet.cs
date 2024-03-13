@@ -1,6 +1,6 @@
 using FluentAssertions;
+using Spiffe.Bundle;
 using Spiffe.Bundle.Jwt;
-using Spiffe.Error;
 using Spiffe.Id;
 
 namespace Spiffe.Tests.Bundle.Jwt;
