@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
+using Spiffe.Bundle;
 using Spiffe.Bundle.Jwt;
-using Spiffe.Error;
 using Spiffe.Id;
 using Spiffe.Svid.Jwt;
 using Spiffe.Tests.Helper;

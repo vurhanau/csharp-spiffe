@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using Spiffe.Error;
 using Spiffe.Id;
 
 namespace Spiffe.Bundle.X509;

@@ -1,4 +1,4 @@
-﻿namespace Spiffe.Error;
+﻿namespace Spiffe.Bundle;
 
 /// <summary>
 /// Thrown to indicate that a Bundle could not be found in the Bundle Source.
@@ -6,6 +6,4 @@
 /// <remarks>
 /// Constructor
 /// </remarks>
-public class BundleNotFoundException(string message) : Exception(message)
-{
-}
+public class BundleNotFoundException(string message) : Exception(message);

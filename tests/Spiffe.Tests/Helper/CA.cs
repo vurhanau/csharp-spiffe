@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
@@ -13,30 +12,30 @@ namespace Spiffe.Tests.Helper;
 
 internal class CertificateCreationOptions
 {
-    public byte[] SerialNumber { get; set; }
+    public byte[] SerialNumber { get; init; }
 
-    public string SubjectName { get; set; }
+    public string SubjectName { get; init; }
 
-    public DateTimeOffset NotBefore { get; set; }
+    public DateTimeOffset NotBefore { get; init; }
 
-    public DateTimeOffset NotAfter { get; set; }
+    public DateTimeOffset NotAfter { get; init; }
 
-    public X509KeyUsageFlags KeyUsage { get; set; }
+    public X509KeyUsageFlags KeyUsage { get; init; }
 
-    public Uri SubjectAlternateName { get; set; }
+    public Uri SubjectAlternateName { get; init; }
 }
 
 internal sealed class CA : IDisposable
 {
-    public TrustDomain TrustDomain { get; set; }
+    public TrustDomain TrustDomain { get; init; }
 
-    public CA Parent { get; set; }
+    public CA Parent { get; init; }
 
-    public X509Certificate2 Cert { get; set; }
+    public X509Certificate2 Cert { get; init; }
 
-    public ECDsa JwtKey { get; set; }
+    public ECDsa JwtKey { get; init; }
 
-    public string JwtKid { get; set; }
+    public string JwtKid { get; init; }
 
     public void Dispose()
     {

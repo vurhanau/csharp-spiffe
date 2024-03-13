@@ -350,7 +350,6 @@ public class TestWorkloadApiClient
         TrustDomain federatedTrustDomain = TrustDomain.FromString("spiffe://example-federated.org");
         X509Certificate2 federatedCert = Certificates.FirstFromPemFile("TestData/X509/good-leaf-and-intermediate.pem");
 
-        // TODO: add CRL test
         var resp = new X509SVIDResponse();
         resp.Svids.Add(new X509SVID()
         {

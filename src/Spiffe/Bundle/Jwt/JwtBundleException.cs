@@ -6,6 +6,4 @@ namespace Spiffe.Bundle.Jwt;
 /// <remarks>
 /// Initializes a new instance of the <see cref="JwtBundleException"/> class.
 /// </remarks>
-public class JwtBundleException(string message, Exception inner) : Exception(message, inner)
-{
-}
+public class JwtBundleException(string message, Exception inner) : Exception(message, inner);

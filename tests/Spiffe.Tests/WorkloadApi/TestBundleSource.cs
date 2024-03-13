@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using FluentAssertions;
 using Google.Protobuf;
