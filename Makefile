@@ -2,6 +2,8 @@ SPIRE_DIR := $(HOME)/Projects/spiffe/spire
 AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
 RUN := @dotnet run --project src/Spiffe.Client/
 
+.PHONY: coverage
+
 server:
 	@cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
 
@@ -44,12 +46,15 @@ test: restore
 	@dotnet test
 
 coverage:
-	@dotnet test --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+	@dotnet test --verbosity normal \
+		--collect:"XPlat Code Coverage" \
+		--results-directory ./coverage \
+		--settings coverlet.runsettings
 
 coverage-report:
 	@reportgenerator \
-		-reports:"Spiffe.Tests/TestResults/$(TID)/coverage.cobertura.xml" \
-		-targetdir:"Spiffe.Tests/TestResults/$(TID)/coveragereport" \
+		-reports:"coverage/$(TID)/coverage.cobertura.xml" \
+		-targetdir:"coverage/$(TID)/coveragereport" \
 		-reporttypes:Html
 
 fmt:
