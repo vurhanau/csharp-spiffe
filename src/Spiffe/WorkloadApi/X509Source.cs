@@ -55,15 +55,7 @@ public sealed class X509Source : IX509Source
                                                      CancellationToken cancellationToken = default)
     {
         _ = client ?? throw new ArgumentNullException(nameof(client));
-        picker ??= svids =>
-        {
-            if (svids.Count == 0)
-            {
-                throw new ArgumentException("SVIDs must be non-empty");
-            }
-
-            return svids[0];
-        };
+        picker ??= GetDefaultSvid;
 
         X509Source source = new(picker);
         Watcher<X509Context> watcher = new(source.SetX509Context);
@@ -143,6 +135,19 @@ public sealed class X509Source : IX509Source
         {
             _lock.ExitWriteLock();
         }
+    }
+
+    /// <summary>
+    /// Visible for testing.
+    /// </summary>
+    internal static X509Svid GetDefaultSvid(List<X509Svid> svids)
+    {
+        if (svids == null || svids.Count == 0)
+        {
+            throw new ArgumentException("SVIDs must be non-empty");
+        }
+
+        return svids[0];
     }
 
     /// <summary>

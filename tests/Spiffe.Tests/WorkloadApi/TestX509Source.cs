@@ -4,6 +4,7 @@ using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.IdentityModel.Abstractions;
 using Moq;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
@@ -132,6 +133,19 @@ public class TestX509Source
 
         f1.Should().Throw<ObjectDisposedException>();
         f2.Should().Throw<ObjectDisposedException>();
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task TestCreateWithNullClient()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() => X509Source.CreateAsync(null));
+    }
+
+    [Fact]
+    public void TestGetDefaultSvidFromInvalidSvids()
+    {
+        Assert.Throws<ArgumentException>(() => X509Source.GetDefaultSvid(null));
+        Assert.Throws<ArgumentException>(() => X509Source.GetDefaultSvid([]));
     }
 
     private static void VerifyX509SvidRsa(X509Svid svid,
