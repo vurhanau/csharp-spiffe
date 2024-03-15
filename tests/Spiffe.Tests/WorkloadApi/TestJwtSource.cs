@@ -94,4 +94,10 @@ public class TestJwtSource
 
         f.Should().Throw<ObjectDisposedException>();
     }
+
+    [Fact(Timeout = 10_000)]
+    public async Task TestCreateWithNullClient()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() => JwtSource.CreateAsync(null));
+    }
 }

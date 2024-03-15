@@ -1,4 +1,5 @@
-﻿using Spiffe.Id;
+﻿using FluentAssertions;
+using Spiffe.Id;
 using static Spiffe.Tests.Id.TestConstants;
 
 namespace Spiffe.Tests.Id;
@@ -264,6 +265,58 @@ public class TestSpiffeId
 
         AssertFail(string.Empty, [string.Empty], "Path cannot contain empty segments");
         AssertFail(string.Empty, ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+    }
+
+    [Fact]
+    public void TestToString()
+    {
+        string str = "spiffe://example.org/myworkload";
+        SpiffeId id = SpiffeId.FromString(str);
+        id.ToString().Should().Be(str);
+    }
+
+    [Fact]
+    public void TestEquals()
+    {
+        SpiffeId id1 = SpiffeId.FromString("spiffe://example.org/myworkload1");
+        SpiffeId id2 = SpiffeId.FromString("spiffe://example.org/myworkload2");
+        id1.Equals(id1).Should().BeTrue();
+        id1.Equals(SpiffeId.FromString(id1.Id)).Should().BeTrue();
+        id1.Equals(SpiffeId.FromString("spiffe://example.org/MYWORKLOAD1")).Should().BeFalse();
+        id1.Equals(id2).Should().BeFalse();
+        id1.Equals(null).Should().BeFalse();
+        id1.Equals(new object()).Should().BeFalse();
+    }
+
+    [Fact]
+    public void TestFromSegmentsFails()
+    {
+        Action f = () => SpiffeId.FromSegments(null);
+        f.Should().Throw<ArgumentNullException>();
+        f = () => SpiffeId.FromSegments(null, "foo");
+        f.Should().Throw<ArgumentNullException>();
+        f = () => SpiffeId.FromSegments(TrustDomain.FromString("spiffe://example.org"), null);
+        f.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void TestFromUriFails()
+    {
+        Action f = () => SpiffeId.FromUri(null);
+        f.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void TestMakeIdFails()
+    {
+        Action f = () => SpiffeId.MakeId(null, "/abc");
+        f.Should().Throw<ArgumentNullException>();
+        f = () => SpiffeId.MakeId(new TrustDomain(string.Empty), "/abc");
+        f.Should().Throw<ArgumentException>();
+        f = () => SpiffeId.MakeId(new TrustDomain(null), "/abc");
+        f.Should().Throw<ArgumentException>();
+        f = () => SpiffeId.MakeId(new TrustDomain("spiffe://example.org"), null);
+        f.Should().Throw<ArgumentNullException>();
     }
 
     private static void AssertIdEqual(SpiffeId spiffeId, TrustDomain expectedTd, string expectedPath)
