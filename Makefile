@@ -46,15 +46,17 @@ test: restore
 	@dotnet test
 
 coverage:
-	@dotnet test --verbosity normal \
+	@rm -rf coverage/* && \
+	dotnet test --verbosity normal \
 		--collect:"XPlat Code Coverage" \
 		--results-directory ./coverage \
 		--settings coverlet.runsettings
+	
 
 coverage-report:
 	@reportgenerator \
-		-reports:"coverage/$(TID)/coverage.cobertura.xml" \
-		-targetdir:"coverage/$(TID)/coveragereport" \
+		-reports:"coverage/$(shell ls coverage)/coverage.cobertura.xml" \
+		-targetdir:"coverage/$(shell ls coverage)/coveragereport" \
 		-reporttypes:Html
 
 fmt:

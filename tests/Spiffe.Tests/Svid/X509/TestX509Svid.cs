@@ -14,13 +14,13 @@ public class TestX509Svid
     {
         SpiffeId id = SpiffeId.FromString("spiffe://example.org/myworkload");
         Action f = () => new X509Svid(id, null, string.Empty);
-        f.Should().Throw<ArgumentException>("Certificates collection must be non-empty");
+        f.Should().Throw<ArgumentException>().WithMessage("Certificates collection must be non-empty");
         f = () => new X509Svid(id, [], string.Empty);
-        f.Should().Throw<ArgumentException>("Certificates collection must be non-empty");
+        f.Should().Throw<ArgumentException>().WithMessage("Certificates collection must be non-empty");
 
         X509Certificate2Collection c = [];
         c.ImportFromPemFile("TestData/X509/good-leaf-only.pem");
         f = () => new X509Svid(id, c, string.Empty);
-        f.Should().Throw<ArgumentException>("Leaf certificate must have a private key");
+        f.Should().Throw<ArgumentException>().WithMessage("Leaf certificate must have a private key");
     }
 }

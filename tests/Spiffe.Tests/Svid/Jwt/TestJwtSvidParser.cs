@@ -58,7 +58,7 @@ public class TestJwtSvidParser
         ];
         string badJwt = Jwt(claims);
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>("Token missing sub claim");
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Token missing sub claim");
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class TestJwtSvidParser
         ];
         string badJwt = Jwt(claims);
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>("Token missing exp claim");
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Token missing exp claim");
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class TestJwtSvidParser
         ];
         string badJwt = Jwt(claims);
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>($"Token has an invalid subject claim: '{sub}'");
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage($"Token has an invalid subject claim: '{sub}'");
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class TestJwtSvidParser
         string badJwt = Jwt(claims);
         SpiffeId workload3 = SpiffeId.FromPath(s_td, "/workload3");
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [workload3.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>($"Expected audience in {s_workload2.Id} (audience={workload3.Id})");
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage($"Expected audience is {workload3.Id} (audience={s_workload2.Id})");
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class TestJwtSvidParser
         ];
         string badJwt = Jwt(claims);
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>("Validation failed, token not valid yet (nbf)");
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Validation failed, token not valid yet (nbf)");
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class TestJwtSvidParser
         ];
         string badJwt = Jwt(claims);
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>("Validation failed, token is expired (exp)");
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Validation failed, token is expired (exp)");
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public class TestJwtSvidParser
         ];
         string badJwt = Jwt(claims);
         Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>("Validation field, token issued in the future (iat)");
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Validation field, token issued in the future (iat)");
     }
 
     [Fact]
