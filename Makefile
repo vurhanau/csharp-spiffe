@@ -2,6 +2,15 @@ SPIRE_DIR := $(HOME)/Projects/spiffe/spire
 AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
 RUN := @dotnet run --project src/Spiffe.Client/
 
+os1=$(shell uname -s)
+ifeq ($(os1),Darwin)
+OPEN=open
+else ifeq ($(os1),Linux)
+OPEN=xdg-open
+else
+$(error unsupported OS: $(os1))
+endif
+
 .PHONY: coverage
 
 server:
@@ -50,14 +59,13 @@ coverage:
 	dotnet test --verbosity normal \
 		--collect:"XPlat Code Coverage" \
 		--results-directory ./coverage \
-		--settings coverlet.runsettings
-	
-
-coverage-report:
-	@reportgenerator \
-		-reports:"coverage/$(shell ls coverage)/coverage.cobertura.xml" \
-		-targetdir:"coverage/$(shell ls coverage)/coveragereport" \
-		-reporttypes:Html
+		--settings coverlet.runsettings && \
+	cd coverage/* && \
+	reportgenerator \
+		-reports:"coverage.cobertura.xml" \
+		-targetdir:"coveragereport" \
+		-reporttypes:Html && \
+	$(OPEN) coveragereport/index.html
 
 fmt:
 	@dotnet format Spiffe.sln
