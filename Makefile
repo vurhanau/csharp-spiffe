@@ -8,7 +8,7 @@ OPEN=open
 else ifeq ($(os1),Linux)
 OPEN=xdg-open
 else
-$(error unsupported OS: $(os1))
+OPEN=$(error unsupported OS: $(os1))
 endif
 
 .PHONY: coverage
@@ -40,13 +40,10 @@ restore:
 build: restore
 	@dotnet build
 
-build-samples:
-	@cd samples/Spiffe.Sample.AspNetCore.Jwt && dotnet build
-	@cd samples/Spiffe.Sample.AspNetCore.Mtls && dotnet build
-	@cd samples/Spiffe.Sample.AspNetCore.Tls && dotnet build
-	@cd samples/Spiffe.Sample.Grpc.Mtls && dotnet build
-	@cd samples/Spiffe.Sample.Grpc.Tls && dotnet build
-	@cd samples/Spiffe.Sample.Watcher && dotnet build
+build-samples: samples/*
+	@for file in $^ ; do \
+		dotnet build $${file} ; \
+	done
 
 watch:
 	@cd samples/Spiffe.Sample.Watcher && dotnet run
