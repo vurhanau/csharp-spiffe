@@ -10,7 +10,7 @@ namespace Spiffe.Tests.WorkloadApi;
 public partial class TestAddress
 {
     [Fact]
-    public void TestParseSocketAddress()
+    public void TestParseUnixSocketAddress()
     {
         (string Addr, string Expected, string Err)[] testCases =
         [
@@ -43,6 +43,11 @@ public partial class TestAddress
                 Addr: "unix://foo",
                 Expected: "foo",
                 Err: string.Empty
+            ),
+            (
+                Addr: "tcp://foo",
+                Expected: string.Empty,
+                Err: "Workload endpoint socket URI must have a supported scheme"
             ),
             (
                 Addr: "unix:///tmp/api.sock",

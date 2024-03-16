@@ -3,6 +3,7 @@ using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Moq;

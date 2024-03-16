@@ -19,7 +19,7 @@ public static class JwtSvidParser
     /// Parses and validates a JWT-SVID token and returns the JWT-SVID.
     /// The JWT-SVID signature is verified using the JWT bundle source.
     /// </summary>
-    public static async Task<JwtSvid> Parse(string token, IJwtBundleSource bundleSource, IEnumerable<string> audience)
+    public static async Task<JwtSvid> ParseAsync(string token, IJwtBundleSource bundleSource, IEnumerable<string> audience)
     {
         (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, audience);
         TokenValidationResult result = await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, audience);
@@ -159,7 +159,7 @@ public static class JwtSvidParser
         // something is misconfigured if this happens and we should not trust it.
         if (jwt.IssuedAt != DateTime.MinValue && now.Add(s_leeway) < jwt.IssuedAt)
         {
-            throw new JwtSvidException("Validation field, token issued in the future (iat)");
+            throw new JwtSvidException("Validation failed, token issued in the future (iat)");
         }
     }
 

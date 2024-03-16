@@ -1,5 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using FluentAssertions;
+using Microsoft.IdentityModel.Tokens;
 using Spiffe.Bundle;
 using Spiffe.Bundle.Jwt;
 using Spiffe.Id;
@@ -36,7 +38,7 @@ public class TestJwtSvidParser
             new(Claims.Aud, s_workload2.Id),
         ];
         string jwt = Jwt(claims);
-        JwtSvid parsed = await JwtSvidParser.Parse(jwt, s_source, [s_workload2.Id]);
+        JwtSvid parsed = await JwtSvidParser.ParseAsync(jwt, s_source, [s_workload2.Id]);
         parsed.Should().Be(new JwtSvid(
             token: jwt,
             id: s_workload1,
@@ -44,6 +46,25 @@ public class TestJwtSvidParser
             expiry: now.AddHours(1),
             claims: claims.ToDictionary(c => c.Type, c => c.Value),
             hint: string.Empty));
+    }
+
+    [Fact]
+    public async Task TestValidate()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Iat, J.ToNumericDate(now)),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        TokenValidationResult validationResult = await JwtSvidParser.ValidateAsync(jwt, s_source, [s_workload2.Id]);
+        validationResult.IsValid.Should().BeTrue();
+
+        Func<Task> f = async () => await JwtSvidParser.ValidateAsync(jwt, s_source, [s_workload1.Id]);
+        await f.Should().ThrowAsync<JwtSvidException>().WithMessage($"Expected audience is {s_workload1.Id} (audience={s_workload2.Id})");
     }
 
     [Fact]
@@ -57,7 +78,7 @@ public class TestJwtSvidParser
             new(Claims.Aud, s_workload2.Id),
         ];
         string badJwt = Jwt(claims);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.ParseAsync(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Token missing sub claim");
     }
 
@@ -72,7 +93,7 @@ public class TestJwtSvidParser
             new(Claims.Aud, s_workload2.Id),
         ];
         string badJwt = Jwt(claims);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.ParseAsync(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Token missing exp claim");
     }
 
@@ -89,7 +110,7 @@ public class TestJwtSvidParser
             new(Claims.Aud, s_workload2.Id),
         ];
         string badJwt = Jwt(claims);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.ParseAsync(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>().WithMessage($"Token has an invalid subject claim: '{sub}'");
     }
 
@@ -106,7 +127,7 @@ public class TestJwtSvidParser
         ];
         string badJwt = Jwt(claims);
         SpiffeId workload3 = SpiffeId.FromPath(s_td, "/workload3");
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [workload3.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.ParseAsync(badJwt, s_source, [workload3.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>().WithMessage($"Expected audience is {workload3.Id} (audience={s_workload2.Id})");
     }
 
@@ -123,8 +144,65 @@ public class TestJwtSvidParser
             new(Claims.Aud, s_workload2.Id),
         ];
         string badJwt = Jwt(claims);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.ParseAsync(badJwt, s_source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Validation failed, token not valid yet (nbf)");
+    }
+
+    [Fact]
+    public async Task TestParseIssuedAtUnset()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        JwtSvid parsed = await JwtSvidParser.ParseAsync(jwt, s_source, [s_workload2.Id]);
+        parsed.Should().Be(new JwtSvid(
+            token: jwt,
+            id: s_workload1,
+            audience: [s_workload2.Id],
+            expiry: now.AddHours(1),
+            claims: claims.ToDictionary(c => c.Type, c => c.Value),
+            hint: string.Empty));
+    }
+
+    [Fact]
+    public async Task TestParseFailsIfKidMissing()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = J.Generate(claims, s_ca.JwtKey, string.Empty);
+        Func<Task> f = async () => await JwtSvidParser.ParseAsync(jwt, s_source, [s_workload2.Id]);
+        await f.Should().ThrowAsync<JwtSvidException>().WithMessage("Token header missing key id");
+    }
+
+    [Fact]
+    public async Task TestParseFailsIfAlgUnknown()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        JwtHeader header = new()
+        {
+            ["alg"] = "unknown",
+        };
+        JwtPayload payload = new(claims);
+        JwtSecurityToken jwt = new(header, payload);
+        string str = new JwtSecurityTokenHandler().WriteToken(jwt);
+        Func<Task> f = async () => await JwtSvidParser.ParseAsync(str, s_source, [s_workload2.Id]);
+        await f.Should().ThrowAsync<JwtSvidException>().WithMessage("Unsupported token signature algorithm 'unknown'");
     }
 
     [Fact]
@@ -141,7 +219,7 @@ public class TestJwtSvidParser
             new(Claims.Aud, s_workload2.Id),
         ];
         string badJwt = Jwt(claims);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, source, [s_workload2.Id]);
+        Func<Task> fn = async () => await JwtSvidParser.ParseAsync(badJwt, source, [s_workload2.Id]);
         await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Validation failed, token is expired (exp)");
     }
 
@@ -157,8 +235,8 @@ public class TestJwtSvidParser
             new(Claims.Aud, s_workload2.Id),
         ];
         string badJwt = Jwt(claims);
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Validation field, token issued in the future (iat)");
+        Func<Task> fn = async () => await JwtSvidParser.ParseAsync(badJwt, s_source, [s_workload2.Id]);
+        await fn.Should().ThrowAsync<JwtSvidException>().WithMessage("Validation failed, token issued in the future (iat)");
     }
 
     [Fact]
@@ -167,8 +245,9 @@ public class TestJwtSvidParser
         string jwt1 = s_ca.CreateJwtSvid(s_workload1, [s_workload2.Id]).Token;
         string jwt2 = s_ca.CreateJwtSvid(s_workload1, [s_workload1.Id]).Token;
         string badJwt = jwt2[..jwt2.LastIndexOf('.')] + jwt1[jwt1.LastIndexOf('.')..];
-        Func<Task> fn = async () => await JwtSvidParser.Parse(badJwt, s_source, [s_workload2.Id]);
-        await fn.Should().ThrowAsync<JwtSvidException>();
+        JwtSvidException e = await Assert.ThrowsAsync<JwtSvidException>(() => JwtSvidParser.ParseAsync(badJwt, s_source, [s_workload1.Id]));
+        e.Message.Should().Be("JWT token validation failed");
+        e.InnerException?.Message?.Should().StartWith("IDX10511: Signature validation failed.");
     }
 
     [Fact]
@@ -184,7 +263,7 @@ public class TestJwtSvidParser
 
         IJwtBundleSource source = new JwtBundleSet(new() { { td2, ca2.JwtBundle() } });
         string jwt = ca1.CreateJwtSvid(workload1, [workload2.Id]).Token;
-        await Assert.ThrowsAsync<BundleNotFoundException>(() => JwtSvidParser.Parse(jwt, source, [workload2.Id]));
+        await Assert.ThrowsAsync<BundleNotFoundException>(() => JwtSvidParser.ParseAsync(jwt, source, [workload2.Id]));
     }
 
     [Fact]
@@ -200,6 +279,6 @@ public class TestJwtSvidParser
 
         IJwtBundleSource source = new JwtBundleSet(new() { { td1, ca2.JwtBundle() } });
         string jwt = ca1.CreateJwtSvid(workload1, [workload2.Id]).Token;
-        await Assert.ThrowsAsync<JwtSvidException>(() => JwtSvidParser.Parse(jwt, source, [workload2.Id]));
+        await Assert.ThrowsAsync<JwtSvidException>(() => JwtSvidParser.ParseAsync(jwt, source, [workload2.Id]));
     }
 }
