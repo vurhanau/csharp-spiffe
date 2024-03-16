@@ -1,10 +1,8 @@
-﻿using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.IdentityModel.Abstractions;
 using Moq;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
@@ -20,7 +18,8 @@ public class TestX509Source
     [Fact(Timeout = 10_000)]
     public async Task TestGetBundleAndSvid()
     {
-        SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
+        TrustDomain td = TrustDomain.FromString("spiffe://example.org");
+        SpiffeId spiffeId = SpiffeId.FromPath(td, "/workload");
         using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/X509/good-leaf-only.pem");
         using X509Certificate2 svidCert = X509Certificate2.CreateFromPemFile(
             "TestData/X509/good-leaf-only.pem",
@@ -46,8 +45,10 @@ public class TestX509Source
         X509Svid svid = s.GetX509Svid();
         VerifyX509SvidRsa(svid, spiffeId, svidCert, hint);
 
-        X509Bundle bundle = s.GetX509Bundle(spiffeId.TrustDomain);
-        VerifyX509BundleSet(bundle, spiffeId.TrustDomain, svidCert);
+        X509Bundle bundle = s.GetX509Bundle(td);
+        bundle.TrustDomain.Should().Be(td);
+        bundle.X509Authorities.Should().ContainSingle();
+        bundle.X509Authorities[0].RawData.Should().Equal(bundleCert.RawData);
     }
 
     [Fact(Timeout = 10_000)]
@@ -162,12 +163,5 @@ public class TestX509Source
         certs[0].RawData.Should().Equal(expectedCert.RawData);
         byte[] expectedKey = expectedCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         certs[0].GetRSAPrivateKey()?.ExportPkcs8PrivateKey().Should().Equal(expectedKey);
-    }
-
-    private static void VerifyX509BundleSet(X509Bundle bundle, TrustDomain expectedTrustDomain, X509Certificate2 expectedCert)
-    {
-        bundle.TrustDomain.Should().Be(expectedTrustDomain);
-        bundle.X509Authorities.Should().ContainSingle();
-        bundle.X509Authorities[0].RawData.Should().Equal(expectedCert.RawData);
     }
 }

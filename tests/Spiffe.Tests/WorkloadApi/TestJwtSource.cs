@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Moq;
 using Spiffe.Bundle.Jwt;
 using Spiffe.Id;
+using Spiffe.Svid.Jwt;
 using Spiffe.Tests.Helper;
 using Spiffe.WorkloadApi;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
@@ -41,6 +42,35 @@ public class TestJwtSource
         string json1 = JsonSerializer.Serialize(k1);
         string json2 = JsonSerializer.Serialize(k2);
         json1.Should().Be(json2);
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task TestFetchJwtSvid()
+    {
+        TrustDomain td = TrustDomain.FromString("spiffe://example.org");
+        SpiffeId id = SpiffeId.FromPath(td, "/workload1");
+        SpiffeId aud = SpiffeId.FromPath(td, "/workload2");
+        CA ca = CA.Create(td);
+        JWTSVIDResponse resp = new();
+        JwtSvid svid = ca.CreateJwtSvid(id, [aud.Id], "hint");
+        resp.Svids.Add(new JWTSVID
+        {
+            SpiffeId = svid.Id.Id,
+            Svid = svid.Token,
+            Hint = svid.Hint,
+        });
+
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.Stream(new JWTBundlesResponse()));
+        mockGrpcClient.Setup(c => c.FetchJWTSVIDAsync(It.IsAny<JWTSVIDRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.Unary(resp));
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        using JwtSource s = await JwtSource.CreateAsync(c);
+
+        List<JwtSvid> fetched = await s.FetchJwtSvidsAsync(new JwtSvidParams(aud.Id, [], id));
+        fetched.Should().ContainSingle();
+        fetched[0].Should().Be(svid);
     }
 
     [Fact(Timeout = 10_000)]
@@ -93,5 +123,11 @@ public class TestJwtSource
         s.Dispose();
 
         f.Should().Throw<ObjectDisposedException>();
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task TestCreateWithNullClient()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() => JwtSource.CreateAsync(null));
     }
 }

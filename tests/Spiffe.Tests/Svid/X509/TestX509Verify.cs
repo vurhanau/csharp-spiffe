@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Spiffe.Bundle.X509;
@@ -51,39 +52,42 @@ public class TestX509Verify
     public void TestVerifyThrows()
     {
         TrustDomain td = TrustDomain.FromString("domain1.test");
+        SpiffeId id = SpiffeId.FromPath(td, "/workload");
         using CA ca = CA.Create(td);
         IX509BundleSource bundleSource = new TestX509BundleSource(ca.X509Bundle());
-        X509Certificate2Collection certs = ca.CreateX509Svid(SpiffeId.FromPath(td, "/workload")).Certificates;
+        X509Certificate2Collection certs = ca.CreateX509Svid(id).Certificates;
         X509Certificate2 leaf = certs[0];
         X509Certificate2Collection intermediates = [..certs.Skip(1)];
 
         // Leaf CA
-        Func<bool> f = () => X509Verify.Verify(ca.Cert!, intermediates, bundleSource);
-        f.Should().Throw<ArgumentException>("Leaf certificate with CA flag set to true");
+        using X509Certificate2 leafCA = CA.CreateX509Svid(ca.Cert, id, null, csr =>
+        {
+            Collection<X509Extension> exts = csr.CertificateExtensions;
+            X509BasicConstraintsExtension ext = exts.OfType<X509BasicConstraintsExtension>().FirstOrDefault();
+            if (ext != null)
+            {
+                exts.Remove(ext);
+            }
+
+            exts.Add(
+                new X509BasicConstraintsExtension(
+                    certificateAuthority: true,
+                    hasPathLengthConstraint: false,
+                    pathLengthConstraint: 0,
+                    critical: true));
+        });
+        Func<bool> f = () => X509Verify.Verify(leafCA, intermediates, bundleSource);
+        f.Should().Throw<ArgumentException>().WithMessage("Leaf certificate with CA flag set to true");
 
         // Leaf with key usage KeyCertSign
-        using X509Certificate2 leafKeyCertSign = CA.CreateCACertificate(null, csr =>
-        {
-            csr.CertificateExtensions.Clear();
-            csr.CertificateExtensions.Add(
-                new X509KeyUsageExtension(
-                    X509KeyUsageFlags.KeyCertSign,
-                    true));
-        });
+        using X509Certificate2 leafKeyCertSign = CA.CreateX509Svid(ca.Cert, id, opts => opts.KeyUsage = X509KeyUsageFlags.KeyCertSign);
         f = () => X509Verify.Verify(leafKeyCertSign, intermediates, bundleSource);
-        f.Should().Throw<ArgumentException>("Leaf certificate with KeyCertSign key usage");
+        f.Should().Throw<ArgumentException>().WithMessage("Leaf certificate with KeyCertSign key usage");
 
         // Leaf with key usage CrlSign
-        using X509Certificate2 leafCrlSign = CA.CreateCACertificate(null, csr =>
-        {
-            csr.CertificateExtensions.Clear();
-            csr.CertificateExtensions.Add(
-                new X509KeyUsageExtension(
-                    X509KeyUsageFlags.CrlSign,
-                    true));
-        });
+        using X509Certificate2 leafCrlSign = CA.CreateX509Svid(ca.Cert, id, opts => opts.KeyUsage = X509KeyUsageFlags.CrlSign);
         f = () => X509Verify.Verify(leafCrlSign, intermediates, bundleSource);
-        f.Should().Throw<ArgumentException>("Leaf certificate with KeyCrlSign key usage");
+        f.Should().Throw<ArgumentException>().WithMessage("Leaf certificate with KeyCrlSign key usage");
 
         // Null params
         f = () => X509Verify.Verify(null, intermediates, bundleSource);
@@ -93,6 +97,13 @@ public class TestX509Verify
         f.Should().Throw<ArgumentNullException>();
 
         f = () => X509Verify.Verify(leaf, intermediates, null);
+        f.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void TestGetSpiffeIdFromCertificateFails()
+    {
+        Action f = () => X509Verify.GetSpiffeIdFromCertificate(null);
         f.Should().Throw<ArgumentNullException>();
     }
 

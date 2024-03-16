@@ -195,9 +195,12 @@ public class SpiffeId
 
     internal static SpiffeId MakeId(TrustDomain td, string path)
     {
+        _ = td ?? throw new ArgumentNullException(nameof(td));
+        _ = path ?? throw new ArgumentNullException(nameof(path));
+
         if (string.IsNullOrEmpty(td.Name))
         {
-            throw new ArgumentException("Trust domain is empty", nameof(td));
+            throw new ArgumentException("Trust domain name is empty", nameof(td));
         }
 
         string id = SchemePrefix + td.Name + path;

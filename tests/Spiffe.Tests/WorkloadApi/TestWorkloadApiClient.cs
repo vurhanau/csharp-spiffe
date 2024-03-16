@@ -3,6 +3,7 @@ using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Moq;
@@ -65,7 +66,7 @@ public class TestWorkloadApiClient
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<X509BundleSet>> fetch = () => c.FetchX509BundlesAsync();
-        await fetch.Should().ThrowAsync<Exception>(err.Message);
+        await fetch.Should().ThrowAsync<Exception>().WithMessage(err.Message);
     }
 
     [Fact]
@@ -78,7 +79,7 @@ public class TestWorkloadApiClient
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<JwtBundleSet>> fetch = () => c.FetchJwtBundlesAsync();
-        await fetch.Should().ThrowAsync<Exception>(err.Message);
+        await fetch.Should().ThrowAsync<Exception>().WithMessage(err.Message);
     }
 
     [Fact]
@@ -323,6 +324,21 @@ public class TestWorkloadApiClient
     }
 
     [Fact]
+    public async Task TestFetchJwtSvidsFails()
+    {
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        mockGrpcClient.Setup(c => c.FetchJWTSVIDAsync(It.IsAny<JWTSVIDRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.Unary(new JWTSVIDResponse()));
+
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        Func<Task> f = async () => await c.FetchJwtSvidsAsync(new JwtSvidParams(null, [], null));
+        await f.Should().ThrowAsync<ArgumentNullException>();
+
+        f = async () => await c.FetchJwtSvidsAsync(new JwtSvidParams("test", null, null));
+        await f.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    [Fact]
     public async Task TestFetchX509ContextError()
     {
         var err = new Exception("Oops!");
@@ -332,7 +348,7 @@ public class TestWorkloadApiClient
 
         var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<X509Context>> fetch = () => c.FetchX509ContextAsync();
-        await fetch.Should().ThrowAsync<Exception>(err.Message);
+        await fetch.Should().ThrowAsync<Exception>().WithMessage(err.Message);
     }
 
     [Fact]

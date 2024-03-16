@@ -31,8 +31,8 @@ internal static class Jwt
             KeyId = kid,
         };
         SigningCredentials credentials = new(securityKey, SecurityAlgorithms.EcdsaSha256);
-        JwtHeader header = new JwtHeader(credentials);
-        JwtPayload payload = new JwtPayload(claims);
+        JwtHeader header = new(credentials);
+        JwtPayload payload = new(claims);
         JwtSecurityToken jwt = new(header, payload);
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }

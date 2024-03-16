@@ -12,17 +12,17 @@ namespace Spiffe.Tests.Helper;
 
 internal class CertificateCreationOptions
 {
-    public byte[] SerialNumber { get; init; }
+    public byte[] SerialNumber { get; set; }
 
-    public string SubjectName { get; init; }
+    public string SubjectName { get; set; }
 
-    public DateTimeOffset NotBefore { get; init; }
+    public DateTimeOffset NotBefore { get; set; }
 
-    public DateTimeOffset NotAfter { get; init; }
+    public DateTimeOffset NotAfter { get; set; }
 
-    public X509KeyUsageFlags KeyUsage { get; init; }
+    public X509KeyUsageFlags KeyUsage { get; set; }
 
-    public Uri SubjectAlternateName { get; init; }
+    public Uri SubjectAlternateName { get; set; }
 }
 
 internal sealed class CA : IDisposable
@@ -182,13 +182,27 @@ internal sealed class CA : IDisposable
         return ca.CopyWithPrivateKey(key);
     }
 
-    private static byte[] CreateSerial()
+    internal static X509Certificate2 CreateX509Svid(X509Certificate2 parent,
+                                                    SpiffeId id,
+                                                    Action<CertificateCreationOptions> configure = null,
+                                                    Action<CertificateRequest> configureCsr = null)
     {
-        return BitConverter.GetBytes(Random.Shared.NextInt64());
+        return CreateX509Certificate(parent,
+                                     opts =>
+                                     {
+                                         byte[] serial = CreateSerial();
+                                         opts.SerialNumber = serial;
+                                         opts.SubjectName = $"CN=X509-SVID {Convert.ToHexString(serial)}";
+                                         opts.KeyUsage = X509KeyUsageFlags.DigitalSignature;
+                                         opts.SubjectAlternateName = id.ToUri();
+                                         configure?.Invoke(opts);
+                                     },
+                                     configureCsr);
     }
 
     private static X509Certificate2 CreateX509Certificate(X509Certificate2 parent,
-                                                          CertificateCreationOptions options = null)
+                                                          Action<CertificateCreationOptions> configureOptions = null,
+                                                          Action<CertificateRequest> configureCsr = null)
     {
         _ = parent ?? throw new ArgumentNullException(nameof(parent));
         if (!parent.HasPrivateKey)
@@ -196,13 +210,22 @@ internal sealed class CA : IDisposable
             throw new ArgumentException("Signing cert must have a private key");
         }
 
-        byte[] serial = options?.SerialNumber ?? CreateSerial();
+        byte[] serial = CreateSerial();
+        CertificateCreationOptions opts = new()
+        {
+            SerialNumber = serial,
+            SubjectName = $"CN=X509-Certificate {Convert.ToHexString(serial)}",
+            KeyUsage = X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
+            NotBefore = DateTimeOffset.UtcNow,
+            NotAfter = parent.NotAfter.AddMinutes(-1),
+        };
+        configureOptions?.Invoke(opts);
+
         using ECDsa key = Keys.CreateEC256Key();
-        string subjectName = options?.SubjectName ?? $"CN=X509-Certificate {Convert.ToHexString(serial)}";
-        CertificateRequest request = new(subjectName, key, HashAlgorithmName.SHA256);
+        CertificateRequest csr = new(opts.SubjectName, key, HashAlgorithmName.SHA256);
 
         // set basic certificate contraints
-        request.CertificateExtensions.Add(
+        csr.CertificateExtensions.Add(
             new X509BasicConstraintsExtension(
                 certificateAuthority: false,
                 hasPathLengthConstraint: false,
@@ -210,26 +233,25 @@ internal sealed class CA : IDisposable
                 critical: true));
 
         // key usage: Digital Signature and Key Encipherment
-        X509KeyUsageFlags keyUsageFlags = options?.KeyUsage ?? X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment;
-        request.CertificateExtensions.Add(
+        csr.CertificateExtensions.Add(
             new X509KeyUsageExtension(
-                keyUsages: keyUsageFlags,
+                keyUsages: opts.KeyUsage,
                 critical: true));
 
         X509Extension authorityKeyIdentifier = GetAuthorityKeyIdentifier(parent);
-        request.CertificateExtensions.Add(authorityKeyIdentifier);
+        csr.CertificateExtensions.Add(authorityKeyIdentifier);
 
         // create certs with a SAN name in addition to the subject name
-        if (options?.SubjectAlternateName != null)
+        if (opts.SubjectAlternateName != null)
         {
             SubjectAlternativeNameBuilder sanBuilder = new();
-            sanBuilder.AddUri(options.SubjectAlternateName);
+            sanBuilder.AddUri(opts.SubjectAlternateName);
             X509Extension sanExtension = sanBuilder.Build();
-            request.CertificateExtensions.Add(sanExtension);
+            csr.CertificateExtensions.Add(sanExtension);
         }
 
         // enhanced key usages
-        request.CertificateExtensions.Add(
+        csr.CertificateExtensions.Add(
             new X509EnhancedKeyUsageExtension(
                 [
                     new Oid("1.3.6.1.5.5.7.3.2"), // TLS Client auth
@@ -238,26 +260,19 @@ internal sealed class CA : IDisposable
                 false));
 
         // add this subject key identifier
-        request.CertificateExtensions.Add(
-            new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
+        csr.CertificateExtensions.Add(
+            new X509SubjectKeyIdentifierExtension(csr.PublicKey, false));
 
-        DateTimeOffset notBefore = DateTimeOffset.UtcNow;
-        DateTimeOffset notAfter = parent.NotAfter.AddMinutes(-1);
-        using X509Certificate2 cert = request.Create(parent, notBefore, notAfter, serial);
+        configureCsr?.Invoke(csr);
+
+        using X509Certificate2 cert = csr.Create(parent, opts.NotBefore, opts.NotAfter, serial);
 
         return cert.CopyWithPrivateKey(key);
     }
 
-    private static X509Certificate2 CreateX509Svid(X509Certificate2 parent, SpiffeId id)
+    private static byte[] CreateSerial()
     {
-        byte[] serial = CreateSerial();
-        return CreateX509Certificate(parent, new()
-        {
-            SerialNumber = serial,
-            SubjectName = $"CN=X509-SVID {Convert.ToHexString(serial)}",
-            KeyUsage = X509KeyUsageFlags.DigitalSignature,
-            SubjectAlternateName = id.ToUri(),
-        });
+        return BitConverter.GetBytes(Random.Shared.NextInt64());
     }
 
     private static X509Extension GetAuthorityKeyIdentifier(X509Certificate2 cert)

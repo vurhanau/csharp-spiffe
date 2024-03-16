@@ -1,5 +1,7 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
+using Spiffe.Tests.Helper;
 using Spiffe.Util;
 using static Spiffe.Tests.Helper.Certificates;
 

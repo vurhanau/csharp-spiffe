@@ -2,6 +2,15 @@ SPIRE_DIR := $(HOME)/Projects/spiffe/spire
 AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
 RUN := @dotnet run --project src/Spiffe.Client/
 
+os1=$(shell uname -s)
+ifeq ($(os1),Darwin)
+OPEN=open
+else ifeq ($(os1),Linux)
+OPEN=xdg-open
+else
+OPEN=$(error unsupported OS: $(os1))
+endif
+
 .PHONY: coverage
 
 server:
@@ -31,13 +40,10 @@ restore:
 build: restore
 	@dotnet build
 
-build-samples:
-	@cd samples/Spiffe.Sample.AspNetCore.Jwt && dotnet build
-	@cd samples/Spiffe.Sample.AspNetCore.Mtls && dotnet build
-	@cd samples/Spiffe.Sample.AspNetCore.Tls && dotnet build
-	@cd samples/Spiffe.Sample.Grpc.Mtls && dotnet build
-	@cd samples/Spiffe.Sample.Grpc.Tls && dotnet build
-	@cd samples/Spiffe.Sample.Watcher && dotnet build
+build-samples: samples/*
+	@for file in $^ ; do \
+		dotnet build $${file} ; \
+	done
 
 watch:
 	@cd samples/Spiffe.Sample.Watcher && dotnet run
@@ -46,16 +52,17 @@ test: restore
 	@dotnet test
 
 coverage:
-	@dotnet test --verbosity normal \
+	@rm -rf coverage/* && \
+	dotnet test --verbosity normal \
 		--collect:"XPlat Code Coverage" \
 		--results-directory ./coverage \
-		--settings coverlet.runsettings
-
-coverage-report:
-	@reportgenerator \
-		-reports:"coverage/$(TID)/coverage.cobertura.xml" \
-		-targetdir:"coverage/$(TID)/coveragereport" \
-		-reporttypes:Html
+		--settings coverlet.runsettings && \
+	cd coverage/* && \
+	reportgenerator \
+		-reports:"coverage.cobertura.xml" \
+		-targetdir:"coveragereport" \
+		-reporttypes:Html && \
+	$(OPEN) coveragereport/index.html
 
 fmt:
 	@dotnet format Spiffe.sln

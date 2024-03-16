@@ -48,5 +48,8 @@ public class TestAuthorizer
         f.Should().Throw<NullReferenceException>();
         f = () => Authorizers.AuthorizeIf(null);
         f.Should().Throw<ArgumentNullException>();
+
+        f = () => new Authorizer(null);
+        f.Should().ThrowExactly<ArgumentNullException>().WithParameterName("fn");
     }
 }

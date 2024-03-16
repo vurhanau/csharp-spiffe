@@ -312,7 +312,7 @@ public class TestConvertor
         JWTSVIDResponse noSvids = new(r);
         noSvids.Svids.Clear();
         f = () => Convertor.ParseJwtSvids(noSvids, null);
-        f.Should().Throw<JwtSvidException>("There were no SVIDs in the response");
+        f.Should().Throw<JwtSvidException>().WithMessage("There were no SVIDs in the response");
     }
 
     // Verify ECDsa by verifying signatures, not by PKCS binary:

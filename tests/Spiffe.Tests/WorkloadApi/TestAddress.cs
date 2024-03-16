@@ -1,10 +1,21 @@
-﻿namespace Spiffe.Tests.WorkloadApi;
+﻿using FluentAssertions;
+using Spiffe.WorkloadApi;
+
+namespace Spiffe.Tests.WorkloadApi;
 
 /// <summary>
 /// Test GRPC target validation.
 /// </summary>
 public partial class TestAddress
 {
+    [Fact]
+    public void TestIsHttpOrHttps()
+    {
+        Address.IsHttpOrHttps("http://localhost").Should().BeTrue();
+        Address.IsHttpOrHttps("https://localhost").Should().BeTrue();
+        Address.IsHttpOrHttps("tcp://localhost").Should().BeFalse();
+    }
+
     private static void AssertParse((string Addr, string Expected, string Err)[] testCases, Func<string, string> parseFunc)
     {
         foreach ((string addr, string expected, string err) in testCases)

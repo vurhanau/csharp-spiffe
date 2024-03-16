@@ -17,7 +17,7 @@ public class X509Svid
                     X509Certificate2Collection certificates,
                     string hint)
     {
-        if (!certificates.Any())
+        if (certificates == null || !certificates.Any())
         {
             throw new ArgumentException("Certificates collection must be non-empty");
         }
