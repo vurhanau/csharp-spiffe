@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Moq;
 using Spiffe.Util;
@@ -47,6 +48,14 @@ public class TestCrypto
         byte[] invalidPrivateKey = "not-DER-encoded"u8.ToArray();
         Action a = () => Crypto.GetCertificateWithPrivateKey(cert, invalidPrivateKey.AsSpan());
         a.Should().Throw<Exception>();
+    }
+
+    [Fact]
+    public void TestDsa()
+    {
+        var dsa = DSA.Create();
+        dsa.ImportFromPem(File.ReadAllText("TestData/dsakey.pem"));
+        Console.WriteLine(dsa.ToString());
     }
 
     [Fact]
