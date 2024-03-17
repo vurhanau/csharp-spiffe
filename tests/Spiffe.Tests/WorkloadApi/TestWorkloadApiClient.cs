@@ -3,7 +3,6 @@ using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
-using Grpc.Net.Client;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Moq;
@@ -298,6 +297,32 @@ public class TestWorkloadApiClient
     }
 
     [Fact]
+    public async Task TestValidateJwtSvid()
+    {
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        TrustDomain td = TrustDomain.FromString("spiffe://example.org");
+        SpiffeId id1 = SpiffeId.FromPath(td, "/workload1");
+        string aud = SpiffeId.FromPath(td, "/workload2").Id;
+        CA ca = CA.Create(td);
+        JwtSvid s1 = ca.CreateJwtSvid(id1, [aud]);
+        ValidateJWTSVIDResponse resp = new()
+        {
+            SpiffeId = id1.Id,
+        };
+
+        mockGrpcClient.Setup(c => c.ValidateJWTSVIDAsync(It.IsAny<ValidateJWTSVIDRequest>(), It.IsAny<CallOptions>()))
+                      .Returns(CallHelpers.Unary(resp));
+
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        JwtSvid s2 = await c.ValidateJwtSvidAsync(s1.Token, aud);
+        s2.Id.Should().Be(id1);
+        s2.Audience.Should().Equal(aud);
+        s2.Claims.Should().Equal(s1.Claims);
+        (s2.Expiry - s1.Expiry).TotalSeconds.Should().BeInRange(-1, 1);
+        s2.Hint.Should().Be(s1.Hint);
+    }
+
+    [Fact]
     public async Task TestFetchJwtSvids()
     {
         CA ca = CA.Create(TrustDomain);
@@ -449,6 +474,48 @@ public class TestWorkloadApiClient
         exceptions.Should().ContainSingle();
         exceptions[0].Should().Be(err);
         received.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TestCreateClientFails()
+    {
+        Action f = () => WorkloadApiClient.Create(null);
+        f.Should().Throw<ArgumentNullException>().WithParameterName("channel");
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task TestWatchErrorRethrown()
+    {
+        var err = new RpcException(Status.DefaultCancelled, "test err");
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+        int okCount = 0;
+        int errCount = 0;
+        var watcher = new Watcher<X509SVIDResponse>(
+            _ => Interlocked.Increment(ref okCount),
+            _ => Interlocked.Increment(ref errCount));
+        Func<Task> f = () => c.Watch(watcher, (_, _, _) => throw err, CancellationToken.None);
+        await f.Should().ThrowAsync<RpcException>().WithMessage(err.Message);
+        okCount.Should().Be(0);
+        errCount.Should().Be(1);
+    }
+
+    [Fact(Timeout = 10_000)]
+    public async Task TestHandleWatchError()
+    {
+        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+        var backoff = new Backoff
+        {
+            InitialDelay = TimeSpan.Zero,
+            MaxDelay = TimeSpan.Zero,
+        };
+        bool rethrow = await c.HandleWatchError(new RpcException(Status.DefaultCancelled), backoff, CancellationToken.None);
+        rethrow.Should().BeTrue();
+        rethrow = await c.HandleWatchError(new RpcException(new Status(StatusCode.InvalidArgument, string.Empty)), backoff, CancellationToken.None);
+        rethrow.Should().BeTrue();
+        rethrow = await c.HandleWatchError(new RpcException(Status.DefaultSuccess), backoff, CancellationToken.None);
+        rethrow.Should().BeFalse();
     }
 
     private static void VerifyX509BundleSet(X509BundleSet b, TrustDomain expectedTrustDomain, X509Certificate2 expectedCert)

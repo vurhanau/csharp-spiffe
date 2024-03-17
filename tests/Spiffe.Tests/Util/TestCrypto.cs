@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
-using Spiffe.Tests.Helper;
+using Moq;
 using Spiffe.Util;
 using static Spiffe.Tests.Helper.Certificates;
 
@@ -48,6 +48,21 @@ public class TestCrypto
         byte[] invalidPrivateKey = "not-DER-encoded"u8.ToArray();
         Action a = () => Crypto.GetCertificateWithPrivateKey(cert, invalidPrivateKey.AsSpan());
         a.Should().Throw<Exception>();
+    }
+
+    [Fact]
+    public void TestGetCertificateWithUnsupportedKeyAlgorithm()
+    {
+        static void AssertFail(string ka)
+        {
+            var c = new Mock<X509Certificate2>();
+            c.Setup(c => c.GetKeyAlgorithm()).Returns(ka);
+            Action a = () => Crypto.GetCertificateWithPrivateKey(c.Object, []);
+            a.Should().Throw<Exception>().WithMessage($"Unsupported key algorithm: '{ka}'");
+        }
+
+        AssertFail("1.3.101.112"); // ED25519
+        AssertFail("foo");
     }
 
     [Fact]
