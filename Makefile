@@ -34,6 +34,9 @@ policy:
 curl:
 	@curl -vvv http://localhost:5000/
 
+pack:
+	@dotnet pack src/Spiffe/Spiffe.csproj -p:NuspecFile=.nuspec --configuration Release --output nupkg
+
 restore:
 	@dotnet restore
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>Spiffe</id>
+        <version>0.0.1-beta</version>
+        <description>C# library for SPIFFE support</description>
+        <authors>vurhanau</authors>
+    </metadata>
+</package>
