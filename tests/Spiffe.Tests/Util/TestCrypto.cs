@@ -51,14 +51,6 @@ public class TestCrypto
     }
 
     [Fact]
-    public void TestDsa()
-    {
-        var dsa = DSA.Create();
-        dsa.ImportFromPem(File.ReadAllText("TestData/dsakey.pem"));
-        Console.WriteLine(dsa.ToString());
-    }
-
-    [Fact]
     public void TestGetCertificateWithUnsupportedKeyAlgorithm()
     {
         static void AssertFail(string ka)
