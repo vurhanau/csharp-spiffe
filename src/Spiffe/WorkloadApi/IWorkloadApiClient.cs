@@ -60,5 +60,5 @@ public interface IWorkloadApiClient
     /// Validates the JWT-SVID token.
     /// The parsed and validated JWT-SVID is returned.
     /// </summary>
-    Task<JwtSvid> ValidateJwtSvid(string token, string audience, CancellationToken cancellationToken = default);
+    Task<JwtSvid> ValidateJwtSvidAsync(string token, string audience, CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,6 @@
-﻿using Spiffe.Id;
+﻿using System.Security.Cryptography;
+using FluentAssertions;
+using Spiffe.Id;
 using static Spiffe.Tests.Id.TestConstants;
 
 namespace Spiffe.Tests.Id;
@@ -20,6 +22,7 @@ public class TestTrustDomain
             Assert.Contains(expectedErr, e.Message);
         }
 
+        AssertFail(null, "Trust domain is missing");
         AssertFail(string.Empty, "Trust domain is missing");
         AssertOk("spiffe://trustdomain", Td);
         AssertOk("spiffe://trustdomain/path", Td);
@@ -68,6 +71,9 @@ public class TestTrustDomain
         AssertOk("spiffe://trustdomain/path");
 
         AssertFail(new Uri("spiffe://trustdomain/path$"), "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+
+        Action f = () => TrustDomain.FromUri(null);
+        f.Should().Throw<ArgumentNullException>().WithParameterName("uri");
     }
 
     [Fact]
@@ -80,5 +86,17 @@ public class TestTrustDomain
             var td = TrustDomain.FromString(s);
             Assert.Equal(expected, td.SpiffeId.Id);
         }
+    }
+
+    [Fact]
+    public void TestEquals()
+    {
+        TrustDomain td1 = TrustDomain.FromString("spiffe://example1.org");
+        TrustDomain td2 = TrustDomain.FromString("spiffe://example1.org");
+        TrustDomain td3 = TrustDomain.FromString("spiffe://example2.org");
+        td1.Equals(td1).Should().BeTrue();
+        td1.Equals(td2).Should().BeTrue();
+        td1.Equals(td3).Should().BeFalse();
+        td1.Equals(new object()).Should().BeFalse();
     }
 }

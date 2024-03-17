@@ -106,7 +106,7 @@ public class WorkloadApiClient : IWorkloadApiClient
     }
 
     /// <inheritdoc/>
-    public async Task<JwtSvid> ValidateJwtSvid(string token, string audience, CancellationToken cancellationToken = default)
+    public async Task<JwtSvid> ValidateJwtSvidAsync(string token, string audience, CancellationToken cancellationToken = default)
     {
         ValidateJWTSVIDRequest req = new()
         {
@@ -117,6 +117,80 @@ public class WorkloadApiClient : IWorkloadApiClient
         _ = await _client.ValidateJWTSVIDAsync(req, opts);
 
         return JwtSvidParser.ParseInsecure(token, [audience]);
+    }
+
+    /// <summary>
+    /// Visible for testing.
+    /// </summary>
+    /// <typeparam name="T">API Proto response.</typeparam>
+    internal async Task Watch<T>(IWatcher<T> watcher,
+                                 Func<IWatcher<T>, Backoff, CancellationToken, Task> watchInternalFunc,
+                                 CancellationToken cancellationToken)
+    {
+        string ty = typeof(T).Name;
+        _logger.LogTrace("Start watching {Type}", ty);
+
+        Backoff backoff = _backoffFunc();
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await watchInternalFunc(watcher, backoff, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogDebug(e, "Watch {Type}", ty);
+
+                watcher.OnError(e);
+
+                bool rethrow = await HandleWatchError(e, backoff, cancellationToken);
+                if (rethrow)
+                {
+                    throw;
+                }
+            }
+        }
+
+        _logger.LogTrace("Stopped watching {Type}", ty);
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="e"/> should be rethrown.
+    /// Visible for testing.
+    /// </summary>
+    internal async Task<bool> HandleWatchError(Exception e,
+                                               Backoff backoff,
+                                               CancellationToken cancellationToken)
+    {
+        if (e is RpcException rpcException)
+        {
+            StatusCode code = rpcException.StatusCode;
+            if (code == StatusCode.Cancelled)
+            {
+                _logger.LogDebug("Status code 'cancelled' - no backoff, rethrow");
+                return true;
+            }
+
+            if (code == StatusCode.InvalidArgument)
+            {
+                _logger.LogWarning(e, "Invalid argument, canceling watch");
+                return true;
+            }
+        }
+
+        TimeSpan retryAfter = backoff.Duration();
+        _logger.LogWarning(e, "Failed to watch the Workload API, retrying in {RetryIn} seconds", retryAfter.TotalSeconds);
+
+        try
+        {
+            await Task.Delay(retryAfter, cancellationToken);
+        }
+        catch (OperationCanceledException oce)
+        {
+            _logger.LogDebug(oce, "Retry backoff watch cancelled");
+        }
+
+        return false;
     }
 
     private async Task<List<JwtSvid>> FetchJwtSvidsInternal(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
@@ -201,37 +275,6 @@ public class WorkloadApiClient : IWorkloadApiClient
             cancellationToken);
     }
 
-    private async Task Watch<T>(IWatcher<T> watcher,
-                                Func<IWatcher<T>, Backoff, CancellationToken, Task> watchInternalFunc,
-                                CancellationToken cancellationToken)
-    {
-        string ty = typeof(T).Name;
-        _logger.LogTrace("Start watching {Type}", ty);
-
-        Backoff backoff = _backoffFunc();
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                await watchInternalFunc(watcher, backoff, cancellationToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogDebug(e, "Watch {Type}", ty);
-
-                watcher.OnError(e);
-
-                bool rethrow = await HandleWatchError(e, backoff, cancellationToken);
-                if (rethrow)
-                {
-                    throw;
-                }
-            }
-        }
-
-        _logger.LogTrace("Stopped watching {Type}", ty);
-    }
-
     private async Task WatchInternal<TFrom, TResult>(IWatcher<TResult> watcher,
                                                      Func<CallOptions, AsyncServerStreamingCall<TFrom>> callFunc,
                                                      Func<TFrom, TResult> parserFunc,
@@ -267,44 +310,6 @@ public class WorkloadApiClient : IWorkloadApiClient
             watcher.OnUpdate(parsed);
             _logger.LogDebug("{RType} updated", rty);
         }
-    }
-
-    /// <summary>
-    /// Returns true if <paramref name="e"/> should be rethrown
-    /// </summary>
-    private async Task<bool> HandleWatchError(Exception e,
-                                              Backoff backoff,
-                                              CancellationToken cancellationToken)
-    {
-        if (e is RpcException rpcException)
-        {
-            StatusCode code = rpcException.StatusCode;
-            if (code == StatusCode.Cancelled)
-            {
-                _logger.LogDebug("Status code 'cancelled' - no backoff, rethrow");
-                return true;
-            }
-
-            if (code == StatusCode.InvalidArgument)
-            {
-                _logger.LogWarning(e, "Invalid argument, canceling watch");
-                return true;
-            }
-        }
-
-        TimeSpan retryAfter = backoff.Duration();
-        _logger.LogWarning(e, "Failed to watch the Workload API, retrying in {RetryIn} seconds", retryAfter.TotalSeconds);
-
-        try
-        {
-            await Task.Delay(retryAfter, cancellationToken);
-        }
-        catch (OperationCanceledException oce)
-        {
-            _logger.LogDebug(oce, "Retry backoff watch cancelled");
-        }
-
-        return false;
     }
 
     private CallOptions GetCallOptions(CancellationToken cancellationToken)
