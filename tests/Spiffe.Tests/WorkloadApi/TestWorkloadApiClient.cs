@@ -483,7 +483,7 @@ public class TestWorkloadApiClient
         f.Should().Throw<ArgumentNullException>().WithParameterName("channel");
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestWatchErrorRethrown()
     {
         var err = new RpcException(Status.DefaultCancelled, "test err");
@@ -500,7 +500,7 @@ public class TestWorkloadApiClient
         errCount.Should().Be(1);
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestHandleWatchError()
     {
         var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
