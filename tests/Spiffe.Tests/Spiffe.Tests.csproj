@@ -7,11 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="xunit" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -28,6 +31,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Spiffe\Spiffe.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\..\src\Proto\workload.proto" Link="Protos\workload.proto" />
+
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+    <PackageReference Include="Grpc.Core.Api" />
+    <PackageReference Include="Grpc.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
