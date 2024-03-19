@@ -179,6 +179,21 @@ public class TestConvertor
         // Parse null
         Action nullSvidResponse = () => Convertor.ParseX509Context(null);
         nullSvidResponse.Should().Throw<ArgumentNullException>();
+
+        // No SVIDs
+        r.Svids.Clear();
+        x509Context = Convertor.ParseX509Context(r);
+        x509Context.X509Svids.Should().BeEmpty();
+
+        // 2 SVIDs with empty hints
+        r.Svids.Add(new X509SVID(s1) { Hint = string.Empty, });
+        r.Svids.Add(new X509SVID(s2) { Hint = string.Empty, });
+        x509Context = Convertor.ParseX509Context(r);
+        x509Context.X509Svids.Should().HaveCount(2);
+        x509Context.X509Svids[0].Id.Should().Be(SpiffeId.FromString(s1.SpiffeId));
+        x509Context.X509Svids[1].Id.Should().Be(SpiffeId.FromString(s2.SpiffeId));
+        x509Context.X509Svids[0].Hint.Should().Be(string.Empty);
+        x509Context.X509Svids[1].Hint.Should().Be(string.Empty);
     }
 
     [Fact]
@@ -313,6 +328,17 @@ public class TestConvertor
         noSvids.Svids.Clear();
         f = () => Convertor.ParseJwtSvids(noSvids, null);
         f.Should().Throw<JwtSvidException>().WithMessage("There were no SVIDs in the response");
+
+        // 2 SVIDs with empty hints
+        r = new();
+        r.Svids.Add(new JWTSVID(s0) { Hint = string.Empty, });
+        r.Svids.Add(new JWTSVID(s1) { Hint = string.Empty, });
+        svids = Convertor.ParseJwtSvids(r, [workload2]);
+        svids.Should().HaveCount(2);
+        svids[0].Id.Should().Be(SpiffeId.FromString(s0.SpiffeId));
+        svids[1].Id.Should().Be(SpiffeId.FromString(s1.SpiffeId));
+        svids[0].Hint.Should().Be(string.Empty);
+        svids[1].Hint.Should().Be(string.Empty);
     }
 
     // Verify ECDsa by verifying signatures, not by PKCS binary:

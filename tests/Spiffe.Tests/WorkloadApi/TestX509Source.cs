@@ -15,7 +15,7 @@ namespace Spiffe.Tests.WorkloadApi;
 
 public class TestX509Source
 {
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestGetBundleAndSvid()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -51,7 +51,7 @@ public class TestX509Source
         bundle.X509Authorities[0].RawData.Should().Equal(bundleCert.RawData);
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestPickSvid()
     {
         SpiffeId spiffeId = SpiffeId.FromString("spiffe://example.org/workload");
@@ -87,7 +87,7 @@ public class TestX509Source
         VerifyX509SvidRsa(svid, SpiffeId.FromString(s2.SpiffeId), svidCert, "internal2");
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateCancelled()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -106,7 +106,7 @@ public class TestX509Source
         s.IsInitialized.Should().BeFalse();
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateTimedOut()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -136,7 +136,7 @@ public class TestX509Source
         f2.Should().Throw<ObjectDisposedException>();
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateWithNullClient()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(() => X509Source.CreateAsync(null));
