@@ -35,7 +35,14 @@ curl:
 	@curl -vvv http://localhost:5000/
 
 pack:
-	@dotnet pack src/Spiffe/Spiffe.csproj -p:NuspecFile=.nuspec --configuration Release --output nupkg
+	@rm -rf /nupkg/*
+	@dotnet pack src/Spiffe/Spiffe.csproj \
+		--configuration Release \
+		-p:NuspecFile=.nuspec \
+		--output nupkg \
+		--include-source \
+		--include-symbols
+	@unzip -l  nupkg/Spiffe.0.0.1-beta.1.nupkg
 
 restore:
 	@dotnet restore

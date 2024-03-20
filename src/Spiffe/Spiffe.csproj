@@ -2,10 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
+    <Version>0.0.1-beta.1</Version>
     <RootNamespace>Spiffe</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,8 +22,8 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens"/>
   </ItemGroup>
 
-<ItemGroup>
-  <Protobuf Include="..\Proto\workload.proto" GrpcServices="Client" />
-</ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="..\Proto\workload.proto" GrpcServices="Client" />
+  </ItemGroup>
 
 </Project>
