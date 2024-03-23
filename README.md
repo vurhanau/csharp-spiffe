@@ -8,6 +8,11 @@ C# implementation of [spiffe/go-spiffe](https://github.com/spiffe/go-spiffe).
 
 Requires .NET8.
 
+[NuGet Package](https://www.nuget.org/packages/Spiffe/)
+
+> [!IMPORTANT]
+> Library is in the pre-release state and not ready for production use.
+
 ## Quick Start
 
 Start [SPIRE](https://spiffe.io/spire/) or another SPIFFE Workload API
