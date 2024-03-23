@@ -9,6 +9,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/vurhanau/csharp-spiffe.git</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType> 
 
     <OutputType>Library</OutputType>
     <RootNamespace>Spiffe</RootNamespace>
