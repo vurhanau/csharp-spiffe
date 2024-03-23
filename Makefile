@@ -84,10 +84,8 @@ coverage:
 	reportgenerator \
 		-reports:"coverage.cobertura.xml" \
 		-targetdir:"coveragereport" \
-		-reporttypes:Html
-
-cov:
-	cd coverage/* && $(OPEN) coveragereport/index.html
+		-reporttypes:Html && \
+	$(OPEN) coveragereport/index.html
 
 fmt:
 	@dotnet format Spiffe.sln
