@@ -12,11 +12,14 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console"/>
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration"/>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json"/>
-    <PackageReference Include="Spiffe"/>
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" /> 
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Spiffe\Spiffe.csproj" />
   </ItemGroup>
 
 </Project>

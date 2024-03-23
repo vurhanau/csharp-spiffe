@@ -65,7 +65,7 @@ build: restore
 
 build-samples: samples/*
 	@for file in $^ ; do \
-		dotnet build $${file} ; \
+		! [[ "$${file}" =~ "WatcherNuget" ]] && dotnet build "$${file}" || true; \
 	done
 
 watch:
