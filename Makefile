@@ -1,3 +1,7 @@
+include .env
+
+SPIFFE_VERSION := $$(grep "<SpiffeVersion>" Directory.Packages.props | sed 's/\s*<.*>\(.*\)<.*>/\1/' | awk '{$$1=$$1};1')
+
 SPIRE_DIR := $(HOME)/Projects/spiffe/spire
 AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
 RUN := @dotnet run --project src/Spiffe.Client/
@@ -34,15 +38,21 @@ policy:
 curl:
 	@curl -vvv http://localhost:5000/
 
-pack:
-	@rm -rf /nupkg/*
+pkg:
+	@rm -rf nupkg/*
 	@dotnet pack src/Spiffe/Spiffe.csproj \
 		--configuration Release \
-		-p:NuspecFile=.nuspec \
 		--output nupkg \
 		--include-source \
 		--include-symbols
-	@unzip -l  nupkg/Spiffe.0.0.1-beta.1.nupkg
+	@unzip -l  nupkg/Spiffe.$(SPIFFE_VERSION).nupkg
+	@cd samples/Spiffe.Sample.WatcherNuget && \
+		dotnet clean && \
+		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
+		dotnet run
+
+pkg-push:
+	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
 
 restore:
 	@dotnet restore

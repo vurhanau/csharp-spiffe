@@ -1,6 +1,7 @@
 <Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <SpiffeVersion>0.0.1-beta.3-dev</SpiffeVersion>
         <GoogleProtobufVersion>3.25.3</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcNetClientVersion>2.61.0</GrpcNetClientVersion>
@@ -21,6 +22,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageVersion Include="Spiffe" Version="$(SpiffeVersion)" />
+
         <!-- Spiffe -->
         <PackageVersion Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
         <PackageVersion Include="Grpc.Net.Client" Version="$(GrpcNetClientVersion)" />
