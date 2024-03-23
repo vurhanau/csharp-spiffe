@@ -1,4 +1,4 @@
-include .env
+-include .env
 
 SPIFFE_VERSION := $$(grep "<SpiffeVersion>" Directory.Packages.props | sed 's/\s*<.*>\(.*\)<.*>/\1/' | awk '{$$1=$$1};1')
 
@@ -53,6 +53,9 @@ pkg:
 
 pkg-push:
 	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
+
+version:
+	@echo $(SPIFFE_VERSION)
 
 restore:
 	@dotnet restore
