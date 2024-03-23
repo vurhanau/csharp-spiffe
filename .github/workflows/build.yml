@@ -42,7 +42,7 @@ jobs:
                 --no-build \
                 --verbosity normal \
                 --collect:"XPlat Code Coverage" \
-                --results-directory ./coverage\
+                --results-directory ./coverage \
             		--settings coverlet.runsettings
 
       - name: Build Samples
