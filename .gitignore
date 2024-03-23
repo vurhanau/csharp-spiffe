@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+.env
+
 # User-specific files
 *.rsuser
 *.suo
@@ -197,6 +199,7 @@ publish/
 PublishScripts/
 
 # NuGet Packages
+nupkg/
 *.nupkg
 # NuGet Symbol Packages
 *.snupkg
