@@ -12,7 +12,7 @@ Requires .NET8.
 [NuGet Package](https://www.nuget.org/packages/Spiffe/)
 
 > [!IMPORTANT]
-> Library is in the pre-release state and not ready for production use.
+>  This is a prerelease version and it's not ready for use in production.
 
 ## Quick Start
 
