@@ -1,4 +1,5 @@
 # C# SPIFFE Library
+[![codecov](https://codecov.io/gh/vurhanau/csharp-spiffe/graph/badge.svg?token=7T5FW25DYR)](https://codecov.io/gh/vurhanau/csharp-spiffe)
 
 ## Overview
 
