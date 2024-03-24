@@ -1,4 +1,5 @@
 # C# SPIFFE Library
+[![codecov](https://codecov.io/gh/vurhanau/csharp-spiffe/graph/badge.svg?token=7T5FW25DYR)](https://codecov.io/gh/vurhanau/csharp-spiffe)
 
 ## Overview
 
@@ -7,6 +8,11 @@ The C# SPIFFE library provides functionality to interact with the Workload API t
 C# implementation of [spiffe/go-spiffe](https://github.com/spiffe/go-spiffe).
 
 Requires .NET8.
+
+[NuGet Package](https://www.nuget.org/packages/Spiffe/)
+
+> [!IMPORTANT]
+>  This is a prerelease version and it's not ready for use in production.
 
 ## Quick Start
 
@@ -18,7 +24,7 @@ To create an mTLS Kestrel server:
 ```csharp
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
 using GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/agent.sock");
-IWorkloadApiClient workload = WorkloadApiClient.Create(channel);
+IWorkloadApiClient client = WorkloadApiClient.Create(client);
 using X509Source x509Source = await X509Source.CreateAsync(workload);
 builder.WebHost.UseKestrel(kestrel =>
 {
@@ -38,7 +44,7 @@ To dial an mTLS server:
 
 ```csharp
 GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/agent.sock");
-IWorkloadApiClient workload = WorkloadApiClient.Create(channel);
+IWorkloadApiClient client = WorkloadApiClient.Create(client);
 X509Source x509Source = await X509Source.CreateAsync(workload);
 HttpClient http = new(new SocketsHttpHandler()
 {
@@ -57,4 +63,4 @@ streamed from the Workload API (e.g. secret rotation).
 
 ## Examples
 
-The [samples](./samples/) directory contains examples for a variety of circumstances.
+The [samples](https://github.com/vurhanau/csharp-spiffe/tree/main/samples) directory contains examples for a variety of circumstances.

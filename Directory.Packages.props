@@ -1,11 +1,12 @@
 <Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <GoogleProtobufVersion>3.25.3</GoogleProtobufVersion>
+        <SpiffeVersion>0.0.1-beta.5-dev</SpiffeVersion>
+        <GoogleProtobufVersion>3.26.0</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcNetClientVersion>2.61.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.62.0</GrpcToolsVersion>
-        <IdentityModelVersion>7.4.0</IdentityModelVersion>
+        <IdentityModelVersion>7.4.1</IdentityModelVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
         <TestSdkVersion>17.9.0</TestSdkVersion>
@@ -16,12 +17,14 @@
         <CoverletVersion>6.0.2</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>9.21.0.86780</SonarVersion>
+        <SonarVersion>9.22.0.87781</SonarVersion>
         <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
         <AspNetCoreTestHostVersion>8.0.3</AspNetCoreTestHostVersion>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageVersion Include="Spiffe" Version="$(SpiffeVersion)" />
+
         <!-- Spiffe -->
         <PackageVersion Include="Google.Protobuf" Version="$(GoogleProtobufVersion)" />
         <PackageVersion Include="Grpc.Net.Client" Version="$(GrpcNetClientVersion)" />

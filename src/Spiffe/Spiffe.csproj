@@ -1,6 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>Spiffe</PackageId>
+    <Version>$(SpiffeVersion)</Version>
+    <Authors>vurhanau</Authors>
+    <PackRelease>true</PackRelease>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/vurhanau/csharp-spiffe.git</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType> 
+
     <OutputType>Library</OutputType>
     <RootNamespace>Spiffe</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -18,8 +29,14 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens"/>
   </ItemGroup>
 
-<ItemGroup>
-  <Protobuf Include="..\Proto\workload.proto" GrpcServices="Client" />
-</ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="..\Proto\workload.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>

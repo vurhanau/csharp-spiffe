@@ -17,7 +17,7 @@ namespace Spiffe.Tests.WorkloadApi;
 
 public class TestBundleSource
 {
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestGetBundles()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -69,7 +69,7 @@ public class TestBundleSource
         json1.Should().Be(json2);
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateCancelled()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -88,7 +88,7 @@ public class TestBundleSource
         s.IsInitialized.Should().BeFalse();
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateTimedOut()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -101,7 +101,7 @@ public class TestBundleSource
         await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateJwtTimedOut()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -136,7 +136,7 @@ public class TestBundleSource
         await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateX509TimedOut()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -176,5 +176,12 @@ public class TestBundleSource
 
         f1.Should().Throw<ObjectDisposedException>();
         f2.Should().Throw<ObjectDisposedException>();
+    }
+
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
+    public async Task TestBundleSourceCreateWithNullClient()
+    {
+        Func<Task> f = () => BundleSource.CreateAsync(null);
+        await f.Should().ThrowAsync<ArgumentNullException>().WithParameterName("client");
     }
 }

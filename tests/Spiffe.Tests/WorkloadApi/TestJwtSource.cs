@@ -17,7 +17,7 @@ namespace Spiffe.Tests.WorkloadApi;
 
 public class TestJwtSource
 {
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestGetBundle()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -44,7 +44,7 @@ public class TestJwtSource
         json1.Should().Be(json2);
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestFetchJwtSvid()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -73,7 +73,7 @@ public class TestJwtSource
         fetched[0].Should().Be(svid);
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateCancelled()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -92,7 +92,7 @@ public class TestJwtSource
         s.IsInitialized.Should().BeFalse();
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateTimedOut()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -125,7 +125,7 @@ public class TestJwtSource
         f.Should().Throw<ObjectDisposedException>();
     }
 
-    [Fact(Timeout = 10_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateWithNullClient()
     {
         await Assert.ThrowsAsync<ArgumentNullException>(() => JwtSource.CreateAsync(null));

@@ -18,7 +18,7 @@ internal static class Convertor
         List<X509Svid> svids = [];
         Dictionary<TrustDomain, X509Bundle> bundles = [];
         HashSet<string> hints = [];
-        foreach (X509SVID from in response.Svids ?? [])
+        foreach (X509SVID from in response.Svids)
         {
             // In the event of more than one X509SVID message with the same hint value set, then the first message in the
             // list SHOULD be selected.
@@ -35,7 +35,7 @@ internal static class Convertor
             bundles[td] = bundle;
         }
 
-        ParseX50Bundles(response.FederatedBundles, bundles);
+        ParseX509Bundles(response.FederatedBundles, bundles);
 
         return new(svids, new X509BundleSet(bundles));
     }
@@ -45,7 +45,7 @@ internal static class Convertor
         _ = response ?? throw new ArgumentNullException(nameof(response));
 
         Dictionary<TrustDomain, X509Bundle> bundles = [];
-        ParseX50Bundles(response.Bundles, bundles);
+        ParseX509Bundles(response.Bundles, bundles);
 
         return new(bundles);
     }
@@ -112,9 +112,9 @@ internal static class Convertor
         return new X509Bundle(td, authorities);
     }
 
-    private static void ParseX50Bundles(IEnumerable<KeyValuePair<string, ByteString>> src, Dictionary<TrustDomain, X509Bundle> dest)
+    private static void ParseX509Bundles(IEnumerable<KeyValuePair<string, ByteString>> src, Dictionary<TrustDomain, X509Bundle> dest)
     {
-        foreach (KeyValuePair<string, ByteString> bundle in src ?? [])
+        foreach (KeyValuePair<string, ByteString> bundle in src)
         {
             TrustDomain td = TrustDomain.FromString(bundle.Key);
             dest[td] = ParseX509Bundle(td, bundle.Value);

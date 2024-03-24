@@ -1,3 +1,7 @@
+-include .env
+
+SPIFFE_VERSION := $$(grep "<SpiffeVersion>" Directory.Packages.props | sed 's/\s*<.*>\(.*\)<.*>/\1/' | awk '{$$1=$$1};1')
+
 SPIRE_DIR := $(HOME)/Projects/spiffe/spire
 AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
 RUN := @dotnet run --project src/Spiffe.Client/
@@ -34,6 +38,25 @@ policy:
 curl:
 	@curl -vvv http://localhost:5000/
 
+pkg:
+	@rm -rf nupkg/*
+	@dotnet pack src/Spiffe/Spiffe.csproj \
+		--configuration Release \
+		--output nupkg \
+		--include-source \
+		--include-symbols
+	@unzip -l  nupkg/Spiffe.$(SPIFFE_VERSION).nupkg
+	@cd samples/Spiffe.Sample.WatcherNuget && \
+		dotnet clean && \
+		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
+		dotnet run
+
+pkg-push:
+	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
+
+version:
+	@echo $(SPIFFE_VERSION)
+
 restore:
 	@dotnet restore
 
@@ -42,7 +65,7 @@ build: restore
 
 build-samples: samples/*
 	@for file in $^ ; do \
-		dotnet build $${file} ; \
+		! [[ "$${file}" =~ "WatcherNuget" ]] && dotnet build "$${file}" || true; \
 	done
 
 watch:
