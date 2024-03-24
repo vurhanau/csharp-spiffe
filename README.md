@@ -63,4 +63,4 @@ streamed from the Workload API (e.g. secret rotation).
 
 ## Examples
 
-The [samples](./samples/) directory contains examples for a variety of circumstances.
+The [samples](https://github.com/vurhanau/csharp-spiffe/tree/main/samples) directory contains examples for a variety of circumstances.
