@@ -4,6 +4,7 @@
         <SpiffeVersion>0.0.1-beta.5-dev</SpiffeVersion>
         <GoogleProtobufVersion>3.26.0</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
+        <GrpcCoreVersion>2.61.0</GrpcCoreVersion>
         <GrpcNetClientVersion>2.61.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.62.0</GrpcToolsVersion>
         <IdentityModelVersion>7.4.1</IdentityModelVersion>
@@ -48,7 +49,7 @@
         <PackageVersion Include="coverlet.collector" Version="$(CoverletVersion)" />
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="$(IdentityModelVersion)" />
         <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="$(AspNetCoreTestHostVersion)" />
-        <PackageVersion Include="Grpc.Core.Api" Version="2.61.0" />
+        <PackageVersion Include="Grpc.Core.Api" Version="$(GrpcCoreVersion)" />
 
         <!-- Spiffe.Samples -->
         <PackageVersion Include="Grpc.AspNetCore" Version="$(GrpcAspNetCoreVersion)" />
