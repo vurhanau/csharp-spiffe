@@ -11,7 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E2096C5E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Tests", "tests\Spiffe.Tests\Spiffe.Tests.csproj", "{9D1BFD3A-FE30-4C31-8457-46739B604B1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Server", "tests\Spiffe.Server\Spiffe.Server.csproj", "{C2F3830E-635D-4F47-AB03-047B62F6D35E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Tests.Server", "tests\Spiffe.Tests.Server\Spiffe.Tests.Server.csproj", "{C2F3830E-635D-4F47-AB03-047B62F6D35E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

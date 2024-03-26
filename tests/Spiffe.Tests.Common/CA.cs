@@ -3,15 +3,10 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
-using Spiffe.Bundle.Jwt;
-using Spiffe.Bundle.X509;
-using Spiffe.Id;
-using Spiffe.Svid.Jwt;
-using Spiffe.Svid.X509;
 
-namespace Spiffe.Tests.Helper;
+namespace Spiffe.Tests.Common;
 
-internal class CertificateCreationOptions
+public class CertificateCreationOptions
 {
     public byte[] SerialNumber { get; set; }
 
@@ -26,10 +21,8 @@ internal class CertificateCreationOptions
     public Uri SubjectAlternateName { get; set; }
 }
 
-internal sealed class CA : IDisposable
+public sealed class CA : IDisposable
 {
-    public TrustDomain TrustDomain { get; init; }
-
     public CA Parent { get; init; }
 
     public X509Certificate2 Cert { get; init; }
@@ -44,18 +37,17 @@ internal sealed class CA : IDisposable
         JwtKey?.Dispose();
     }
 
-    internal static CA Create(TrustDomain trustDomain)
+    public static CA Create()
     {
         return new CA
         {
-            TrustDomain = trustDomain,
             Cert = CreateCACertificate(),
             JwtKey = Keys.CreateEC256Key(),
             JwtKid = Keys.GenerateKeyId(),
         };
     }
 
-    internal CA ChildCA()
+    public CA ChildCA()
     {
         X509Certificate2 cert = CreateCACertificate(Cert);
         return new CA
@@ -67,30 +59,7 @@ internal sealed class CA : IDisposable
         };
     }
 
-    internal X509Svid CreateX509Svid(SpiffeId id)
-    {
-        X509Certificate2 cert = CreateX509Svid(Cert!, id);
-        X509Certificate2Collection chain = [cert];
-        chain.AddRange(Chain(false));
-        return new(id, chain, string.Empty);
-    }
-
-    internal JwtSvid CreateJwtSvid(SpiffeId spiffeId, IEnumerable<string> audience, string hint = "")
-    {
-        DateTime expiry = DateTime.Now.AddHours(1);
-        List<Claim> claims = Jwt.GetClaims(spiffeId.Id, audience, expiry);
-        string token = Jwt.Generate(claims, JwtKey, JwtKid);
-        JwtSvid svid = JwtSvidParser.ParseInsecure(token, audience);
-        return new JwtSvid(
-            token: svid.Token,
-            id: svid.Id,
-            audience: audience,
-            expiry: expiry,
-            claims: claims.ToDictionary(c => c.Type, c => c.Value),
-            hint: hint);
-    }
-
-    internal Dictionary<string, JsonWebKey> JwtAuthorities()
+    public Dictionary<string, JsonWebKey> JwtAuthorities()
     {
         ECDsaSecurityKey ecdsa = new(JwtKey);
         JsonWebKey jwtKey = JsonWebKeyConverter.ConvertFromECDsaSecurityKey(ecdsa);
@@ -98,7 +67,7 @@ internal sealed class CA : IDisposable
         return new() { { JwtKid!,  jwtKey } };
     }
 
-    internal X509Certificate2Collection X509Authorities()
+    public X509Certificate2Collection X509Authorities()
     {
         CA root = this;
         while (root.Parent != null)
@@ -110,17 +79,7 @@ internal sealed class CA : IDisposable
         return result;
     }
 
-    internal X509Bundle X509Bundle()
-    {
-        return new X509Bundle(TrustDomain!, X509Authorities());
-    }
-
-    internal JwtBundle JwtBundle()
-    {
-        return new JwtBundle(TrustDomain!, JwtAuthorities());
-    }
-
-    internal X509Certificate2Collection Chain(bool includeRoot)
+    public X509Certificate2Collection Chain(bool includeRoot)
     {
         X509Certificate2Collection chain = [];
         CA next = this;
@@ -137,7 +96,14 @@ internal sealed class CA : IDisposable
         return chain;
     }
 
-    internal static X509Certificate2 CreateCACertificate(X509Certificate2 parent = null,
+    public string CreateJwtSvid(string spiffeId, IEnumerable<string> audience, string hint = "")
+    {
+        DateTime expiry = DateTime.Now.AddHours(1);
+        List<Claim> claims = Jwt.GetClaims(spiffeId, audience, expiry);
+        return Jwt.Generate(claims, JwtKey, JwtKid);
+    }
+
+    public static X509Certificate2 CreateCACertificate(X509Certificate2 parent = null,
                                                          Action<CertificateRequest> csrConfigure = null)
     {
         using ECDsa key = Keys.CreateEC256Key();
@@ -183,27 +149,9 @@ internal sealed class CA : IDisposable
         return ca.CopyWithPrivateKey(key);
     }
 
-    internal static X509Certificate2 CreateX509Svid(X509Certificate2 parent,
-                                                    SpiffeId id,
-                                                    Action<CertificateCreationOptions> configure = null,
-                                                    Action<CertificateRequest> configureCsr = null)
-    {
-        return CreateX509Certificate(parent,
-                                     opts =>
-                                     {
-                                         byte[] serial = CreateSerial();
-                                         opts.SerialNumber = serial;
-                                         opts.SubjectName = $"CN=X509-SVID {Convert.ToHexString(serial)}";
-                                         opts.KeyUsage = X509KeyUsageFlags.DigitalSignature;
-                                         opts.SubjectAlternateName = id.ToUri();
-                                         configure?.Invoke(opts);
-                                     },
-                                     configureCsr);
-    }
-
-    private static X509Certificate2 CreateX509Certificate(X509Certificate2 parent,
-                                                          Action<CertificateCreationOptions> configureOptions = null,
-                                                          Action<CertificateRequest> configureCsr = null)
+    public static X509Certificate2 CreateX509Certificate(X509Certificate2 parent,
+                                                         Action<CertificateCreationOptions> configureOptions = null,
+                                                         Action<CertificateRequest> configureCsr = null)
     {
         _ = parent ?? throw new ArgumentNullException(nameof(parent));
         if (!parent.HasPrivateKey)
