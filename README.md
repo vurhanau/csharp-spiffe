@@ -11,8 +11,8 @@ Requires .NET8.
 
 [NuGet Package](https://www.nuget.org/packages/Spiffe/)
 
-> [!IMPORTANT]
->  This is a prerelease version and it's not ready for use in production.
+__IMPORTANT__ \
+This is a prerelease version and it's not ready for use in production.
 
 ## Quick Start
 
