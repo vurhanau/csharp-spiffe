@@ -7,6 +7,9 @@ int port = 5001;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseKestrel(k => k.Listen(IPAddress.Any, port, opts => opts.Protocols = HttpProtocols.Http2));
 builder.Services.AddGrpc();
+builder.Services.AddGrpcReflection();
+
 WebApplication app = builder.Build();
 app.MapGrpcService<WorkloadApiService>();
+app.MapGrpcReflectionService();
 app.Run();

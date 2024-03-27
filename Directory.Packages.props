@@ -50,6 +50,10 @@
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="$(IdentityModelVersion)" />
         <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="$(AspNetCoreTestHostVersion)" />
         <PackageVersion Include="Grpc.Core.Api" Version="$(GrpcCoreVersion)" />
+        <PackageVersion Include="CliWrap" Version="3.6.6" />
+
+        <!-- Spiffe.Tests.Server -->
+        <PackageVersion Include="Grpc.AspNetCore.Server.Reflection" Version="2.61.0" />
 
         <!-- Spiffe.Samples -->
         <PackageVersion Include="Grpc.AspNetCore" Version="$(GrpcAspNetCoreVersion)" />
