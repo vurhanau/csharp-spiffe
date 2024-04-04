@@ -4,6 +4,7 @@ using CliWrap.EventStream;
 using FluentAssertions;
 using Grpc.Net.Client;
 using Spiffe.Svid.Jwt;
+using Spiffe.Tests;
 using Spiffe.WorkloadApi;
 using Xunit.Abstractions;
 
@@ -18,19 +19,18 @@ public class TestWorkloadApiIntegration
         _output = output;
     }
 
-    [Fact(Timeout = 60_000)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestFetchJWTSVID()
     {
         using var cts = new CancellationTokenSource();
-        cts.CancelAfter(30_000);
-        var ct = cts.Token;
+        cts.CancelAfter(Constants.TestTimeoutMillis / 2);
         var t = Task.Factory.StartNew(async () =>
         {
             var cmd = Cli.Wrap("dotnet")
                         .WithArguments(["run", "--framework", "net8.0"])
                         .WithWorkingDirectory("/Users/avurhanau/Projects/spiffe/csharp-spiffe/tests/Spiffe.Tests.Server");
 
-            await foreach (var cmdEvent in cmd.ListenAsync(ct))
+            await foreach (var cmdEvent in cmd.ListenAsync(cts.Token))
             {
                 switch (cmdEvent)
                 {
@@ -57,6 +57,7 @@ public class TestWorkloadApiIntegration
             subject: null));
 
         ret.Should().ContainSingle();
+        cts.Cancel();
         await t;
     }
 

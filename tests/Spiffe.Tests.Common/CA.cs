@@ -98,7 +98,7 @@ public sealed class CA : IDisposable
 
     public string CreateJwtSvid(string spiffeId, IEnumerable<string> audience, string hint = "")
     {
-        DateTime expiry = DateTime.Now.AddHours(1);
+        DateTime expiry = DateTime.UtcNow.AddHours(1);
         List<Claim> claims = Jwt.GetClaims(spiffeId, audience, expiry);
         return Jwt.Generate(claims, JwtKey, JwtKid);
     }
