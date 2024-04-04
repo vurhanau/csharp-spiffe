@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <SpiffeVersion>0.0.1-beta.5-dev</SpiffeVersion>
-        <GoogleProtobufVersion>3.26.0</GoogleProtobufVersion>
+        <GoogleProtobufVersion>3.26.1</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcNetClientVersion>2.61.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.62.0</GrpcToolsVersion>
