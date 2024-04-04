@@ -28,7 +28,7 @@ public class WorkloadApiTests
         WorkloadApiServer api = new(_output);
         Task apiTask = await api.RunAsync(address, cts.Token);
 
-        GrpcChannel ch = GrpcChannelFactory.CreateChannel("http://localhost:" + port);
+        GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
         IWorkloadApiClient c = WorkloadApiClient.Create(ch);
         List<JwtSvid> resp = await c.FetchJwtSvidsAsync(new JwtSvidParams(
             audience: "foo",
