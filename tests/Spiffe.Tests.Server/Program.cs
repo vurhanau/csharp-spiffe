@@ -25,7 +25,7 @@ else if (address.Scheme == "unix")
         File.Delete(unixSocketPath);
     }
 
-    configureKestrel = k => k.ListenUnixSocket(unixSocketPath);
+    configureKestrel = k => k.ListenUnixSocket(unixSocketPath, opts => opts.Protocols = HttpProtocols.Http2);
 }
 else
 {

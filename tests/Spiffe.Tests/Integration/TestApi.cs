@@ -6,15 +6,15 @@ using Xunit.Abstractions;
 
 namespace Spiffe.Tests.Integration;
 
-internal class WorkloadApiServer
+internal class TestApi
 {
     private const int StartingPort = 5000;
 
-    private const string TestServerStartedLog = "Now listening on: http://0.0.0.0:";
+    private const string TestServerStartedLog = "Now listening on:";
 
     private readonly ITestOutputHelper _output;
 
-    internal WorkloadApiServer(ITestOutputHelper output)
+    internal TestApi(ITestOutputHelper output)
     {
         _output = output;
     }
