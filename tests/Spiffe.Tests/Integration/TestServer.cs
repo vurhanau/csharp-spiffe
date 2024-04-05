@@ -6,15 +6,15 @@ using Xunit.Abstractions;
 
 namespace Spiffe.Tests.Integration;
 
-internal class TestApi
+internal class TestServer
 {
     private const int StartingPort = 5000;
 
-    private const string TestServerStartedLog = "Now listening on:";
+    private const string TestServerStartedLog = "Application started";
 
     private readonly ITestOutputHelper _output;
 
-    internal TestApi(ITestOutputHelper output)
+    internal TestServer(ITestOutputHelper output)
     {
         _output = output;
     }
@@ -71,7 +71,7 @@ internal class TestApi
         return 0;
     }
 
-    internal async Task<Task> RunAsync(string address, CancellationToken cancellationToken)
+    internal async Task<Task> ListenAsync(string address, CancellationToken cancellationToken)
     {
         bool started = false;
         Task t = Task.Factory.StartNew(async () =>

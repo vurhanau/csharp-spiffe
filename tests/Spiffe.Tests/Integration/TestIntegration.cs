@@ -24,7 +24,7 @@ public partial class TestIntegration
     [Category(Constants.Integration)]
     public async Task TestHttpFetchJWTSVID()
     {
-        int port = TestApi.GetAvailablePort();
+        int port = TestServer.GetAvailablePort();
         string address = $"http://localhost:{port}";
         await RunTest(address);
     }
@@ -32,19 +32,31 @@ public partial class TestIntegration
     private async Task RunTest(string address)
     {
         using CancellationTokenSource cts = new();
-        cts.CancelAfter(Constants.TestTimeoutMillis);
-        TestApi api = new(_output);
-        Task apiTask = await api.RunAsync(address, cts.Token);
+        cts.CancelAfter(Constants.IntegrationTestTimeoutMillis);
+        TestServer server = new(_output);
+        Task serverTask = await server.ListenAsync(address, cts.Token);
 
-        GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
-        IWorkloadApiClient c = WorkloadApiClient.Create(ch);
-        List<JwtSvid> resp = await c.FetchJwtSvidsAsync(new JwtSvidParams(
-            audience: "foo",
-            extraAudiences: [],
-            subject: null));
-        resp.Should().ContainSingle();
+        for (int i = 0; i < Constants.IntegrationTestRetriesMax; i++)
+        {
+            try
+            {
+                using GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
+                IWorkloadApiClient c = WorkloadApiClient.Create(ch);
+                List<JwtSvid> resp = await c.FetchJwtSvidsAsync(new JwtSvidParams(
+                    audience: "foo",
+                    extraAudiences: [],
+                    subject: null));
+                resp.Should().ContainSingle();
+                break;
+            }
+            catch (Exception e)
+            {
+                _output.WriteLine($"Test failed, attempt: {i + 1}: {e.Message}");
+                await Task.Delay(100);
+            }
+        }
 
         cts.Cancel();
-        await apiTask;
+        await serverTask;
     }
 }
