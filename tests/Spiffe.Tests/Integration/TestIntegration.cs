@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using FluentAssertions;
 using Grpc.Net.Client;
+using Spiffe.Bundle.X509;
 using Spiffe.Grpc;
-using Spiffe.Svid.Jwt;
 using Spiffe.WorkloadApi;
 using Xunit.Abstractions;
 
@@ -42,11 +42,8 @@ public partial class TestIntegration
             {
                 using GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
                 IWorkloadApiClient c = WorkloadApiClient.Create(ch);
-                List<JwtSvid> resp = await c.FetchJwtSvidsAsync(new JwtSvidParams(
-                    audience: "foo",
-                    extraAudiences: [],
-                    subject: null));
-                resp.Should().ContainSingle();
+                X509BundleSet resp = await c.FetchX509BundlesAsync();
+                resp.Bundles.Should().ContainSingle();
                 break;
             }
             catch (Exception e)

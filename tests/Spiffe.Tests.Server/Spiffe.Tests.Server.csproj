@@ -10,8 +10,4 @@
     <PackageReference Include="Grpc.AspNetCore.Server.Reflection" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Spiffe.Tests.Common\Spiffe.Tests.Common.csproj" />
-  </ItemGroup>
-
 </Project>
