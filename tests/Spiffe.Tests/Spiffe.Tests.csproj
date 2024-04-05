@@ -12,6 +12,8 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="CliWrap" />
     <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -29,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Spiffe\Spiffe.csproj" />
   </ItemGroup>
+
 
   <ItemGroup>
     <Content Include="TestData\**" CopyToOutputDirectory="PreserveNewest" /> 

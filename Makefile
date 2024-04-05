@@ -20,6 +20,12 @@ endif
 server:
 	@cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
 
+mock:
+	@dotnet run --project tests/Spiffe.Tests.Server --framework net8.0
+
+call:
+	@cd tests/Spiffe.Tests.Server && ./call.sh
+
 jt:
 	@cd $(SPIRE_DIR) && ./spire-server token generate -spiffeID spiffe://example.org/myagent
 

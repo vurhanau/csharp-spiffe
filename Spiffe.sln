@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E2096C5E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Tests", "tests\Spiffe.Tests\Spiffe.Tests.csproj", "{9D1BFD3A-FE30-4C31-8457-46739B604B1A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spiffe.Tests.Server", "tests\Spiffe.Tests.Server\Spiffe.Tests.Server.csproj", "{C2F3830E-635D-4F47-AB03-047B62F6D35E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +30,14 @@ Global
 		{9D1BFD3A-FE30-4C31-8457-46739B604B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D1BFD3A-FE30-4C31-8457-46739B604B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D1BFD3A-FE30-4C31-8457-46739B604B1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2F3830E-635D-4F47-AB03-047B62F6D35E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2F3830E-635D-4F47-AB03-047B62F6D35E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2F3830E-635D-4F47-AB03-047B62F6D35E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2F3830E-635D-4F47-AB03-047B62F6D35E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{76A7EC05-F3EB-49B2-8D5E-3DE997BAE483} = {2CDEC0C5-AF38-466C-A6B3-93334041094C}
 		{9D1BFD3A-FE30-4C31-8457-46739B604B1A} = {E2096C5E-D50E-4500-A55C-38B89B5488DA}
+		{C2F3830E-635D-4F47-AB03-047B62F6D35E} = {E2096C5E-D50E-4500-A55C-38B89B5488DA}
 	EndGlobalSection
 EndGlobal
