@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
@@ -76,7 +77,7 @@ internal sealed class CA : IDisposable
 
     internal JwtSvid CreateJwtSvid(SpiffeId spiffeId, IEnumerable<string> audience, string hint = "")
     {
-        DateTime expiry = DateTime.Now.AddHours(1);
+        DateTime expiry = DateTime.UtcNow.AddHours(1);
         List<Claim> claims = Jwt.GetClaims(spiffeId.Id, audience, expiry);
         string token = Jwt.Generate(claims, JwtKey, JwtKid);
         JwtSvid svid = JwtSvidParser.ParseInsecure(token, audience);
