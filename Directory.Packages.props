@@ -2,12 +2,12 @@
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <SpiffeVersion>0.0.1-beta.5-dev</SpiffeVersion>
-        <GoogleProtobufVersion>3.26.0</GoogleProtobufVersion>
+        <GoogleProtobufVersion>3.26.1</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcCoreVersion>2.61.0</GrpcCoreVersion>
-        <GrpcNetClientVersion>2.61.0</GrpcNetClientVersion>
+        <GrpcNetClientVersion>2.62.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.62.0</GrpcToolsVersion>
-        <IdentityModelVersion>7.4.1</IdentityModelVersion>
+        <IdentityModelVersion>7.5.0</IdentityModelVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
         <TestSdkVersion>17.9.0</TestSdkVersion>
@@ -18,7 +18,7 @@
         <CoverletVersion>6.0.2</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>9.22.0.87781</SonarVersion>
+        <SonarVersion>9.23.1.88495</SonarVersion>
         <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
         <AspNetCoreTestHostVersion>8.0.3</AspNetCoreTestHostVersion>
     </PropertyGroup>
