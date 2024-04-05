@@ -22,7 +22,7 @@ public partial class TestIntegration
 
     [Fact(Timeout = Constants.IntegrationTestTimeoutMillis)]
     [Category(Constants.Integration)]
-    public async Task TestHttpFetchJWTSVID()
+    public async Task TestFetchViaHttp()
     {
         int port = TestServer.GetAvailablePort();
         string address = $"http://localhost:{port}";

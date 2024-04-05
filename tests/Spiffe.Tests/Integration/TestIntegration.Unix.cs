@@ -14,7 +14,7 @@ public partial class TestIntegration
 {
     [Fact(Timeout = Constants.IntegrationTestTimeoutMillis)]
     [Category(Constants.Integration)]
-    public async Task TestUnixDomainSocketFetchJWTSVID()
+    public async Task TestFetchViaUnixSocket()
     {
         string socket = Path.Join(Path.GetTempPath(), $"workload-api-{Guid.NewGuid()}.sock");
         await RunTest($"unix://{socket}");
