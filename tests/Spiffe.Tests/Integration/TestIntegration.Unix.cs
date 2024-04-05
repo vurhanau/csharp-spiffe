@@ -1,6 +1,9 @@
 #if !OS_WINDOWS
 
 using System.ComponentModel;
+using FluentAssertions;
+using Grpc.Net.Client;
+using Spiffe.Grpc;
 
 namespace Spiffe.Tests.Integration;
 
@@ -18,5 +21,4 @@ public partial class TestIntegration
         File.Delete(socket);
     }
 }
-
 #endif
