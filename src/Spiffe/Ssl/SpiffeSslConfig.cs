@@ -16,7 +16,7 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates TLS server authentication config backed by X509 SVID.
     /// </summary>
-    public static SslServerAuthenticationOptions GetTlsServerOptions(X509Source x509Source)
+    public static SslServerAuthenticationOptions GetTlsServerOptions(IX509Source x509Source)
     {
         return new SslServerAuthenticationOptions
         {
@@ -28,7 +28,7 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates MTLS server authentication config backed by X509 SVID.
     /// </summary>
-    public static SslServerAuthenticationOptions GetMtlsServerOptions(X509Source x509Source, IAuthorizer authorizer)
+    public static SslServerAuthenticationOptions GetMtlsServerOptions(IX509Source x509Source, IAuthorizer authorizer)
     {
         return new SslServerAuthenticationOptions
         {
@@ -54,7 +54,7 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates MTLS client authentication config backed by X509 SVID.
     /// </summary>
-    public static SslClientAuthenticationOptions GetMtlsClientOptions(X509Source x509Source, IAuthorizer authorizer)
+    public static SslClientAuthenticationOptions GetMtlsClientOptions(IX509Source x509Source, IAuthorizer authorizer)
     {
         return new SslClientAuthenticationOptions
         {
@@ -90,7 +90,7 @@ public static class SpiffeSslConfig
         return ok;
     }
 
-    private static SslStreamCertificateContext CreateContext(X509Source x509Source)
+    private static SslStreamCertificateContext CreateContext(IX509Source x509Source)
     {
         X509Svid svid = x509Source.GetX509Svid();
         X509Certificate2 leaf = svid.Certificates[0];

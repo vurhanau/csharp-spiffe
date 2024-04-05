@@ -144,7 +144,7 @@ public static class JwtSvidParser
             throw new JwtSvidException($"Expected audience is {expected} (audience={actual})");
         }
 
-        DateTime now = DateTime.Now;
+        DateTime now = DateTime.UtcNow;
         if (jwt.ValidFrom > now.Add(s_leeway))
         {
             throw new JwtSvidException("Validation failed, token not valid yet (nbf)");

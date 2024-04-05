@@ -261,7 +261,7 @@ public class TestConvertor
     public void TestParseJwtSvid()
     {
         using ECDsa signingKey = Keys.CreateEC256Key();
-        DateTime expiry = DateTime.Now.AddHours(1);
+        DateTime expiry = DateTime.UtcNow.AddHours(1);
         string workload1 = "spiffe://example1.org/workload1";
         string workload2 = "spiffe://example2.org/workload2";
         string hint1 = "internal1";
