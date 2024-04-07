@@ -27,6 +27,11 @@ else if (address.Scheme == "unix")
 
     configureKestrel = k => k.ListenUnixSocket(unixSocketPath, opts => opts.Protocols = HttpProtocols.Http2);
 }
+else if (address.Scheme == "npipe")
+{
+    string namedPipe = address.PathAndQuery;
+    configureKestrel = k => k.ListenNamedPipe(namedPipe, opts => opts.Protocols = HttpProtocols.Http2);
+}
 else
 {
     Console.WriteLine($"Unsupported address scheme: {address.Scheme}");
