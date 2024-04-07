@@ -18,7 +18,7 @@ IX509BundleSource x509BundleSource = await BundleSource.CreateAsync(workload);
 
 using HttpClient http = new(new SocketsHttpHandler()
 {
-    SslOptions = SpiffeSslConfig.GetTlsClientOptions(x509BundleSource, Authorizers.AuthorizeAny()),
+    SslOptions = SpiffeSslConfig.GetTlsClientOptions(x509BundleSource),
 });
 
 WebApplication app = builder.Build();
