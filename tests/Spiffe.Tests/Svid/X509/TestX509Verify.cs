@@ -106,9 +106,4 @@ public class TestX509Verify
         Action f = () => X509Verify.GetSpiffeIdFromCertificate(null);
         f.Should().Throw<ArgumentNullException>();
     }
-
-    internal class TestX509BundleSource(X509Bundle bundle) : IX509BundleSource
-    {
-        public X509Bundle GetX509Bundle(TrustDomain trustDomain) => bundle;
-    }
 }

@@ -16,7 +16,7 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates TLS server authentication config backed by X509 SVID.
     /// </summary>
-    public static SslServerAuthenticationOptions GetTlsServerOptions(X509Source x509Source)
+    public static SslServerAuthenticationOptions GetTlsServerOptions(IX509Source x509Source)
     {
         return new SslServerAuthenticationOptions
         {
@@ -28,7 +28,7 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates MTLS server authentication config backed by X509 SVID.
     /// </summary>
-    public static SslServerAuthenticationOptions GetMtlsServerOptions(X509Source x509Source, IAuthorizer authorizer)
+    public static SslServerAuthenticationOptions GetMtlsServerOptions(IX509Source x509Source, IAuthorizer authorizer)
     {
         return new SslServerAuthenticationOptions
         {
@@ -42,19 +42,19 @@ public static class SpiffeSslConfig
     /// <summary>
     /// Creates TLS client authentication config backed by X509 SVID.
     /// </summary>
-    public static SslClientAuthenticationOptions GetTlsClientOptions(IX509BundleSource x509BundleSource, IAuthorizer authorizer)
+    public static SslClientAuthenticationOptions GetTlsClientOptions(IX509BundleSource x509BundleSource)
     {
         return new SslClientAuthenticationOptions
         {
             RemoteCertificateValidationCallback = (_, cert, chain, _) =>
-                                                        ValidateRemoteCertificate(cert, chain, x509BundleSource, authorizer),
+                                                        ValidateRemoteCertificate(cert, chain, x509BundleSource, Authorizers.AuthorizeAny()),
         };
     }
 
     /// <summary>
     /// Creates MTLS client authentication config backed by X509 SVID.
     /// </summary>
-    public static SslClientAuthenticationOptions GetMtlsClientOptions(X509Source x509Source, IAuthorizer authorizer)
+    public static SslClientAuthenticationOptions GetMtlsClientOptions(IX509Source x509Source, IAuthorizer authorizer)
     {
         return new SslClientAuthenticationOptions
         {
@@ -90,11 +90,17 @@ public static class SpiffeSslConfig
         return ok;
     }
 
-    private static SslStreamCertificateContext CreateContext(X509Source x509Source)
+    private static SslStreamCertificateContext CreateContext(IX509Source x509Source)
     {
         X509Svid svid = x509Source.GetX509Svid();
-        X509Certificate2 leaf = svid.Certificates[0];
-        X509Certificate2Collection intermediates = [..svid.Certificates.Skip(1)];
+        X509Certificate2Collection c = svid.Certificates;
+        if (!c.Any())
+        {
+            throw new ArgumentException("SVID doesn't contain any certificates");
+        }
+
+        X509Certificate2 leaf = c[0];
+        X509Certificate2Collection intermediates = c.Count > 1 ? [..c.Skip(1)] : [];
 
         return SslStreamCertificateContext.Create(leaf, intermediates, true);
     }
