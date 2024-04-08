@@ -13,7 +13,7 @@ public partial class TestIntegration
     [Category(Constants.Integration)]
     public async Task TestFetchViaNamedPipe()
     {
-        string namedPipe = $"npipe:pipe/workload-api-{Guid.NewGuid()}.pipe";
+        string namedPipe = $"npipe://workload-api-{Guid.NewGuid()}.pipe";
         await RunTest(namedPipe);
     }
 }
