@@ -20,6 +20,7 @@ if (address.Scheme == Uri.UriSchemeHttp)
 else if (address.Scheme == "unix")
 {
     string unixSocketPath = address.PathAndQuery;
+    Console.WriteLine($"Unix socket path is {unixSocketPath}");
     if (File.Exists(unixSocketPath))
     {
         File.Delete(unixSocketPath);
@@ -30,6 +31,7 @@ else if (address.Scheme == "unix")
 else if (address.Scheme == "npipe")
 {
     string namedPipe = address.PathAndQuery;
+    Console.WriteLine($"Named pipe path is {namedPipe}");
     configureKestrel = k => k.ListenNamedPipe(namedPipe, opts => opts.Protocols = HttpProtocols.Http2);
 }
 else
