@@ -18,7 +18,6 @@ public static partial class GrpcChannelFactory
     private static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
     {
         string pipeName = Address.ParseNamedPipeTarget(address);
-        pipeName = Path.GetFileName(pipeName);
         return new SocketsHttpHandler
         {
             ConnectCallback = async (ignored, cancellationToken) =>

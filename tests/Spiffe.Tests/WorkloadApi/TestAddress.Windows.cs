@@ -16,17 +16,17 @@ public partial class TestAddress
         [
             (
                 Addr: "npipe:pipeName",
-                Expected: @"\\.\pipe\pipeName",
+                Expected: "pipeName",
                 Err: string.Empty
             ),
             (
                 Addr: "npipe:pipe/name",
-                Expected: @"\\.\pipe\pipe/name",
+                Expected: @"pipe/name",
                 Err: string.Empty
             ),
             (
                 Addr: "npipe:pipe\\name",
-                Expected: @"\\.\pipe\pipe\name",
+                Expected: @"pipe\name",
                 Err: string.Empty
             ),
             (
