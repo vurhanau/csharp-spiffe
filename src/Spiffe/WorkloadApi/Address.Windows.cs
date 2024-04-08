@@ -46,12 +46,7 @@ internal static partial class Address
             throw new ArgumentException("Workload endpoint named pipe URI must not include a fragment");
         }
 
-        return GetNamedPipeTarget(TrimScheme(uri));
-    }
-
-    private static string GetNamedPipeTarget(string pipeName)
-    {
-        return @"\\.\" + Path.Combine("pipe", pipeName);
+        return TrimScheme(uri);
     }
 }
 

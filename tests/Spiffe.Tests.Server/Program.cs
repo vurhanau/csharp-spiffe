@@ -20,6 +20,7 @@ if (address.Scheme == Uri.UriSchemeHttp)
 else if (address.Scheme == "unix")
 {
     string unixSocketPath = address.PathAndQuery;
+    Console.WriteLine($"Unix socket path is '{unixSocketPath}'");
     if (File.Exists(unixSocketPath))
     {
         File.Delete(unixSocketPath);
@@ -27,9 +28,15 @@ else if (address.Scheme == "unix")
 
     configureKestrel = k => k.ListenUnixSocket(unixSocketPath, opts => opts.Protocols = HttpProtocols.Http2);
 }
+else if (address.Scheme == "npipe")
+{
+    string namedPipe = address.PathAndQuery;
+    Console.WriteLine($"Named pipe path is '{namedPipe}'");
+    configureKestrel = k => k.ListenNamedPipe(namedPipe, opts => opts.Protocols = HttpProtocols.Http2);
+}
 else
 {
-    Console.WriteLine($"Unsupported address scheme: {address.Scheme}");
+    Console.WriteLine($"Unsupported address scheme: '{address.Scheme}'");
     Environment.Exit(1);
     return;
 }
