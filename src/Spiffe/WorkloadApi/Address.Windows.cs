@@ -1,4 +1,4 @@
-﻿#if OS_WINDOWS
+﻿#if !OS_WINDOWS
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Spiffe.Tests")]

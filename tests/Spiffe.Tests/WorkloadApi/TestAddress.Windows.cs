@@ -1,4 +1,4 @@
-﻿#if OS_WINDOWS
+﻿#if !OS_WINDOWS
 
 using Spiffe.WorkloadApi;
 
@@ -48,6 +48,11 @@ public partial class TestAddress
                 Addr: "npipe:pipeName#fragment",
                 Expected: string.Empty,
                 Err: "Workload endpoint named pipe URI must not include a fragment"
+            ),
+            (
+                Addr: "unix:pipeName",
+                Expected: string.Empty,
+                Err: "Workload endpoint socket URI must have a supported scheme"
             ),
         ];
 
