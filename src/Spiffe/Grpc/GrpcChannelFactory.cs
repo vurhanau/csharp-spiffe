@@ -17,7 +17,7 @@ public static partial class GrpcChannelFactory
     /// <list type="bullet">
     /// <item><description>HTTP/HTTPS (example: <a href="https://1.2.3.4:5"/>)</description></item>
     /// <item><description>Unix domain socket (example: unix:///tmp/agent.sock)</description></item>
-    /// <item><description>Named pipe (example: npipe:pipe\agent)</description></item>
+    /// <item><description>Named pipe (example: npipe:agent)</description></item>
     /// </list>
     /// </param>
     /// <param name="configureOptions">GRPC channel options configurer</param>

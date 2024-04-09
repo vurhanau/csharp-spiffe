@@ -49,6 +49,11 @@ public partial class TestAddress
                 Expected: string.Empty,
                 Err: "Workload endpoint named pipe URI must not include a fragment"
             ),
+            (
+                Addr: "unix:pipeName",
+                Expected: string.Empty,
+                Err: "Workload endpoint socket URI must have a supported scheme"
+            ),
         ];
 
         AssertParse(testCases, Address.ParseNamedPipeTarget);

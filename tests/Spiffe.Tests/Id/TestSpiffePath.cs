@@ -1,4 +1,5 @@
-﻿using Spiffe.Id;
+﻿using FluentAssertions;
+using Spiffe.Id;
 
 namespace Spiffe.Tests.Id;
 
@@ -19,6 +20,8 @@ public class TestSpiffePath
             Assert.Equal(expectedPath, path);
         }
 
+        Action f = () => SpiffePath.JoinPathSegments(null);
+        f.Should().Throw<ArgumentNullException>().WithParameterName("segments");
         AssertBad("Path cannot contain empty segments", string.Empty);
         AssertBad("Path cannot contain dot segments", ".");
         AssertBad("Path cannot contain dot segments", "..");

@@ -72,5 +72,10 @@ public class TestStrings
             SpiffeId = w1.Id,
         });
         s.Should().Contain(w1.Id);
+
+        s = Strings.ToString((X509Svid)null);
+        s.Should().Be("null");
+        s = Strings.ToString((JwtSvid)null);
+        s.Should().Be("null");
     }
 }
