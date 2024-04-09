@@ -1,4 +1,4 @@
-﻿#if !OS_WINDOWS
+﻿#if OS_WINDOWS
 
 using Spiffe.WorkloadApi;
 
