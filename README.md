@@ -24,8 +24,8 @@ To create an mTLS Kestrel server:
 ```csharp
 WebApplicationBuilder builder = WebApplication.CreateBuilder();
 using GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/agent.sock");
-IWorkloadApiClient client = WorkloadApiClient.Create(client);
-using X509Source x509Source = await X509Source.CreateAsync(workload);
+IWorkloadApiClient client = WorkloadApiClient.Create(channel);
+using X509Source x509Source = await X509Source.CreateAsync(client);
 builder.WebHost.UseKestrel(kestrel =>
 {
     kestrel.Listen(IPAddress.Any, 8443, listenOptions =>
@@ -44,8 +44,8 @@ To dial an mTLS server:
 
 ```csharp
 GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/agent.sock");
-IWorkloadApiClient client = WorkloadApiClient.Create(client);
-X509Source x509Source = await X509Source.CreateAsync(workload);
+IWorkloadApiClient client = WorkloadApiClient.Create(channel);
+X509Source x509Source = await X509Source.CreateAsync(client);
 HttpClient http = new(new SocketsHttpHandler()
 {
     // Configure mTLS client options
