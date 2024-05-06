@@ -11,7 +11,7 @@
         <LoggingVersion>8.0.0</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
         <TestSdkVersion>17.9.0</TestSdkVersion>
-        <XunitVersion>2.7.1</XunitVersion>
+        <XunitVersion>2.8.0</XunitVersion>
         <XunitRunnerVersion>2.8.0</XunitRunnerVersion>
         <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
         <MoqVersion>4.18.4</MoqVersion>
