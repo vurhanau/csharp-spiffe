@@ -4,7 +4,7 @@
         <SpiffeVersion>0.0.1-beta.6-dev</SpiffeVersion>
         <GoogleProtobufVersion>3.26.1</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
-        <GrpcCoreVersion>2.61.0</GrpcCoreVersion>
+        <GrpcCoreVersion>2.63.0</GrpcCoreVersion>
         <GrpcNetClientVersion>2.62.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.63.0</GrpcToolsVersion>
         <IdentityModelVersion>7.5.2</IdentityModelVersion>
