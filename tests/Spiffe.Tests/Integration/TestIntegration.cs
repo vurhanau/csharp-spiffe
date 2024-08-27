@@ -53,7 +53,7 @@ public partial class TestIntegration
             }
         }
 
-        cts.Cancel();
+        await cts.CancelAsync();
         await serverTask;
     }
 }

@@ -49,4 +49,4 @@ builder.Services.AddGrpcReflection();
 WebApplication app = builder.Build();
 app.MapGrpcService<WorkloadApiService>();
 app.MapGrpcReflectionService();
-app.Run();
+await app.RunAsync();
