@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <SpiffeVersion>0.0.1-beta.6-dev</SpiffeVersion>
+        <SpiffeVersion>0.0.1-beta.7-dev</SpiffeVersion>
         <GoogleProtobufVersion>3.27.2</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcCoreVersion>2.65.0</GrpcCoreVersion>
