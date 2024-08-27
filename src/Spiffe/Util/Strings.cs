@@ -98,7 +98,7 @@ public static class Strings
         string audienceString = string.Join(", ", jwtSvid.Audience);
         sb.AppendLine($"Audience: {audienceString}");
 
-        if (!jwtSvid.Claims.IsNullOrEmpty())
+        if (jwtSvid.Claims.Count > 0)
         {
             sb.AppendLine("Claims:");
         }
