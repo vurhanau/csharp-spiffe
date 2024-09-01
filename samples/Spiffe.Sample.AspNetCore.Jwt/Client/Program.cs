@@ -42,4 +42,4 @@ app.MapGet("/", async () =>
     return Results.Text(str, statusCode: (int)resp.StatusCode);
 });
 
-app.Run(clientUrl);
+await app.RunAsync(clientUrl);

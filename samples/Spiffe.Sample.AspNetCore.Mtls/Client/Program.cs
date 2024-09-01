@@ -33,4 +33,4 @@ app.MapGet("/", async () =>
     return str;
 });
 
-app.Run(clientUrl);
+await app.RunAsync(clientUrl);

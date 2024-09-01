@@ -35,4 +35,4 @@ app.MapGet("/", (ClaimsPrincipal principal) =>
     return "Hello world!";
 }).RequireAuthorization();
 
-app.Run(serverUrl);
+await app.RunAsync(serverUrl);

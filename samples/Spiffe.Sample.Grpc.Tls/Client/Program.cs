@@ -38,4 +38,4 @@ app.MapGet("/", async () =>
     return reply.Message;
 });
 
-app.Run(clientUrl);
+await app.RunAsync(clientUrl);
