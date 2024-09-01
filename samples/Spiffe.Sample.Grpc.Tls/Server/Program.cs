@@ -42,4 +42,4 @@ app.Logger.LogInformation("Server certificate:\n {Cert}", serverCertificate);
 
 app.MapGrpcService<GreetService>();
 
-app.Run();
+await app.RunAsync();
