@@ -1,6 +1,5 @@
 # C# SPIFFE Library
 [![codecov](https://codecov.io/gh/vurhanau/csharp-spiffe/graph/badge.svg?token=7T5FW25DYR)](https://codecov.io/gh/vurhanau/csharp-spiffe)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cbc86197d97e4beea33832bcff996f81)](https://app.codacy.com/gh/vurhanau/csharp-spiffe?utm_source=github.com&utm_medium=referral&utm_content=vurhanau/csharp-spiffe&utm_campaign=Badge_Grade)
 
 ## Overview
 
