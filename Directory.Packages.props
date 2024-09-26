@@ -5,7 +5,7 @@
         <GoogleProtobufVersion>3.28.2</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
         <GrpcCoreVersion>2.66.0</GrpcCoreVersion>
-        <GrpcNetClientVersion>2.65.0</GrpcNetClientVersion>
+        <GrpcNetClientVersion>2.66.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.66.0</GrpcToolsVersion>
         <IdentityModelVersion>8.1.0</IdentityModelVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
