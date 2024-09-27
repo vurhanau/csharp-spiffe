@@ -1,10 +1,14 @@
 -include .env
 
-SPIFFE_VERSION := $$(grep "<SpiffeVersion>" Directory.Packages.props | sed 's/\s*<.*>\(.*\)<.*>/\1/' | awk '{$$1=$$1};1')
+.DEFAULT_GOAL := help
 
-SPIRE_DIR := $(HOME)/Projects/spiffe/spire
-AGENT_SOCKET := --address unix:///tmp/spire-agent/public/api.sock
-RUN := @dotnet run --project src/Spiffe.Client/
+.PHONY: help
+help:     ## Shows this help
+	@egrep -h '\s##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-30s\033[0m %s\n", $$1, $$2}'
+
+############################################################################
+# Build and test
+############################################################################
 
 os1=$(shell uname -s)
 ifeq ($(os1),Darwin)
@@ -15,72 +19,26 @@ else
 OPEN=$(error unsupported OS: $(os1))
 endif
 
-.PHONY: coverage
-
-server:
-	@cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
-
-mock:
-	@dotnet run --project tests/Spiffe.Tests.Server --framework net8.0
-
-call:
-	@cd tests/Spiffe.Tests.Server && ./call.sh
-
-jt:
-	@cd $(SPIRE_DIR) && ./spire-server token generate -spiffeID spiffe://example.org/myagent
-
-agent:
-	@cd $(SPIRE_DIR) && ./spire-agent run -config conf/agent/agent.conf -joinToken $(JT)
-
-fetch:
-	@cd $(SPIRE_DIR) && ./spire-agent api fetch x509
-
-policy:
-	@cd $(SPIRE_DIR) && ./spire-server entry create \
-		-parentID spiffe://example.org/myagent \
-		-spiffeID spiffe://example.org/myservice \
-		-selector unix:uid:$$(id -u)
-
-curl:
-	@curl -vvv http://localhost:5000/
-
-pkg:
-	@rm -rf nupkg/*
-	@dotnet pack src/Spiffe/Spiffe.csproj \
-		--configuration Release \
-		--output nupkg \
-		--include-source \
-		--include-symbols
-	@unzip -l  nupkg/Spiffe.$(SPIFFE_VERSION).nupkg
-	@cd samples/Spiffe.Sample.WatcherNuget && \
-		dotnet clean && \
-		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
-		dotnet run
-
-pkg-push:
-	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
-
-version:
-	@echo $(SPIFFE_VERSION)
-
-restore:
+.PHONY: restore
+restore: ## Restores project dependencies
 	@dotnet restore
 
-build: restore
+.PHONY: build
+build: restore  ## Builds the library
 	@dotnet build
 
-build-samples: samples/*
+.PHONY: build-samples
+build-samples: samples/*  ## Builds the samples
 	@for file in $^ ; do \
 		! [[ "$${file}" =~ "WatcherNuget" ]] && dotnet build "$${file}" || true; \
 	done
 
-watch:
-	@cd samples/Spiffe.Sample.Watcher && dotnet run
-
-test: restore
+.PHONY: test
+test: restore ## Runs unit, integration tests
 	@dotnet test
 
-coverage:
+.PHONY: coverage
+coverage: ## Generates code coverage report
 	@rm -rf coverage/* && \
 	dotnet test --verbosity normal \
 		--collect:"XPlat Code Coverage" \
@@ -93,16 +51,78 @@ coverage:
 		-reporttypes:Html && \
 	$(OPEN) coveragereport/index.html
 
-fmt:
+.PHONY: fmt
+fmt: ## Formats the code
 	@dotnet format Spiffe.sln
 
-lint:
-	@jb inspectcode Spiffe.sln -o=jb.xml --build
 
-dependabot:
-	@dependadotnet . > .github/dependabot.yml
+############################################################################
+# Release
+############################################################################
 
-toolchain:
+SPIFFE_VERSION := $$(grep "<SpiffeVersion>" Directory.Packages.props | sed 's/\s*<.*>\(.*\)<.*>/\1/' | awk '{$$1=$$1};1')
+
+.PHONY: version
+version: ## Prints the current version
+	@echo $(SPIFFE_VERSION)
+
+.PHONY: pkg
+pkg: ## Builds the nuget package and runs the sample to test the artifact
+	@rm -rf nupkg/*
+	@dotnet pack src/Spiffe/Spiffe.csproj \
+		--configuration Release \
+		--output nupkg \
+		--include-source \
+		--include-symbols
+	@unzip -l  nupkg/Spiffe.$(SPIFFE_VERSION).nupkg
+	@cd samples/Spiffe.Sample.WatcherNuget && \
+		dotnet clean && \
+		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
+		dotnet run
+
+.PHONY: push
+push: ## Pushes the nuget package to the nuget.org
+	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
+
+
+############################################################################
+# End-to-end test
+############################################################################
+
+SPIRE_DIR := $(HOME)/Projects/spiffe/spire
+
+.PHONY: e2e-server
+e2e-server: ## Starts the Spire server located at $(SPIRE_DIR)
+	@cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
+
+.PHONY: e2e-agent
+e2e-agent: ## Starts the Spire agent located at $(SPIRE_DIR)
+	cd $(SPIRE_DIR) && \
+	./spire-agent run \
+	-config conf/agent/agent.conf \
+	-joinToken $(shell cd $(SPIRE_DIR) && ./spire-server token generate -spiffeID spiffe://example.org/myagent | sed 's/Token: //') 
+
+.PHONY: e2e-policy
+e2e-policy: ## Creates a policy for the workload
+	@cd $(SPIRE_DIR) && ./spire-server entry create \
+		-parentID spiffe://example.org/myagent \
+		-spiffeID spiffe://example.org/myservice \
+		-selector unix:uid:$$(id -u)
+
+.PHONY: e2e-workload
+e2e-workload: ## Starts the sample watcher workload
+	@cd samples/Spiffe.Sample.Watcher && dotnet run
+
+
+############################################################################
+# Toolchain and utilities
+############################################################################
+
+.PHONY: toolchain
+toolchain: ## Installs the required tools
 	@dotnet tool install -g dependadotnet
 	@dotnet tool install -g dotnet-reportgenerator-globaltool
-	@dotnet tool install -g JetBrains.ReSharper.GlobalTools
+
+.PHONY: dependabot
+dependabot:
+	@dependadotnet . > .github/dependabot.yml
