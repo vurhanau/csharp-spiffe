@@ -37,4 +37,4 @@ app.Logger.LogInformation("Server certificate:\n {Cert}", serverCertificate);
 
 app.MapGet("/", () => "Hello World!");
 
-app.Run();
+await app.RunAsync();
