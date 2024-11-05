@@ -1,4 +1,4 @@
-name: Publish release package to NuGet
+name: Publish
 on:
   release:
     types: [created]
@@ -32,5 +32,5 @@ jobs:
       - name: Pack
         run: make pkg
 
-      - name: Publish
-        run: ENV_NUGET_API_KEY=${{secrets.NUGET_API_KEY}} make push
+      # - name: Publish
+      #   run: ENV_NUGET_API_KEY=${{secrets.NUGET_API_KEY}} make push
