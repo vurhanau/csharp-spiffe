@@ -72,9 +72,12 @@ pkg: ## Builds the nuget package and runs the sample to test the artifact
 	@dotnet pack src/Spiffe/Spiffe.csproj \
 		--configuration Release \
 		--output nupkg \
-		--include-source \
-		--include-symbols
-	@unzip -l  nupkg/Spiffe.$(SPIFFE_VERSION).nupkg
+		-p:IncludeSymbols=true \
+		-p:SymbolPackageFormat=snupkg
+
+.PHONY: pkg-test
+pkg-test: pkg ## Tests the nuget package
+	@unzip -l nupkg/Spiffe.$(SPIFFE_VERSION).nupkg
 	@cd samples/Spiffe.Sample.WatcherNuget && \
 		dotnet clean && \
 		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
