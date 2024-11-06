@@ -24,27 +24,22 @@ restore: ## Restores project dependencies
 	@dotnet restore
 
 .PHONY: build
-build: restore  ## Builds the library
-	@dotnet build
-
-.PHONY: build-samples
-build-samples: samples/*  ## Builds the samples
-	@for file in $^ ; do \
-		! [[ "$${file}" =~ "WatcherNuget" ]] && dotnet build "$${file}" || true; \
-	done
+build: restore  ## Builds the project
+	@dotnet build --no-restore
 
 .PHONY: test
-test: restore ## Runs unit, integration tests
-	@dotnet test
-
-.PHONY: coverage
-coverage: ## Generates code coverage report
+test: ## Runs unit, integration tests and generates code coverage report
 	@rm -rf coverage/* && \
-	dotnet test --verbosity normal \
+	dotnet test \
+		--no-build \
+		--verbosity normal \
 		--collect:"XPlat Code Coverage" \
 		--results-directory ./coverage \
-		--settings coverlet.runsettings && \
-	cd coverage/* && \
+		--settings coverlet.runsettings
+
+.PHONY: report
+report: coverage ## Shows code coverage report
+	@cd coverage/* && \
 	reportgenerator \
 		-reports:"coverage.cobertura.xml" \
 		-targetdir:"coveragereport" \
@@ -55,6 +50,19 @@ coverage: ## Generates code coverage report
 fmt: ## Formats the code
 	@dotnet format Spiffe.sln
 
+.PHONY: clean
+clean: ## Cleans the project
+	@dotnet clean && \
+	rm -rf coverage && \
+	rm -rf nupkg/* && \
+	rm -rf src/Spiffe/bin && \
+	rm -rf src/Spiffe/obj
+
+.PHONY: build-samples
+build-samples: samples/*  ## Builds the samples
+	@for file in $^ ; do \
+		! [[ "$${file}" =~ "WatcherNuget" ]] && dotnet build "$${file}" || true; \
+	done
 
 ############################################################################
 # Release

@@ -31,14 +31,13 @@ jobs:
             ${{ runner.os }}-nuget-
       
       - name: Restore
-        run: dotnet restore
+        run: make restore
 
       - name: Build
-        run: dotnet build --no-restore
+        run: make build
 
       - name: Test
-        run: |
-          dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage  --settings coverlet.runsettings
+        run: make test
 
       - name: Build Samples
         run: make build-samples
