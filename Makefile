@@ -66,6 +66,24 @@ SPIFFE_VERSION := $$(grep "<SpiffeVersion>" Directory.Packages.props | sed 's/\s
 version: ## Prints the current version
 	@echo $(SPIFFE_VERSION)
 
+.PHONY: release
+release: ## Creates a new release
+	@SPIFFE_VERSION=$(shell echo $(SPIFFE_VERSION) | sed 's/-dev//') && \
+	sed -i '' "s/<SpiffeVersion>.*<\/SpiffeVersion>/<SpiffeVersion>$${SPIFFE_VERSION}<\/SpiffeVersion>/" Directory.Packages.props && \
+	echo "Release version: $${SPIFFE_VERSION}" && \
+	git checkout -b release/$(SPIFFE_VERSION) && \
+	git add Directory.Packages.props && \
+	git commit -m "Bump version to $(SPIFFE_VERSION)" && \
+	git tag $(SPIFFE_VERSION) && \
+	git push origin release/$(SPIFFE_VERSION) && \
+	git push origin $(SPIFFE_VERSION)
+
+.PHONY: next-patch
+next-patch: ## Sets dev version with incremented patch version
+	@SPIFFE_VERSION=$(shell echo $(SPIFFE_VERSION) | awk -F. -v OFS=. '{$$NF = $$NF + 1; print}')-dev && \
+	sed -i '' "s/<SpiffeVersion>.*<\/SpiffeVersion>/<SpiffeVersion>$${SPIFFE_VERSION}<\/SpiffeVersion>/" Directory.Packages.props && \
+	echo "Version set to $${SPIFFE_VERSION}"
+
 .PHONY: pkg
 pkg: ## Builds the nuget package and runs the sample to test the artifact
 	@rm -rf nupkg/*
