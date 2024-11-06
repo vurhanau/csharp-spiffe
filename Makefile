@@ -82,7 +82,11 @@ release: ## Creates a new release
 next-patch: ## Sets dev version with incremented patch version
 	@SPIFFE_VERSION=$(shell echo $(SPIFFE_VERSION) | awk -F. -v OFS=. '{$$NF = $$NF + 1; print}')-dev && \
 	sed -i '' "s/<SpiffeVersion>.*<\/SpiffeVersion>/<SpiffeVersion>$${SPIFFE_VERSION}<\/SpiffeVersion>/" Directory.Packages.props && \
-	echo "Version set to $${SPIFFE_VERSION}"
+	echo "Version set to $${SPIFFE_VERSION}" && \
+	git checkout -b dev/$(SPIFFE_VERSION) && \
+	git add Directory.Packages.props && \
+	git commit -m "Bump version to $${SPIFFE_VERSION}" && \
+	git push origin dev/$(SPIFFE_VERSION)
 
 .PHONY: pkg
 pkg: ## Builds the nuget package and runs the sample to test the artifact
