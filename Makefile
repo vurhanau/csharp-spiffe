@@ -92,14 +92,18 @@ next-patch: ## Sets dev version with incremented patch version
 	git commit -m "Bump version to $${SPIFFE_VERSION}" && \
 	git push origin dev/$(SPIFFE_VERSION)
 
-.PHONY: pkg
-pkg: ## Builds the nuget package and runs the sample to test the artifact
+.PHONY: pack
+pack: ## Builds the nuget package and runs the sample to test the artifact
 	@rm -rf nupkg/*
 	@dotnet pack src/Spiffe/Spiffe.csproj \
 		--configuration Release \
 		--output nupkg \
 		-p:IncludeSymbols=true \
 		-p:SymbolPackageFormat=snupkg
+
+.PHONY: push
+push: ## Pushes the nuget package to the nuget.org
+	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
 
 .PHONY: pkg-test
 pkg-test: pkg ## Tests the nuget package
@@ -108,11 +112,6 @@ pkg-test: pkg ## Tests the nuget package
 		dotnet clean && \
 		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
 		dotnet run
-
-.PHONY: push
-push: ## Pushes the nuget package to the nuget.org
-	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
-
 
 ############################################################################
 # End-to-end test
