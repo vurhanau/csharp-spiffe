@@ -27,18 +27,13 @@ jobs:
             ${{ runner.os }}-nuget-
       
       - name: Restore
-        run: dotnet restore
+        run: make restore
 
       - name: Build
-        run: dotnet build --no-restore
+        run: make build
 
       - name: Pack
-        run: >
-          dotnet pack src/Spiffe/Spiffe.csproj
-            --configuration Release
-            --output nupkg
-            -p:IncludeSymbols=true
-            -p:SymbolPackageFormat=snupkg
+        run: make pack
 
-      # - name: Publish
-      #   run: ENV_NUGET_API_KEY=${{secrets.NUGET_API_KEY}} make push
+      - name: Publish
+        run: ENV_NUGET_API_KEY=${{secrets.NUGET_API_KEY}} make push

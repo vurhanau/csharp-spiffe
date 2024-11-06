@@ -1,4 +1,6 @@
 # C# SPIFFE Library
+[![NuGet](https://img.shields.io/nuget/v/Spiffe.svg)](https://www.nuget.org/packages/Spiffe)
+[![Alert Status](https://sonarcloud.io/api/project_badges/measure?project=vurhanau_csharp-spiffe&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=vurhanau_csharp-spiffe)
 [![codecov](https://codecov.io/gh/vurhanau/csharp-spiffe/branch/main/graph/badge.svg?token=7T5FW25DYR)](https://codecov.io/gh/vurhanau/csharp-spiffe)
 
 ## Overview
