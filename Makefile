@@ -74,8 +74,11 @@ release: ## Creates a new release
 	git checkout -b release/$(SPIFFE_VERSION) && \
 	git add Directory.Packages.props && \
 	git commit -m "Bump version to $(SPIFFE_VERSION)" && \
+	git push origin release/$(SPIFFE_VERSION)
+
+tag:
+	git checkout -b release/$(SPIFFE_VERSION) && \
 	git tag v$(SPIFFE_VERSION) && \
-	git push origin release/$(SPIFFE_VERSION) && \
 	git push origin v$(SPIFFE_VERSION)
 
 .PHONY: next-patch
