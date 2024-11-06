@@ -77,7 +77,7 @@ release: ## Creates a new release
 	git push origin release/$(SPIFFE_VERSION)
 
 tag:
-	git checkout main && \
+	@git checkout main && \
 	git pull origin main && \
 	git tag v$(SPIFFE_VERSION) && \
 	git push origin v$(SPIFFE_VERSION)
