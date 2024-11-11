@@ -2,7 +2,7 @@ using Microsoft.IdentityModel.Tokens;
 using Spiffe.Svid.Jwt;
 using Spiffe.WorkloadApi;
 
-namespace Spiffe.AspNetCore;
+namespace Spiffe.AspNetCore.Server;
 
 internal class JwtSvidTokenHandler : TokenHandler
 {

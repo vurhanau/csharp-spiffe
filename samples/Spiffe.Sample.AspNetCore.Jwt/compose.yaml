@@ -1,0 +1,79 @@
+services:
+  spire-server:
+    image: ghcr.io/spiffe/spire-server:1.10.0
+    container_name: spire-server
+    volumes:
+      - ./spire/server:/etc/spire/server
+    ports:
+      - "8081:8081"
+    command: ["-config", "/etc/spire/server/server.conf"]
+
+  spire-agent:
+    image: ghcr.io/spiffe/spire-agent:1.10.0
+    container_name: spire-agent
+    privileged: true
+    pid: host
+    cgroup: host
+    ports:
+      - "8080:8080"
+    depends_on:
+      - spire-server
+    volumes:
+      - ./spire/agent:/etc/spire/agent
+      - /var/run/docker.sock:/var/run/docker.sock
+      - agent_data:/tmp/spire/agent/public
+    command: [
+      "-config", "/etc/spire/agent/agent.conf",
+      "-serverAddress", "spire-server"
+    ]
+
+  spire-init:
+    image: docker:27.3.1-dind-alpine3.20
+    container_name: spire-init
+    privileged: true
+    depends_on:
+      - spire-agent
+    volumes:
+      - ./spire/server:/etc/spire/server
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: [
+      "docker", "exec", "spire-server",
+      "/opt/spire/bin/spire-server", "entry", "create", "-data", "/etc/spire/server/entries.json"
+    ]
+
+  server:
+    image: spiffe/aspnet-jwt-server$MODE:latest
+    container_name: server
+    cgroup: host
+    depends_on:
+      - spire-init
+    labels:
+      - org.example.workload=server
+    volumes:
+      - agent_data:/tmp/spire/agent/public
+    ports:
+      - "5000"
+    environment:
+      - SPIRE_AGENT_ADDRESS=unix:///tmp/spire/agent/public/api.sock
+      - SERVER_URL=http://0.0.0.0:5000
+      - SERVER_AUDIENCE=spiffe://example.org/server
+      - LOG_LEVEL=Information
+
+  client:
+    image: spiffe/aspnet-jwt-client$MODE:latest
+    container_name: client
+    cgroup: host
+    depends_on:
+      - server
+    labels:
+      - org.example.workload=client
+    volumes:
+      - agent_data:/tmp/spire/agent/public
+    environment:
+      - SPIRE_AGENT_ADDRESS=unix:///tmp/spire/agent/public/api.sock
+      - SERVER_URL=http://server:5000
+      - SERVER_AUDIENCE=spiffe://example.org/server
+      - LOG_LEVEL=Information
+
+volumes:
+  agent_data:
