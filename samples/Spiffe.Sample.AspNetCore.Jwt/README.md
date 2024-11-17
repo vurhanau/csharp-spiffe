@@ -7,9 +7,4 @@ It fetches trust bundles from SPIRE Agent to validate caller's JWT token.
 
 `Client` fetches JWT SVID from SPIRE Agent and keeps pinging `Server` with a JWT token derived from this SVID.
 
-![JWT SVID Sample Diagram](./img/diagram.png)
-
-### Run
-1. `make docker`    - builds Server, Client workload Docker images
-2. `make up`        - starts SPIRE Server, SPIRE Agent, Server, and Client workloads.
-3. `make down`      - stops the services.
+![JWT SVID Sample Diagram](./diagram.png)

@@ -1,19 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
-  <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Spiffe\Spiffe.csproj" />
+    <PackageReference Include="Spiffe" />
   </ItemGroup>
 
   <ItemGroup>
     <Protobuf Include="..\Proto\greet.proto" GrpcServices="Server" Link="Protos\greet.proto" />
-
     <PackageReference Include="Grpc.AspNetCore" />
   </ItemGroup>
-
 </Project>

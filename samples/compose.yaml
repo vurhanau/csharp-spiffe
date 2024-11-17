@@ -3,7 +3,7 @@ services:
     image: ghcr.io/spiffe/spire-server:1.10.0
     container_name: spire-server
     volumes:
-      - ./spire/server:/etc/spire/server
+      - ./docker-spire/server:/etc/spire/server
     ports:
       - "8081:8081"
     command: ["-config", "/etc/spire/server/server.conf"]
@@ -19,7 +19,7 @@ services:
     depends_on:
       - spire-server
     volumes:
-      - ./spire/agent:/etc/spire/agent
+      - ./docker-spire/agent:/etc/spire/agent
       - /var/run/docker.sock:/var/run/docker.sock
       - agent_data:/tmp/spire/agent/public
     command: [
@@ -34,7 +34,7 @@ services:
     depends_on:
       - spire-agent
     volumes:
-      - ./spire/server:/etc/spire/server
+      - ./docker-spire/server:/etc/spire/server
       - /var/run/docker.sock:/var/run/docker.sock
     command: [
       "docker", "exec", "spire-server",
@@ -42,7 +42,12 @@ services:
     ]
 
   server:
-    image: spiffe/aspnet-jwt-server$MODE:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: server
+      args:
+          SAMPLE_DIR: $SAMPLE_DIR
     container_name: server
     cgroup: host
     depends_on:
@@ -55,7 +60,12 @@ services:
       - "5000"
 
   client:
-    image: spiffe/aspnet-jwt-client$MODE:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: client
+      args:
+          SAMPLE_DIR: $SAMPLE_DIR
     container_name: client
     cgroup: host
     depends_on:

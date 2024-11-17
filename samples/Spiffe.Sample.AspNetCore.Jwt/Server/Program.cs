@@ -13,7 +13,6 @@ using Spiffe.WorkloadApi;
 using ILoggerFactory factory = LoggerFactory.Create(builder =>
     builder.AddSimpleConsole(options =>
     {
-        options.SingleLine = true;
         options.TimestampFormat = "HH:mm:ss ";
     })
     .SetMinimumLevel(LogLevel.Information));
@@ -22,13 +21,13 @@ ILogger logger = factory.CreateLogger<Program>();
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 using CancellationTokenSource close = new();
 
-logger.LogDebug("Connecting to agent grpc channel");
+logger.LogInformation("Connecting to agent grpc channel");
 using GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/spire/agent/public/api.sock");
 
-logger.LogDebug("Creating workloadapi client");
+logger.LogInformation("Creating workloadapi client");
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel, logger);
 
-logger.LogDebug("Creating jwt source");
+logger.LogInformation("Creating jwt source");
 using JwtSource jwtSource = await JwtSource.CreateAsync(workload,
                                                         timeoutMillis: 60_000,
                                                         cancellationToken: close.Token);
