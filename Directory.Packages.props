@@ -3,7 +3,7 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <SpiffeVersion>0.0.1-beta.11-dev</SpiffeVersion>
         <GoogleProtobufVersion>3.28.3</GoogleProtobufVersion>
-        <GrpcAspNetCoreVersion>2.60.0</GrpcAspNetCoreVersion>
+        <GrpcAspNetCoreVersion>2.66.0</GrpcAspNetCoreVersion>
         <GrpcCoreVersion>2.66.0</GrpcCoreVersion>
         <GrpcNetClientVersion>2.66.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.67.0</GrpcToolsVersion>
