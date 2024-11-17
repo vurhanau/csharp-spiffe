@@ -53,11 +53,6 @@ services:
       - agent_data:/tmp/spire/agent/public
     ports:
       - "5000"
-    environment:
-      - SPIRE_AGENT_ADDRESS=unix:///tmp/spire/agent/public/api.sock
-      - SERVER_URL=http://0.0.0.0:5000
-      - SERVER_AUDIENCE=spiffe://example.org/server
-      - LOG_LEVEL=Information
 
   client:
     image: spiffe/aspnet-jwt-client$MODE:latest
@@ -69,11 +64,6 @@ services:
       - org.example.workload=client
     volumes:
       - agent_data:/tmp/spire/agent/public
-    environment:
-      - SPIRE_AGENT_ADDRESS=unix:///tmp/spire/agent/public/api.sock
-      - SERVER_URL=http://server:5000
-      - SERVER_AUDIENCE=spiffe://example.org/server
-      - LOG_LEVEL=Information
 
 volumes:
   agent_data:

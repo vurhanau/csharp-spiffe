@@ -1,8 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using Spiffe.Svid.Jwt;
 using Spiffe.WorkloadApi;
 
-namespace Spiffe.AspNetCore.Server;
+namespace Spiffe.AspNetCore.Jwt;
 
 internal class JwtSvidTokenHandler : TokenHandler
 {

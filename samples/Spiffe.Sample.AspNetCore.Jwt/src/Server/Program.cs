@@ -1,21 +1,14 @@
+using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Spiffe.AspNetCore.Server;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Spiffe.AspNetCore.Jwt;
 using Spiffe.Grpc;
 using Spiffe.WorkloadApi;
-
-string serverUrl = Environment.GetEnvironmentVariable("SERVER_URL")
-                                        ?? throw new ArgumentException("SERVER_URL must be set", nameof(args));
-string serverAudience = Environment.GetEnvironmentVariable("SERVER_AUDIENCE")
-                                        ?? throw new ArgumentException("SERVER_AUDIENCE must be set", nameof(args));
-string agentAddress = Environment.GetEnvironmentVariable("SPIRE_AGENT_ADDRESS")
-                                        ?? throw new ArgumentException("SPIRE_AGENT_ADDRESS must be set", nameof(args));
-string log = Environment.GetEnvironmentVariable("LOG_LEVEL") ?? "Information";
-if (!Enum.TryParse(log, true, out LogLevel logLevel))
-{
-    logLevel = LogLevel.Information;
-}
 
 using ILoggerFactory factory = LoggerFactory.Create(builder =>
     builder.AddSimpleConsole(options =>
@@ -23,24 +16,14 @@ using ILoggerFactory factory = LoggerFactory.Create(builder =>
         options.SingleLine = true;
         options.TimestampFormat = "HH:mm:ss ";
     })
-    .SetMinimumLevel(logLevel));
+    .SetMinimumLevel(LogLevel.Information));
 ILogger logger = factory.CreateLogger<Program>();
-logger.LogInformation(@"
-    Configuration:
-        SERVER_URL={ServerUrl}
-        SPIRE_AGENT_ADDRESS={AgentAddress}
-        SERVER_AUDIENCE={ServerAudience}
-        LOG_LEVEL={LogLevel}",
-        serverUrl,
-        agentAddress,
-        serverAudience,
-        log);
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 using CancellationTokenSource close = new();
 
 logger.LogDebug("Connecting to agent grpc channel");
-using GrpcChannel channel = GrpcChannelFactory.CreateChannel(agentAddress);
+using GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/spire/agent/public/api.sock");
 
 logger.LogDebug("Creating workloadapi client");
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel, logger);
@@ -54,7 +37,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
 {
     o.TokenHandlers.Clear();
-    o.TokenHandlers.Add(new JwtSvidTokenHandler(jwtSource, serverAudience));
+    o.TokenHandlers.Add(new JwtSvidTokenHandler(jwtSource, "spiffe://example.org/server"));
 });
 
 WebApplication app = builder.Build();
@@ -70,4 +53,4 @@ app.MapGet("/", (ClaimsPrincipal principal) =>
     return $"Hello, {sub}";
 }).RequireAuthorization();
 
-await app.RunAsync(serverUrl);
+await app.RunAsync("http://0.0.0.0:5000");

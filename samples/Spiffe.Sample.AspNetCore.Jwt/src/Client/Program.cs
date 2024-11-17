@@ -1,21 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using Spiffe.Grpc;
 using Spiffe.Svid.Jwt;
 using Spiffe.WorkloadApi;
-
-string serverUrl = Environment.GetEnvironmentVariable("SERVER_URL")
-                                    ?? throw new ArgumentException("SERVER_URL must be set", nameof(args));
-string serverAudience = Environment.GetEnvironmentVariable("SERVER_AUDIENCE")
-                                    ?? throw new ArgumentException("SERVER_AUDIENCE must be set", nameof(args));
-string agentAddress = Environment.GetEnvironmentVariable("SPIRE_AGENT_ADDRESS")
-                                    ?? throw new ArgumentException("SPIRE_AGENT_ADDRESS must be set", nameof(args));
-string log = Environment.GetEnvironmentVariable("LOG_LEVEL") ?? "Information";
-if (!Enum.TryParse(log, true, out LogLevel logLevel))
-{
-    logLevel = LogLevel.Information;
-}
 
 using ILoggerFactory factory = LoggerFactory.Create(builder =>
     builder.AddSimpleConsole(options =>
@@ -23,21 +15,11 @@ using ILoggerFactory factory = LoggerFactory.Create(builder =>
         options.SingleLine = true;
         options.TimestampFormat = "HH:mm:ss ";
     })
-    .SetMinimumLevel(logLevel));
+    .SetMinimumLevel(LogLevel.Information));
 ILogger logger = factory.CreateLogger<Program>();
-logger.LogInformation(@"
-    Configuration:
-        SERVER_URL={ServerUrl}
-        SPIRE_AGENT_ADDRESS={AgentAddress}
-        SERVER_AUDIENCE={ServerAudience}
-        LOG_LEVEL={LogLevel}",
-        serverUrl,
-        agentAddress,
-        serverAudience,
-        log);
 
 logger.LogDebug("Connecting to agent grpc channel");
-GrpcChannel channel = GrpcChannelFactory.CreateChannel(agentAddress);
+GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/spire/agent/public/api.sock");
 
 logger.LogDebug("Creating workloadapi client");
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel, logger);
@@ -52,7 +34,7 @@ while (true)
     logger.LogDebug("Fetching jwt svid");
     List<JwtSvid> svids = [];
     svids = await jwtSource.FetchJwtSvidsAsync(new JwtSvidParams(
-        audience: serverAudience,
+        audience: "spiffe://example.org/server",
         extraAudiences: [],
         subject: null));
 
@@ -62,7 +44,7 @@ while (true)
     HttpResponseMessage resp = await http.SendAsync(new()
     {
         Method = HttpMethod.Get,
-        RequestUri = new Uri(serverUrl),
+        RequestUri = new Uri("http://server:5000"),
         Headers =
         {
             Authorization = new AuthenticationHeaderValue("Bearer", svid.Token),
