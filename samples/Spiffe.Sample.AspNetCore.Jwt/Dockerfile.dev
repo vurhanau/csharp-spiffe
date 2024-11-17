@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
+WORKDIR /sample
+
+COPY . ./
+RUN echo '<?xml version="1.0" encoding="utf-8"?>  \n\
+<configuration>  \n\
+  <packageSources>  \n\
+    <clear />  \n\
+    <add key="local" value="./nupkg" priority="1" />  \n\
+    <add key="nuget" value="https://www.nuget.org/api/v2/" priority="2" /> \n\
+  </packageSources> \n\
+</configuration>' > ./NuGet.config
+RUN dotnet restore
+RUN dotnet publish src/Server/Server.csproj -c Release -o server
+RUN dotnet publish src/Client/Client.csproj -c Release -o client
+
+# Build server image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS server
+WORKDIR /server
+COPY --from=build-env /sample/server .
+ENTRYPOINT ["dotnet", "Server.dll"]
+
+# Build client image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS client
+WORKDIR /client
+COPY --from=build-env /sample/client .
+ENTRYPOINT ["dotnet", "Client.dll"]

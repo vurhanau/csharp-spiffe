@@ -121,34 +121,6 @@ pkg-test: pkg ## Tests the nuget package
 		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
 		dotnet run
 
-############################################################################
-# End-to-end test
-############################################################################
-
-SPIRE_DIR := $(HOME)/Projects/spiffe/spire
-
-.PHONY: e2e-server
-e2e-server: ## Starts the Spire server located at $(SPIRE_DIR)
-	@cd $(SPIRE_DIR) && ./spire-server run -config conf/server/server.conf
-
-.PHONY: e2e-agent
-e2e-agent: ## Starts the Spire agent located at $(SPIRE_DIR)
-	cd $(SPIRE_DIR) && \
-	./spire-agent run \
-	-config conf/agent/agent.conf \
-	-joinToken $(shell cd $(SPIRE_DIR) && ./spire-server token generate -spiffeID spiffe://example.org/myagent | sed 's/Token: //') 
-
-.PHONY: e2e-policy
-e2e-policy: ## Creates a policy for the workload
-	@cd $(SPIRE_DIR) && ./spire-server entry create \
-		-parentID spiffe://example.org/myagent \
-		-spiffeID spiffe://example.org/myservice \
-		-selector unix:uid:$$(id -u)
-
-.PHONY: e2e-workload
-e2e-workload: ## Starts the sample watcher workload
-	@cd samples/Spiffe.Sample.Watcher && dotnet run
-
 
 ############################################################################
 # Toolchain and utilities

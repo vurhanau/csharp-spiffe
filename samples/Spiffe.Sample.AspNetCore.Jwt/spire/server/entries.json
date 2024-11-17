@@ -1,0 +1,20 @@
+{
+    "entries":[
+        {
+            "parent_id": "spiffe://example.org/spire/agent/cn/agent.example.com",
+            "spiffe_id": "spiffe://example.org/client",
+            "selectors": [{
+                "type": "docker",
+                "value": "label:org.example.workload:client"
+            }]
+        },
+        {
+            "parent_id": "spiffe://example.org/spire/agent/cn/agent.example.com",
+            "spiffe_id": "spiffe://example.org/server",
+            "selectors": [{
+                "type": "docker",
+                "value": "label:org.example.workload:server"
+            }]
+        }
+    ]
+}
