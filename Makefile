@@ -130,7 +130,3 @@ pkg-test: pkg ## Tests the nuget package
 toolchain: ## Installs the required tools
 	@dotnet tool install -g dependadotnet
 	@dotnet tool install -g dotnet-reportgenerator-globaltool
-
-.PHONY: dependabot
-dependabot:
-	@dependadotnet . > .github/dependabot.yml
