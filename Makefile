@@ -113,14 +113,6 @@ pack: ## Builds the nuget package and runs the sample to test the artifact
 push: ## Pushes the nuget package to the nuget.org
 	@dotnet nuget push nupkg/Spiffe.$(SPIFFE_VERSION).nupkg --api-key $(ENV_NUGET_API_KEY) --source https://api.nuget.org/v3/index.json
 
-.PHONY: pkg-test
-pkg-test: pkg ## Tests the nuget package
-	@unzip -l nupkg/Spiffe.$(SPIFFE_VERSION).nupkg
-	@cd samples/Spiffe.Sample.WatcherNuget && \
-		dotnet clean && \
-		dotnet restore -s ../../nupkg -s https://api.nuget.org/ && \
-		dotnet run
-
 
 ############################################################################
 # Toolchain and utilities
