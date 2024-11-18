@@ -12,35 +12,30 @@ using Spiffe.WorkloadApi;
 using ILoggerFactory factory = LoggerFactory.Create(builder =>
     builder.AddSimpleConsole(options =>
     {
-        options.SingleLine = true;
         options.TimestampFormat = "HH:mm:ss ";
     })
     .SetMinimumLevel(LogLevel.Information));
 ILogger logger = factory.CreateLogger<Program>();
 
-logger.LogDebug("Connecting to agent grpc channel");
+logger.LogInformation("Connecting to agent grpc channel");
 GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/spire/agent/public/api.sock");
 
-logger.LogDebug("Creating workloadapi client");
+logger.LogInformation("Creating workloadapi client");
 IWorkloadApiClient workload = WorkloadApiClient.Create(channel, logger);
 
-logger.LogDebug("Creating jwt source");
+logger.LogInformation("Creating jwt source");
 JwtSource jwtSource = await JwtSource.CreateAsync(workload, timeoutMillis: 60_000);
 
 using HttpClient http = new();
 
 while (true)
 {
-    logger.LogDebug("Fetching jwt svid");
-    List<JwtSvid> svids = [];
-    svids = await jwtSource.FetchJwtSvidsAsync(new JwtSvidParams(
-        audience: "spiffe://example.org/server",
-        extraAudiences: [],
-        subject: null));
+    List<JwtSvid> svids = await jwtSource.FetchJwtSvidsAsync(new JwtSvidParams(
+                                                                audience: "spiffe://example.org/server",
+                                                                extraAudiences: [],
+                                                                subject: null));
 
     JwtSvid svid = svids[0];
-    logger.LogDebug("Jwt svid: '{Svid}'", Spiffe.Util.Strings.ToString(svid));
-
     HttpResponseMessage resp = await http.SendAsync(new()
     {
         Method = HttpMethod.Get,

@@ -1,4 +1,7 @@
-﻿using Grpc.Net.Client;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
+using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
 using Spiffe.Bundle.X509;
 using Spiffe.Grpc;
 using Spiffe.Sample.Grpc.Tls;
@@ -6,19 +9,19 @@ using Spiffe.Ssl;
 using Spiffe.WorkloadApi;
 using static Spiffe.Sample.Grpc.Tls.Greeter;
 
-string clientUrl = "http://localhost:5000";
-string serverUrl = "https://localhost:5001";
-string spiffeAddress = "unix:///tmp/spire-agent/public/api.sock";
+using ILoggerFactory factory = LoggerFactory.Create(builder =>
+    builder.AddSimpleConsole(options =>
+    {
+        options.TimestampFormat = "HH:mm:ss ";
+    })
+    .SetMinimumLevel(LogLevel.Information));
+ILogger logger = factory.CreateLogger<Program>();
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+GrpcChannel workloadChannel = GrpcChannelFactory.CreateChannel("unix:///tmp/spire/agent/public/api.sock");
+IWorkloadApiClient workload = WorkloadApiClient.Create(workloadChannel, logger);
+IX509BundleSource x509Source = await BundleSource.CreateAsync(workload, timeoutMillis: 60000);
 
-// Configure Spiffe client
-using CancellationTokenSource close = new();
-GrpcChannel workloadChannel = GrpcChannelFactory.CreateChannel(spiffeAddress);
-IWorkloadApiClient workload = WorkloadApiClient.Create(workloadChannel);
-IX509BundleSource x509Source = await BundleSource.CreateAsync(workload);
-
-using GrpcChannel channel = GrpcChannel.ForAddress(serverUrl, new GrpcChannelOptions()
+using GrpcChannel channel = GrpcChannel.ForAddress("https://server:5000", new GrpcChannelOptions()
 {
     HttpHandler = new SocketsHttpHandler()
     {
@@ -28,14 +31,9 @@ using GrpcChannel channel = GrpcChannel.ForAddress(serverUrl, new GrpcChannelOpt
 });
 
 GreeterClient client = new(channel);
-
-WebApplication app = builder.Build();
-app.Lifetime.ApplicationStopped.Register(close.Cancel);
-
-app.MapGet("/", async () =>
+while (true)
 {
-    HelloReply reply = await client.SayHelloAsync(new HelloRequest { Name = "TlsGreeterClient" });
-    return reply.Message;
-});
-
-await app.RunAsync(clientUrl);
+    HelloReply reply = await client.SayHelloAsync(new HelloRequest());
+    logger.LogInformation("Response: {Message}", reply.Message);
+    await Task.Delay(5000);
+}

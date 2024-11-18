@@ -1,34 +1,38 @@
+using System.Net.Http;
+using System.Threading.Tasks;
 using Grpc.Net.Client;
-using Spiffe.Bundle.X509;
+using Microsoft.Extensions.Logging;
 using Spiffe.Grpc;
 using Spiffe.Ssl;
 using Spiffe.WorkloadApi;
 
-string clientUrl = "http://localhost:5000";
-string serverUrl = "https://localhost:5001";
-string spiffeAddress = "unix:///tmp/spire-agent/public/api.sock";
+using ILoggerFactory factory = LoggerFactory.Create(builder =>
+    builder.AddSimpleConsole(options =>
+    {
+        options.TimestampFormat = "HH:mm:ss ";
+    })
+    .SetMinimumLevel(LogLevel.Information));
+ILogger logger = factory.CreateLogger<Program>();
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+logger.LogInformation("Connecting to agent grpc channel");
+GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/spire/agent/public/api.sock");
 
-// Configure Spiffe client
-using CancellationTokenSource close = new();
-GrpcChannel channel = GrpcChannelFactory.CreateChannel(spiffeAddress);
-IWorkloadApiClient workload = WorkloadApiClient.Create(channel);
-IX509BundleSource x509BundleSource = await BundleSource.CreateAsync(workload);
+logger.LogInformation("Creating workloadapi client");
+IWorkloadApiClient workload = WorkloadApiClient.Create(channel, logger);
+
+logger.LogInformation("Creating x509 source");
+X509Source x509Source = await X509Source.CreateAsync(workload, timeoutMillis: 60_000);
 
 using HttpClient http = new(new SocketsHttpHandler()
 {
-    SslOptions = SpiffeSslConfig.GetTlsClientOptions(x509BundleSource),
+    SslOptions = SpiffeSslConfig.GetTlsClientOptions(x509Source),
 });
 
-WebApplication app = builder.Build();
-app.Lifetime.ApplicationStopped.Register(close.Cancel);
-
-app.MapGet("/", async () =>
+while (true)
 {
-    HttpResponseMessage r = await http.GetAsync(serverUrl);
-    string str = await r.Content.ReadAsStringAsync();
-    return str;
-});
+    HttpResponseMessage resp = await http.GetAsync("https://server:5000");
+    string str = await resp.Content.ReadAsStringAsync();
+    logger.LogInformation("Response: {StatusCode} - {Content}", (int)resp.StatusCode, str);
 
-await app.RunAsync(clientUrl);
+    await Task.Delay(5000);
+}

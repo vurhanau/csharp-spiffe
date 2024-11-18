@@ -1,23 +1,31 @@
-﻿using Grpc.Net.Client;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
+using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
 using Spiffe.Grpc;
 using Spiffe.Sample.Grpc.Mtls;
 using Spiffe.Ssl;
 using Spiffe.WorkloadApi;
 using static Spiffe.Sample.Grpc.Mtls.Greeter;
 
-string clientUrl = "http://localhost:5000";
-string serverUrl = "https://localhost:5001";
-string spiffeAddress = "unix:///tmp/spire-agent/public/api.sock";
+using ILoggerFactory factory = LoggerFactory.Create(builder =>
+    builder.AddSimpleConsole(options =>
+    {
+        options.TimestampFormat = "HH:mm:ss ";
+    })
+    .SetMinimumLevel(LogLevel.Information));
+ILogger logger = factory.CreateLogger<Program>();
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+logger.LogInformation("Connecting to agent grpc channel");
+GrpcChannel workloadChannel = GrpcChannelFactory.CreateChannel("unix:///tmp/spire/agent/public/api.sock");
 
-// Configure Spiffe client
-using CancellationTokenSource close = new();
-GrpcChannel workloadChannel = GrpcChannelFactory.CreateChannel(spiffeAddress);
-IWorkloadApiClient workload = WorkloadApiClient.Create(workloadChannel);
-X509Source x509Source = await X509Source.CreateAsync(workload);
+logger.LogInformation("Creating workloadapi client");
+IWorkloadApiClient workload = WorkloadApiClient.Create(workloadChannel, logger);
 
-using GrpcChannel channel = GrpcChannel.ForAddress(serverUrl, new GrpcChannelOptions()
+logger.LogDebug("Creating x509 source");
+X509Source x509Source = await X509Source.CreateAsync(workload, timeoutMillis: 60000);
+
+using GrpcChannel channel = GrpcChannel.ForAddress("https://server:5000", new GrpcChannelOptions()
 {
     HttpHandler = new SocketsHttpHandler()
     {
@@ -27,17 +35,9 @@ using GrpcChannel channel = GrpcChannel.ForAddress(serverUrl, new GrpcChannelOpt
 });
 
 GreeterClient client = new(channel);
-
-WebApplication app = builder.Build();
-app.Lifetime.ApplicationStopped.Register(close.Cancel);
-
-string clientCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
-app.Logger.LogInformation("Client certificate:\n {Cert}", clientCertificate);
-
-app.MapGet("/", async () =>
+while (true)
 {
-    HelloReply reply = await client.SayHelloAsync(new HelloRequest { Name = "MtlsGreeterClient" });
-    return reply.Message;
-});
-
-await app.RunAsync(clientUrl);
+    HelloReply reply = await client.SayHelloAsync(new HelloRequest());
+    logger.LogInformation("Response: {Message}", reply.Message);
+    await Task.Delay(5000);
+}

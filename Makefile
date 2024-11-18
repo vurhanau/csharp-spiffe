@@ -61,7 +61,7 @@ clean: ## Cleans the project
 .PHONY: build-samples
 build-samples: samples/*  ## Builds the samples
 	@for file in $^ ; do \
-		! [[ "$${file}" =~ "WatcherNuget" ]] && dotnet build "$${file}" || true; \
+		[[ "$${file}" =~ "Spiffe.Sample." ]] && dotnet restore "$${file}" && dotnet build "$${file}" --no-restore || true; \
 	done
 
 ############################################################################
