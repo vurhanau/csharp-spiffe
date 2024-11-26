@@ -33,7 +33,8 @@ public sealed class JwtSource : IJwtSource
     /// <inheritdoc/>
     public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
     {
-        return await _client.FetchJwtSvidsAsync(jwtParams, cancellationToken);
+        return await _client.FetchJwtSvidsAsync(jwtParams, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -83,7 +84,8 @@ public sealed class JwtSource : IJwtSource
             () => client.WatchJwtBundlesAsync(watcher, cancellationToken),
             cancellationToken);
 
-        await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
+        await source.WaitUntilUpdated(timeoutMillis, cancellationToken)
+            .ConfigureAwait(false);
 
         return source;
     }
@@ -120,7 +122,8 @@ public sealed class JwtSource : IJwtSource
                !timeout.IsCancellationRequested &&
                !cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(50, CancellationToken.None);
+            await Task.Delay(50, CancellationToken.None)
+                .ConfigureAwait(false);
         }
 
         if (!IsInitialized)

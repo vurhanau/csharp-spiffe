@@ -95,7 +95,8 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
             () => client.WatchJwtBundlesAsync(jwtWatcher, cancellationToken),
             cancellationToken);
 
-        await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
+        await source.WaitUntilUpdated(timeoutMillis, cancellationToken)
+            .ConfigureAwait(false);
 
         return source;
     }
@@ -162,7 +163,8 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
                !timeout.IsCancellationRequested &&
                !cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(50, CancellationToken.None);
+            await Task.Delay(50, CancellationToken.None)
+                .ConfigureAwait(false);
         }
 
         if (!IsInitialized)

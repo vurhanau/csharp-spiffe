@@ -22,7 +22,8 @@ public static class JwtSvidParser
     public static async Task<JwtSvid> ParseAsync(string token, IJwtBundleSource bundleSource, IEnumerable<string> audience)
     {
         (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, audience);
-        TokenValidationResult result = await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, audience);
+        TokenValidationResult result = await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, audience)
+            .ConfigureAwait(false);
         if (!result.IsValid)
         {
             throw new JwtSvidException("JWT token validation failed", result.Exception);
@@ -49,7 +50,8 @@ public static class JwtSvidParser
                                                                   IEnumerable<string> validAudience)
     {
         (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, validAudience);
-        return await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, validAudience);
+        return await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, validAudience)
+            .ConfigureAwait(false);
     }
 
     private static (SpiffeId Id, JsonWebToken Jwt) ParseValidate(string token, IEnumerable<string> validAudience)
@@ -111,7 +113,7 @@ public static class JwtSvidParser
             ValidateLifetime = true,
             IssuerSigningKey = key,
             ValidAudiences = validAudiences,
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <summary>

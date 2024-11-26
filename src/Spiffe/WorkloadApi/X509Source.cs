@@ -63,7 +63,8 @@ public sealed class X509Source : IX509Source
             () => client.WatchX509ContextAsync(watcher, cancellationToken),
             cancellationToken);
 
-        await source.WaitUntilUpdated(timeoutMillis, cancellationToken);
+        await source.WaitUntilUpdated(timeoutMillis, cancellationToken)
+            .ConfigureAwait(false);
 
         return source;
     }
@@ -163,7 +164,8 @@ public sealed class X509Source : IX509Source
                !timeout.IsCancellationRequested &&
                !cancellationToken.IsCancellationRequested)
         {
-            await Task.Delay(50, CancellationToken.None);
+            await Task.Delay(50, CancellationToken.None)
+                .ConfigureAwait(false);
         }
 
         if (!IsInitialized)
