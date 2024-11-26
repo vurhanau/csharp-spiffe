@@ -60,13 +60,14 @@ public class WorkloadApiClient : IWorkloadApiClient
         return await Fetch(
             opts => _client.FetchX509SVID(s_x509SvidRequest, opts),
             Convertor.ParseX509Context,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
     public async Task WatchX509ContextAsync(IWatcher<X509Context> watcher, CancellationToken cancellationToken = default)
     {
-        await Watch(watcher, WatchX509ContextInternal, cancellationToken);
+        await Watch(watcher, WatchX509ContextInternal, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -75,19 +76,21 @@ public class WorkloadApiClient : IWorkloadApiClient
         return await Fetch(
             opts => _client.FetchX509Bundles(s_x509BundlesRequest, opts),
             Convertor.ParseX509BundleSet,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
     public async Task WatchX509BundlesAsync(IWatcher<X509BundleSet> watcher, CancellationToken cancellationToken = default)
     {
-        await Watch(watcher, WatchX509BundlesInternal, cancellationToken);
+        await Watch(watcher, WatchX509BundlesInternal, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
     public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
     {
-        return await FetchJwtSvidsInternal(jwtParams, cancellationToken);
+        return await FetchJwtSvidsInternal(jwtParams, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -96,13 +99,14 @@ public class WorkloadApiClient : IWorkloadApiClient
         return await Fetch(
             opts => _client.FetchJWTBundles(s_jwtBundlesRequest, opts),
             Convertor.ParseJwtBundleSet,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
     public async Task WatchJwtBundlesAsync(IWatcher<JwtBundleSet> watcher, CancellationToken cancellationToken = default)
     {
-        await Watch(watcher, WatchJwtBundlesInternal, cancellationToken);
+        await Watch(watcher, WatchJwtBundlesInternal, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -114,7 +118,8 @@ public class WorkloadApiClient : IWorkloadApiClient
             Audience = audience,
         };
         CallOptions opts = GetCallOptions(cancellationToken);
-        _ = await _client.ValidateJWTSVIDAsync(req, opts);
+        _ = await _client.ValidateJWTSVIDAsync(req, opts)
+            .ConfigureAwait(false);
 
         return JwtSvidParser.ParseInsecure(token, [audience]);
     }
@@ -135,7 +140,8 @@ public class WorkloadApiClient : IWorkloadApiClient
         {
             try
             {
-                await watchInternalFunc(watcher, backoff, cancellationToken);
+                await watchInternalFunc(watcher, backoff, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -143,7 +149,8 @@ public class WorkloadApiClient : IWorkloadApiClient
 
                 watcher.OnError(e);
 
-                bool rethrow = await HandleWatchError(e, backoff, cancellationToken);
+                bool rethrow = await HandleWatchError(e, backoff, cancellationToken)
+                    .ConfigureAwait(false);
                 if (rethrow)
                 {
                     throw;
@@ -183,7 +190,8 @@ public class WorkloadApiClient : IWorkloadApiClient
 
         try
         {
-            await Task.Delay(retryAfter, cancellationToken);
+            await Task.Delay(retryAfter, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (OperationCanceledException oce)
         {
@@ -206,7 +214,8 @@ public class WorkloadApiClient : IWorkloadApiClient
         }
 
         CallOptions opts = GetCallOptions(cancellationToken);
-        JWTSVIDResponse response = await _client.FetchJWTSVIDAsync(request, opts);
+        JWTSVIDResponse response = await _client.FetchJWTSVIDAsync(request, opts)
+            .ConfigureAwait(false);
         List<JwtSvid> svids = Convertor.ParseJwtSvids(response, aud);
 
         return svids;
@@ -222,7 +231,8 @@ public class WorkloadApiClient : IWorkloadApiClient
         IAsyncEnumerator<TFrom> enumerator = stream.GetAsyncEnumerator(cancellationToken);
         try
         {
-            bool hasItem = await enumerator.MoveNextAsync();
+            bool hasItem = await enumerator.MoveNextAsync()
+                .ConfigureAwait(false);
             if (!hasItem)
             {
                 throw new InvalidOperationException("Failed to fetch item: enumerator is empty");
@@ -232,7 +242,8 @@ public class WorkloadApiClient : IWorkloadApiClient
         }
         finally
         {
-            await enumerator.DisposeAsync();
+            await enumerator.DisposeAsync()
+                .ConfigureAwait(false);
         }
     }
 
@@ -246,7 +257,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             Convertor.ParseX509Context,
             Strings.ToString,
             backoff,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     private async Task WatchX509BundlesInternal(IWatcher<X509BundleSet> watcher,
@@ -259,7 +270,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             Convertor.ParseX509BundleSet,
             Strings.ToString,
             backoff,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     private async Task WatchJwtBundlesInternal(IWatcher<JwtBundleSet> watcher,
@@ -272,7 +283,7 @@ public class WorkloadApiClient : IWorkloadApiClient
             Convertor.ParseJwtBundleSet,
             Strings.ToString,
             backoff,
-            cancellationToken);
+            cancellationToken).ConfigureAwait(false);
     }
 
     private async Task WatchInternal<TFrom, TResult>(IWatcher<TResult> watcher,
@@ -291,7 +302,7 @@ public class WorkloadApiClient : IWorkloadApiClient
         CallOptions callOptions = GetCallOptions(cancellationToken);
         using AsyncServerStreamingCall<TFrom> call = callFunc(callOptions);
         IAsyncEnumerable<TFrom> stream = call.ResponseStream.ReadAllAsync(cancellationToken);
-        await foreach (TFrom response in stream)
+        await foreach (TFrom response in stream.WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             backoff.Reset();
             _logger.LogDebug("Backoff reset");

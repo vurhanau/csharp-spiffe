@@ -32,7 +32,8 @@ public static partial class GrpcChannelFactory
 
                 try
                 {
-                    await clientStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                    await clientStream.ConnectAsync(cancellationToken)
+                        .ConfigureAwait(false);
                     return clientStream;
                 }
                 catch

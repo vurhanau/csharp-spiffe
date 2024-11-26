@@ -26,7 +26,8 @@ public static partial class GrpcChannelFactory
                 Socket socket = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
                 try
                 {
-                    await socket.ConnectAsync(udsEndPoint, cancellationToken).ConfigureAwait(false);
+                    await socket.ConnectAsync(udsEndPoint, cancellationToken)
+                        .ConfigureAwait(false);
                     return new NetworkStream(socket, true);
                 }
                 catch
