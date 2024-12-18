@@ -18,7 +18,7 @@
         <CoverletVersion>6.0.2</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>10.3.0.106239</SonarVersion>
+        <SonarVersion>10.4.0.108396</SonarVersion>
         <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
         <AspNetCoreTestHostVersion>8.0.3</AspNetCoreTestHostVersion>
     </PropertyGroup>
