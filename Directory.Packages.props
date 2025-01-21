@@ -6,7 +6,7 @@
         <GrpcAspNetCoreVersion>2.67.0</GrpcAspNetCoreVersion>
         <GrpcCoreVersion>2.67.0</GrpcCoreVersion>
         <GrpcNetClientVersion>2.67.0</GrpcNetClientVersion>
-        <GrpcToolsVersion>2.68.1</GrpcToolsVersion>
+        <GrpcToolsVersion>2.69.0</GrpcToolsVersion>
         <IdentityModelVersion>8.3.0</IdentityModelVersion>
         <LoggingVersion>8.0.0</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
