@@ -27,18 +27,18 @@ public class TestX509Source
         byte[] svidKey = svidCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         string hint = "internal";
         X509SVIDResponse resp = new();
-        resp.Svids.Add(new X509SVID()
+        resp.Svids.Add(new X509SVID
         {
             SpiffeId = spiffeId.Id,
             Bundle = ByteString.CopyFrom(bundleCert.RawData),
             X509Svid = ByteString.CopyFrom(svidCert.RawData),
             X509SvidKey = ByteString.CopyFrom(svidKey),
-            Hint = hint,
+            Hint = hint
         });
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(resp));
+            .Returns(CallHelpers.Stream(resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         using X509Source s = await X509Source.CreateAsync(c);
 
@@ -67,19 +67,15 @@ public class TestX509Source
             Bundle = ByteString.CopyFrom(bundleCert.RawData),
             X509Svid = ByteString.CopyFrom(svidCert.RawData),
             X509SvidKey = ByteString.CopyFrom(svidKey),
-            Hint = "internal1",
+            Hint = "internal1"
         };
-        X509SVID s2 = new(s1)
-        {
-            SpiffeId = "spiffe://example.org/workload2",
-            Hint = "internal2",
-        };
+        X509SVID s2 = new(s1) { SpiffeId = "spiffe://example.org/workload2", Hint = "internal2" };
         resp.Svids.Add(s1);
         resp.Svids.Add(s2);
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(resp));
+            .Returns(CallHelpers.Stream(resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         using X509Source s = await X509Source.CreateAsync(c, svids => svids[1]);
 
@@ -94,13 +90,14 @@ public class TestX509Source
         X509SVIDResponse resp = new();
         TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, resp));
+            .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
 
-        using X509Source s = await X509Source.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
+        using X509Source s =
+            await X509Source.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
 
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
         s.IsInitialized.Should().BeFalse();
@@ -113,7 +110,7 @@ public class TestX509Source
         X509SVIDResponse resp = new();
         TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, resp));
+            .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         await Assert.ThrowsAsync<OperationCanceledException>(() => X509Source.CreateAsync(c, timeoutMillis: 500));
@@ -129,7 +126,7 @@ public class TestX509Source
         f1.Should().Throw<InvalidOperationException>();
         f2.Should().Throw<InvalidOperationException>();
 
-        s.SetX509Context(new([], new([])));
+        s.SetX509Context(new X509Context([], new X509BundleSet([])));
         s.Dispose();
 
         f1.Should().Throw<ObjectDisposedException>();
@@ -137,10 +134,8 @@ public class TestX509Source
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
-    public async Task TestCreateWithNullClient()
-    {
+    public async Task TestCreateWithNullClient() =>
         await Assert.ThrowsAsync<ArgumentNullException>(() => X509Source.CreateAsync(null));
-    }
 
     [Fact]
     public void TestGetDefaultSvidFromInvalidSvids()
@@ -150,9 +145,9 @@ public class TestX509Source
     }
 
     private static void VerifyX509SvidRsa(X509Svid svid,
-                                          SpiffeId expectedSpiffeId,
-                                          X509Certificate2 expectedCert,
-                                          string expectedHint)
+        SpiffeId expectedSpiffeId,
+        X509Certificate2 expectedCert,
+        string expectedHint)
     {
         svid.Id.Should().Be(expectedSpiffeId);
         svid.Hint.Should().Be(expectedHint);

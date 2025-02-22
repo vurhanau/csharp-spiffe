@@ -50,14 +50,8 @@ public class TestBackoff
         IterateUntilMax(backoff);
     }
 
-    private static Backoff GetBackoff()
-    {
-        return new()
-        {
-            InitialDelay = TimeSpan.FromSeconds(MinBackoff),
-            MaxDelay = TimeSpan.FromSeconds(MaxBackoff),
-        };
-    }
+    private static Backoff GetBackoff() =>
+        new() { InitialDelay = TimeSpan.FromSeconds(MinBackoff), MaxDelay = TimeSpan.FromSeconds(MaxBackoff) };
 
     private static void IterateUntilMax(Backoff backoff)
     {

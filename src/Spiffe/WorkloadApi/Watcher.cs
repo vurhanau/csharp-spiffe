@@ -1,14 +1,13 @@
 ﻿namespace Spiffe.WorkloadApi;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public class Watcher<T> : IWatcher<T>
 {
+    private readonly Action<Exception> _onError;
     private readonly Action<T> _onUpdate;
 
-    private readonly Action<Exception> _onError;
-
     /// <summary>
-    /// Constructor
+    ///     Constructor
     /// </summary>
     public Watcher(Action<T> onUpdate, Action<Exception> onError)
     {
@@ -17,16 +16,16 @@ public class Watcher<T> : IWatcher<T>
     }
 
     /// <summary>
-    /// Constructor
+    ///     Constructor
     /// </summary>
     public Watcher(Action<T> onUpdate)
-    : this(onUpdate, _ => { })
+        : this(onUpdate, _ => { })
     {
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public void OnUpdate(T update) => _onUpdate(update);
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public void OnError(Exception e) => _onError(e);
 }

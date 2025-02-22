@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
@@ -44,27 +43,19 @@ internal sealed class CA : IDisposable
         JwtKey?.Dispose();
     }
 
-    internal static CA Create(TrustDomain trustDomain)
-    {
-        return new CA
+    internal static CA Create(TrustDomain trustDomain) =>
+        new()
         {
             TrustDomain = trustDomain,
             Cert = CreateCACertificate(),
             JwtKey = Keys.CreateEC256Key(),
-            JwtKid = Keys.GenerateKeyId(),
+            JwtKid = Keys.GenerateKeyId()
         };
-    }
 
     internal CA ChildCA()
     {
         X509Certificate2 cert = CreateCACertificate(Cert);
-        return new CA
-        {
-            Parent = this,
-            Cert = cert,
-            JwtKey = Keys.CreateEC256Key(),
-            JwtKid = Keys.GenerateKeyId(),
-        };
+        return new CA { Parent = this, Cert = cert, JwtKey = Keys.CreateEC256Key(), JwtKid = Keys.GenerateKeyId() };
     }
 
     internal X509Svid CreateX509Svid(SpiffeId id)
@@ -72,7 +63,7 @@ internal sealed class CA : IDisposable
         X509Certificate2 cert = CreateX509Svid(Cert!, id);
         X509Certificate2Collection chain = [cert];
         chain.AddRange(Chain(false));
-        return new(id, chain, string.Empty);
+        return new X509Svid(id, chain, string.Empty);
     }
 
     internal JwtSvid CreateJwtSvid(SpiffeId spiffeId, IEnumerable<string> audience, string hint = "")
@@ -82,12 +73,12 @@ internal sealed class CA : IDisposable
         string token = Jwt.Generate(claims, JwtKey, JwtKid);
         JwtSvid svid = JwtSvidParser.ParseInsecure(token, audience);
         return new JwtSvid(
-            token: svid.Token,
-            id: svid.Id,
-            audience: audience,
-            expiry: expiry,
-            claims: claims.ToDictionary(c => c.Type, c => c.Value),
-            hint: hint);
+            svid.Token,
+            svid.Id,
+            audience,
+            expiry,
+            claims.ToDictionary(c => c.Type, c => c.Value),
+            hint);
     }
 
     internal Dictionary<string, JsonWebKey> JwtAuthorities()
@@ -95,7 +86,7 @@ internal sealed class CA : IDisposable
         ECDsaSecurityKey ecdsa = new(JwtKey);
         JsonWebKey jwtKey = JsonWebKeyConverter.ConvertFromECDsaSecurityKey(ecdsa);
         jwtKey.KeyId = JwtKid!;
-        return new() { { JwtKid!,  jwtKey } };
+        return new Dictionary<string, JsonWebKey> { { JwtKid!, jwtKey } };
     }
 
     internal X509Certificate2Collection X509Authorities()
@@ -110,15 +101,9 @@ internal sealed class CA : IDisposable
         return result;
     }
 
-    internal X509Bundle X509Bundle()
-    {
-        return new X509Bundle(TrustDomain!, X509Authorities());
-    }
+    internal X509Bundle X509Bundle() => new(TrustDomain!, X509Authorities());
 
-    internal JwtBundle JwtBundle()
-    {
-        return new JwtBundle(TrustDomain!, JwtAuthorities());
-    }
+    internal JwtBundle JwtBundle() => new(TrustDomain!, JwtAuthorities());
 
     internal X509Certificate2Collection Chain(bool includeRoot)
     {
@@ -138,7 +123,7 @@ internal sealed class CA : IDisposable
     }
 
     internal static X509Certificate2 CreateCACertificate(X509Certificate2 parent = null,
-                                                         Action<CertificateRequest> csrConfigure = null)
+        Action<CertificateRequest> csrConfigure = null)
     {
         using ECDsa key = Keys.CreateEC256Key();
         byte[] serial = CreateSerial();
@@ -149,10 +134,10 @@ internal sealed class CA : IDisposable
         // set basic certificate contraints
         csr.CertificateExtensions.Add(
             new X509BasicConstraintsExtension(
-                certificateAuthority: true,
-                hasPathLengthConstraint: false,
-                pathLengthConstraint: -1,
-                critical: true));
+                true,
+                false,
+                -1,
+                true));
 
         // key usage
         csr.CertificateExtensions.Add(
@@ -170,8 +155,8 @@ internal sealed class CA : IDisposable
 
         DateTimeOffset notBefore = DateTimeOffset.UtcNow;
         DateTimeOffset notAfter = parent != null // Handles the case when cert.notAfter < issuer.notAfter
-                                    ? parent.NotAfter.AddMinutes(-1)
-                                    : notBefore.AddHours(1);
+            ? parent.NotAfter.AddMinutes(-1)
+            : notBefore.AddHours(1);
         if (parent == null)
         {
             return csr.CreateSelfSigned(notBefore, notAfter);
@@ -184,26 +169,24 @@ internal sealed class CA : IDisposable
     }
 
     internal static X509Certificate2 CreateX509Svid(X509Certificate2 parent,
-                                                    SpiffeId id,
-                                                    Action<CertificateCreationOptions> configure = null,
-                                                    Action<CertificateRequest> configureCsr = null)
-    {
-        return CreateX509Certificate(parent,
-                                     opts =>
-                                     {
-                                         byte[] serial = CreateSerial();
-                                         opts.SerialNumber = serial;
-                                         opts.SubjectName = $"CN=X509-SVID {Convert.ToHexString(serial)}";
-                                         opts.KeyUsage = X509KeyUsageFlags.DigitalSignature;
-                                         opts.SubjectAlternateName = id.ToUri();
-                                         configure?.Invoke(opts);
-                                     },
-                                     configureCsr);
-    }
+        SpiffeId id,
+        Action<CertificateCreationOptions> configure = null,
+        Action<CertificateRequest> configureCsr = null) =>
+        CreateX509Certificate(parent,
+            opts =>
+            {
+                byte[] serial = CreateSerial();
+                opts.SerialNumber = serial;
+                opts.SubjectName = $"CN=X509-SVID {Convert.ToHexString(serial)}";
+                opts.KeyUsage = X509KeyUsageFlags.DigitalSignature;
+                opts.SubjectAlternateName = id.ToUri();
+                configure?.Invoke(opts);
+            },
+            configureCsr);
 
     private static X509Certificate2 CreateX509Certificate(X509Certificate2 parent,
-                                                          Action<CertificateCreationOptions> configureOptions = null,
-                                                          Action<CertificateRequest> configureCsr = null)
+        Action<CertificateCreationOptions> configureOptions = null,
+        Action<CertificateRequest> configureCsr = null)
     {
         _ = parent ?? throw new ArgumentNullException(nameof(parent));
         if (!parent.HasPrivateKey)
@@ -218,7 +201,7 @@ internal sealed class CA : IDisposable
             SubjectName = $"CN=X509-Certificate {Convert.ToHexString(serial)}",
             KeyUsage = X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
             NotBefore = DateTimeOffset.UtcNow,
-            NotAfter = parent.NotAfter.AddMinutes(-1),
+            NotAfter = parent.NotAfter.AddMinutes(-1)
         };
         configureOptions?.Invoke(opts);
 
@@ -228,16 +211,16 @@ internal sealed class CA : IDisposable
         // set basic certificate contraints
         csr.CertificateExtensions.Add(
             new X509BasicConstraintsExtension(
-                certificateAuthority: false,
-                hasPathLengthConstraint: false,
-                pathLengthConstraint: 0,
-                critical: true));
+                false,
+                false,
+                0,
+                true));
 
         // key usage: Digital Signature and Key Encipherment
         csr.CertificateExtensions.Add(
             new X509KeyUsageExtension(
-                keyUsages: opts.KeyUsage,
-                critical: true));
+                opts.KeyUsage,
+                true));
 
         X509Extension authorityKeyIdentifier = GetAuthorityKeyIdentifier(parent);
         csr.CertificateExtensions.Add(authorityKeyIdentifier);
@@ -256,7 +239,7 @@ internal sealed class CA : IDisposable
             new X509EnhancedKeyUsageExtension(
                 [
                     new Oid("1.3.6.1.5.5.7.3.2"), // TLS Client auth
-                    new Oid("1.3.6.1.5.5.7.3.1"), // TLS Server auth
+                    new Oid("1.3.6.1.5.5.7.3.1") // TLS Server auth
                 ],
                 false));
 
@@ -271,17 +254,15 @@ internal sealed class CA : IDisposable
         return cert.CopyWithPrivateKey(key);
     }
 
-    private static byte[] CreateSerial()
-    {
-        return BitConverter.GetBytes(Random.Shared.NextInt64());
-    }
+    private static byte[] CreateSerial() => BitConverter.GetBytes(Random.Shared.NextInt64());
 
     private static X509Extension GetAuthorityKeyIdentifier(X509Certificate2 cert)
     {
         // There is no built-in support, so it needs to be copied from the
         // Subject Key Identifier of the signing certificate.
         // AuthorityKeyIdentifier is "KeyID=<subject key identifier>"
-        byte[] issuerSubjectKey = cert.Extensions.First(f => f.Oid?.Value == "2.5.29.14").RawData; // X509v3 Subject Key Identifier
+        byte[] issuerSubjectKey =
+            cert.Extensions.First(f => f.Oid?.Value == "2.5.29.14").RawData; // X509v3 Subject Key Identifier
         ArraySegment<byte> segment = new(issuerSubjectKey, 2, issuerSubjectKey.Length - 2);
         byte[] authorityKeyIdentifer = new byte[segment.Count + 4];
 
@@ -292,8 +273,8 @@ internal sealed class CA : IDisposable
         authorityKeyIdentifer[3] = 0x14;
         segment.CopyTo(authorityKeyIdentifer, 4);
         return new X509Extension(
-            oid: "2.5.29.35",
-            rawData: authorityKeyIdentifer,
-            critical: false);
+            "2.5.29.35",
+            authorityKeyIdentifer,
+            false);
     }
 }

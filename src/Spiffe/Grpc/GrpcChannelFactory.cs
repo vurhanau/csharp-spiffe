@@ -4,21 +4,27 @@ using Spiffe.WorkloadApi;
 namespace Spiffe.Grpc;
 
 /// <summary>
-/// Constructs GRPC channels.
+///     Constructs GRPC channels.
 /// </summary>
 public static partial class GrpcChannelFactory
 {
     /// <summary>
-    /// Creates GRPC channel.
+    ///     Creates GRPC channel.
     /// </summary>
     /// <param name="address">
-    /// GRPC target address.
-    /// <br/>
-    /// <list type="bullet">
-    /// <item><description>HTTP/HTTPS (example: <a href="https://1.2.3.4:5"/>)</description></item>
-    /// <item><description>Unix domain socket (example: unix:///tmp/agent.sock)</description></item>
-    /// <item><description>Named pipe (example: npipe:agent)</description></item>
-    /// </list>
+    ///     GRPC target address.
+    ///     <br />
+    ///     <list type="bullet">
+    ///         <item>
+    ///             <description>HTTP/HTTPS (example: <a href="https://1.2.3.4:5" />)</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>Unix domain socket (example: unix:///tmp/agent.sock)</description>
+    ///         </item>
+    ///         <item>
+    ///             <description>Named pipe (example: npipe:agent)</description>
+    ///         </item>
+    ///     </list>
     /// </param>
     /// <param name="configureOptions">GRPC channel options configurer</param>
     public static GrpcChannel CreateChannel(string address, Action<GrpcChannelOptions>? configureOptions = null)
@@ -36,7 +42,7 @@ public static partial class GrpcChannelFactory
     }
 
     /// <summary>
-    /// Creates a platform specific socket handler.
+    ///     Creates a platform specific socket handler.
     /// </summary>
     private static partial SocketsHttpHandler CreateNativeSocketHandler(string address);
 }

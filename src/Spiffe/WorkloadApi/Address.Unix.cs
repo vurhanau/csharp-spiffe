@@ -6,12 +6,12 @@ using System.Runtime.CompilerServices;
 namespace Spiffe.WorkloadApi;
 
 /// <summary>
-/// Class to operate with Workload API address.
+///     Class to operate with Workload API address.
 /// </summary>
 internal static partial class Address
 {
     /// <summary>
-    /// Parses the endpoint address and returns a gRPC Unix domain socket target.
+    ///     Parses the endpoint address and returns a gRPC Unix domain socket target.
     /// </summary>
     internal static string ParseUnixSocketTarget(string address)
     {
@@ -49,26 +49,21 @@ internal static partial class Address
         return TrimScheme(uri);
     }
 
-    private static bool IsUnixSocket(Uri uri)
-    {
-        return "unix".Equals(uri.Scheme, StringComparison.Ordinal);
-    }
+    private static bool IsUnixSocket(Uri uri) => "unix".Equals(uri.Scheme, StringComparison.Ordinal);
 
     /// <summary>
-    /// Tells whether or not this URI is opaque.
-    ///
-    /// <p> A URI is opaque if, and only if, it is absolute and its
-    /// scheme-specific part does not begin with a slash character ('/').
-    /// An opaque URI has a scheme, a scheme-specific part, and possibly
-    /// a fragment; all other components are undefined. </p>
-    /// See <seealso href="https://pkg.go.dev/net/url#URL.Opaque"/> and
-    /// <seealso href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html#isOpaque()"/>
+    ///     Tells whether or not this URI is opaque.
+    ///     <p>
+    ///         A URI is opaque if, and only if, it is absolute and its
+    ///         scheme-specific part does not begin with a slash character ('/').
+    ///         An opaque URI has a scheme, a scheme-specific part, and possibly
+    ///         a fragment; all other components are undefined.
+    ///     </p>
+    ///     See <seealso href="https://pkg.go.dev/net/url#URL.Opaque" /> and
+    ///     <seealso href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html#isOpaque()" />
     /// </summary>
     /// <returns>True if, and only if, this URI is opaque</returns>
-    private static bool IsOpaque(Uri uri)
-    {
-        return string.IsNullOrEmpty(uri.Host) && !uri.PathAndQuery.StartsWith('/');
-    }
+    private static bool IsOpaque(Uri uri) => string.IsNullOrEmpty(uri.Host) && !uri.PathAndQuery.StartsWith('/');
 }
 
 #endif

@@ -54,7 +54,7 @@ public class TestCrypto
     {
         static void AssertFail(string ka)
         {
-            var c = new Mock<X509Certificate2>();
+            Mock<X509Certificate2> c = new();
             c.Setup(c => c.GetKeyAlgorithm()).Returns(ka);
             Action a = () => Crypto.GetCertificateWithPrivateKey(c.Object, []);
             a.Should().Throw<Exception>().WithMessage($"Unsupported key algorithm: '{ka}'");

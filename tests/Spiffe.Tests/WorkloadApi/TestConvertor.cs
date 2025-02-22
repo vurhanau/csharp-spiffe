@@ -49,18 +49,18 @@ public class TestConvertor
         b2[0].RawData.Should().Equal(cert1Raw);
 
         // Parse empty bundle set
-        r = new();
+        r = new X509BundlesResponse();
         bs = Convertor.ParseX509BundleSet(r);
         bs.Bundles.Should().BeEmpty();
 
         // Parse malformed bundle set with a malformed trust domain name
-        r = new();
+        r = new X509BundlesResponse();
         r.Bundles.Add("$#_=malformed-domain", ByteString.CopyFrom(cert1Raw));
         Action malformedTrustDomainName = () => Convertor.ParseX509BundleSet(r);
         malformedTrustDomainName.Should().Throw<Exception>();
 
         // Parse malformed bundle set with a malformed bundle
-        r = new();
+        r = new X509BundlesResponse();
         r.Bundles.Add(td1.Name, ByteString.CopyFromUtf8("malformed"));
         Action malformedCert = () => Convertor.ParseX509BundleSet(r);
         malformedCert.Should().Throw<Exception>();
@@ -96,7 +96,7 @@ public class TestConvertor
             Bundle = ByteString.CopyFrom(bundle1),
             X509Svid = ByteString.CopyFrom(Certificates.Concat(cert1)),
             X509SvidKey = ByteString.CopyFrom(key1.ExportPkcs8PrivateKey()),
-            Hint = hint1,
+            Hint = hint1
         };
         X509SVID s2 = new()
         {
@@ -104,7 +104,7 @@ public class TestConvertor
             Bundle = ByteString.CopyFrom(bundle2),
             X509Svid = ByteString.CopyFrom(Certificates.Concat(cert2)),
             X509SvidKey = ByteString.CopyFrom(key2),
-            Hint = hint2,
+            Hint = hint2
         };
         r.Svids.Add(s1);
         r.Svids.Add(s2);
@@ -136,6 +136,7 @@ public class TestConvertor
 
         // Verify SVIDs
         x509Context.X509Svids.Should().HaveCount(2);
+
         void VerifyFirstSvid()
         {
             X509Svid svid1 = x509Context.X509Svids[0];
@@ -159,19 +160,13 @@ public class TestConvertor
         svid2.Certificates[0].GetRSAPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(key2);
 
         // Parse 2 SVIDs with the same hint - should return just first
-        r.Svids[1] = new X509SVID(s2)
-        {
-            Hint = hint1,
-        };
+        r.Svids[1] = new X509SVID(s2) { Hint = hint1 };
         x509Context = Convertor.ParseX509Context(r);
         x509Context.X509Svids.Should().ContainSingle();
         VerifyFirstSvid();
 
         // Parse 2 SVIDs from the same trust domain
-        var s3 = new X509SVID(s2)
-        {
-            SpiffeId = SpiffeId.FromPath(id1.TrustDomain, id2.Path).Id,
-        };
+        X509SVID s3 = new(s2) { SpiffeId = SpiffeId.FromPath(id1.TrustDomain, id2.Path).Id };
         r.Svids[1] = s3;
         x509Context = Convertor.ParseX509Context(r);
         x509Context.X509Bundles.Bundles.Should().HaveCount(2);
@@ -186,8 +181,8 @@ public class TestConvertor
         x509Context.X509Svids.Should().BeEmpty();
 
         // 2 SVIDs with empty hints
-        r.Svids.Add(new X509SVID(s1) { Hint = string.Empty, });
-        r.Svids.Add(new X509SVID(s2) { Hint = string.Empty, });
+        r.Svids.Add(new X509SVID(s1) { Hint = string.Empty });
+        r.Svids.Add(new X509SVID(s2) { Hint = string.Empty });
         x509Context = Convertor.ParseX509Context(r);
         x509Context.X509Svids.Should().HaveCount(2);
         x509Context.X509Svids[0].Id.Should().Be(SpiffeId.FromString(s1.SpiffeId));
@@ -236,18 +231,18 @@ public class TestConvertor
         VerifyJwtBundle(td2, jwks2);
 
         // Parse empty bundle set
-        r = new();
+        r = new JWTBundlesResponse();
         bs = Convertor.ParseJwtBundleSet(r);
         bs.Bundles.Should().BeEmpty();
 
         // Parse malformed bundle set with a malformed trust domain name
-        r = new();
+        r = new JWTBundlesResponse();
         r.Bundles.Add("$#_=malformed-domain", ByteString.CopyFrom(jwksBytes1));
         Action malformedTrustDomainName = () => Convertor.ParseJwtBundleSet(r);
         malformedTrustDomainName.Should().Throw<Exception>();
 
         // Parse malformed bundle set with a malformed bundle
-        r = new();
+        r = new JWTBundlesResponse();
         r.Bundles.Add(td1.Name, ByteString.CopyFromUtf8("malformed"));
         Action malformedCert = () => Convertor.ParseJwtBundleSet(r);
         malformedCert.Should().Throw<Exception>();
@@ -272,18 +267,8 @@ public class TestConvertor
         string jwt2 = Jwt.Generate(claims2, signingKey);
 
         JWTSVIDResponse r = new();
-        JWTSVID s0 = new()
-        {
-            SpiffeId = workload1,
-            Svid = jwt1,
-            Hint = hint1,
-        };
-        JWTSVID s1 = new()
-        {
-            SpiffeId = workload1,
-            Svid = jwt2,
-            Hint = hint2,
-        };
+        JWTSVID s0 = new() { SpiffeId = workload1, Svid = jwt1, Hint = hint1 };
+        JWTSVID s1 = new() { SpiffeId = workload1, Svid = jwt2, Hint = hint2 };
         r.Svids.Add(s0);
         r.Svids.Add(s1);
 
@@ -292,28 +277,25 @@ public class TestConvertor
         svids.Should().NotBeNull();
         svids.Should().HaveCount(2);
         JwtSvid expected0 = new(
-            token: jwt1,
-            id: SpiffeId.FromString(workload1),
-            audience: [workload2],
-            expiry: expiry,
-            claims: claims1.ToDictionary(c => c.Type, c => c.Value),
-            hint: hint1);
+            jwt1,
+            SpiffeId.FromString(workload1),
+            [workload2],
+            expiry,
+            claims1.ToDictionary(c => c.Type, c => c.Value),
+            hint1);
         JwtSvid expected1 = new(
-            token: jwt2,
-            id: SpiffeId.FromString(workload1),
-            audience: [workload2],
-            expiry: expiry,
-            claims: claims2.ToDictionary(c => c.Type, c => c.Value),
-            hint: hint2);
+            jwt2,
+            SpiffeId.FromString(workload1),
+            [workload2],
+            expiry,
+            claims2.ToDictionary(c => c.Type, c => c.Value),
+            hint2);
         svids.Should().Equal(expected0, expected1);
 
         // Parse 2 SVIDs with the same hint -> 1 SVID
-        r = new();
+        r = new JWTSVIDResponse();
         r.Svids.Add(s0);
-        r.Svids.Add(new JWTSVID(s1)
-        {
-            Hint = hint1,
-        });
+        r.Svids.Add(new JWTSVID(s1) { Hint = hint1 });
         svids = Convertor.ParseJwtSvids(r, [workload2]);
         svids.Should().NotBeNull();
         svids.Should().ContainSingle();
@@ -330,9 +312,9 @@ public class TestConvertor
         f.Should().Throw<JwtSvidException>().WithMessage("There were no SVIDs in the response");
 
         // 2 SVIDs with empty hints
-        r = new();
-        r.Svids.Add(new JWTSVID(s0) { Hint = string.Empty, });
-        r.Svids.Add(new JWTSVID(s1) { Hint = string.Empty, });
+        r = new JWTSVIDResponse();
+        r.Svids.Add(new JWTSVID(s0) { Hint = string.Empty });
+        r.Svids.Add(new JWTSVID(s1) { Hint = string.Empty });
         svids = Convertor.ParseJwtSvids(r, [workload2]);
         svids.Should().HaveCount(2);
         svids[0].Id.Should().Be(SpiffeId.FromString(s0.SpiffeId));

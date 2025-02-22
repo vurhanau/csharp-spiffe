@@ -25,14 +25,14 @@ public class TestWorkloadApiClient
     public async Task TestFetchX509Bundles()
     {
         using X509Certificate2 cert = Certificates.FirstFromPemFile("TestData/X509/good-leaf-only.pem");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
-        var resp = new X509BundlesResponse();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        X509BundlesResponse resp = new();
         resp.Bundles.Add("spiffe://example.org", ByteString.CopyFrom(cert.RawData));
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(resp));
+            .Returns(CallHelpers.Stream(resp));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
-        var b = await c.FetchX509BundlesAsync();
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        X509BundleSet b = await c.FetchX509BundlesAsync();
         b.Bundles.Should().ContainSingle();
         VerifyX509BundleSet(b, TrustDomain, cert);
     }
@@ -40,30 +40,30 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestFetchJwtBundles()
     {
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
-        var resp = new JWTBundlesResponse();
-        var jwksJson = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_1.json");
-        var jwks = JsonWebKeySet.Create(jwksJson);
-        var jwksBytes = Encoding.UTF8.GetBytes(jwksJson);
-        var td = TrustDomain.FromString("spiffe://example.org");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        JWTBundlesResponse resp = new();
+        string jwksJson = await File.ReadAllTextAsync("TestData/Jwt/jwks_valid_1.json");
+        JsonWebKeySet jwks = JsonWebKeySet.Create(jwksJson);
+        byte[] jwksBytes = Encoding.UTF8.GetBytes(jwksJson);
+        TrustDomain td = TrustDomain.FromString("spiffe://example.org");
         resp.Bundles.Add(td.SpiffeId.Id, ByteString.CopyFrom(jwksBytes));
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(resp));
+            .Returns(CallHelpers.Stream(resp));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
-        var b = await c.FetchJwtBundlesAsync();
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        JwtBundleSet b = await c.FetchJwtBundlesAsync();
         VerifyJwtBundleSet(b, td, jwks);
     }
 
     [Fact]
     public async Task TestFetchX509BundlesError()
     {
-        var err = new Exception("Oops!");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Exception err = new("Oops!");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.StreamError<X509BundlesResponse>(err));
+            .Returns(CallHelpers.StreamError<X509BundlesResponse>(err));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<X509BundleSet>> fetch = () => c.FetchX509BundlesAsync();
         await fetch.Should().ThrowAsync<Exception>().WithMessage(err.Message);
     }
@@ -71,12 +71,12 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestFetchJwtBundlesError()
     {
-        var err = new Exception("Oops!");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Exception err = new("Oops!");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.StreamError<JWTBundlesResponse>(err));
+            .Returns(CallHelpers.StreamError<JWTBundlesResponse>(err));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<JwtBundleSet>> fetch = () => c.FetchJwtBundlesAsync();
         await fetch.Should().ThrowAsync<Exception>().WithMessage(err.Message);
     }
@@ -92,24 +92,24 @@ public class TestWorkloadApiClient
 
         static X509BundlesResponse Resp(TrustDomain trustDomain, X509Certificate2 cert)
         {
-            var r = new X509BundlesResponse();
+            X509BundlesResponse r = new();
             r.Bundles.Add(trustDomain.Name, ByteString.CopyFrom(cert.RawData));
             return r;
         }
 
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(
-                                                Resp(firstTrustDomain, first),
-                                                Resp(secondTrustDomain, second)));
+            .Returns(CallHelpers.Stream(
+                Resp(firstTrustDomain, first),
+                Resp(secondTrustDomain, second)));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         List<X509BundleSet> received = [];
         List<Exception> exceptions = [];
 
         using CancellationTokenSource done = new();
-        var watcher = new Watcher<X509BundleSet>(
+        Watcher<X509BundleSet> watcher = new(
             b =>
             {
                 received.Add(b);
@@ -157,19 +157,19 @@ public class TestWorkloadApiClient
             return r;
         }
 
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(
-                                                Resp(firstTrustDomain, firstJwksJson),
-                                                Resp(secondTrustDomain, secondJwksJson)));
+            .Returns(CallHelpers.Stream(
+                Resp(firstTrustDomain, firstJwksJson),
+                Resp(secondTrustDomain, secondJwksJson)));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         List<JwtBundleSet> received = [];
         List<Exception> exceptions = [];
 
         using CancellationTokenSource done = new();
-        var watcher = new Watcher<JwtBundleSet>(
+        Watcher<JwtBundleSet> watcher = new(
             b =>
             {
                 received.Add(b);
@@ -196,18 +196,18 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestWatchX509BundlesError()
     {
-        var err = new Exception("Oops!");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Exception err = new("Oops!");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509Bundles(It.IsAny<X509BundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.StreamError<X509BundlesResponse>(err));
+            .Returns(CallHelpers.StreamError<X509BundlesResponse>(err));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
 
         List<X509BundleSet> received = [];
         List<Exception> exceptions = [];
 
         using CancellationTokenSource done = new();
-        var watcher = new Watcher<X509BundleSet>(
+        Watcher<X509BundleSet> watcher = new(
             b =>
             {
                 received.Add(b);
@@ -230,18 +230,18 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestWatchJwtBundlesError()
     {
-        var err = new Exception("Oops!");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Exception err = new("Oops!");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.StreamError<JWTBundlesResponse>(err));
+            .Returns(CallHelpers.StreamError<JWTBundlesResponse>(err));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
 
         List<JwtBundleSet> received = [];
         List<Exception> exceptions = [];
 
         using CancellationTokenSource done = new();
-        var watcher = new Watcher<JwtBundleSet>(
+        Watcher<JwtBundleSet> watcher = new(
             b =>
             {
                 received.Add(b);
@@ -264,56 +264,54 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestFetchX509Context()
     {
-        var spiffeId = SpiffeId.FromPath(TrustDomain, "/workload");
-        var hint = "internal";
-        using X509Certificate2 bundleCert = Certificates.FirstFromPemFile("TestData/X509/good-leaf-and-intermediate.pem");
+        SpiffeId spiffeId = SpiffeId.FromPath(TrustDomain, "/workload");
+        string hint = "internal";
+        using X509Certificate2 bundleCert =
+            Certificates.FirstFromPemFile("TestData/X509/good-leaf-and-intermediate.pem");
         using X509Certificate2 cert = X509Certificate2.CreateFromPemFile(
             "TestData/X509/good-leaf-only.pem",
             "TestData/X509/key-pkcs8-rsa.pem");
         byte[] key = cert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
 
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
-        var resp = new X509SVIDResponse();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        X509SVIDResponse resp = new();
         resp.Svids.Add(new X509SVID
         {
             Bundle = ByteString.CopyFrom(bundleCert.RawData),
             SpiffeId = spiffeId.Id,
             Hint = hint,
             X509Svid = ByteString.CopyFrom(cert.RawData),
-            X509SvidKey = ByteString.CopyFrom(key),
+            X509SvidKey = ByteString.CopyFrom(key)
         });
 
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(resp));
+            .Returns(CallHelpers.Stream(resp));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
-        var r = await c.FetchX509ContextAsync();
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        X509Context r = await c.FetchX509ContextAsync();
         r.X509Bundles.Bundles.Should().ContainSingle();
         VerifyX509BundleSet(r.X509Bundles, TrustDomain, bundleCert);
 
         r.X509Svids.Should().ContainSingle();
-        var svid = r.X509Svids[0];
+        X509Svid svid = r.X509Svids[0];
         VerifyX509SvidRsa(svid, spiffeId, cert, hint);
     }
 
     [Fact]
     public async Task TestValidateJwtSvid()
     {
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
         SpiffeId id1 = SpiffeId.FromPath(td, "/workload1");
         string aud = SpiffeId.FromPath(td, "/workload2").Id;
         CA ca = CA.Create(td);
         JwtSvid s1 = ca.CreateJwtSvid(id1, [aud]);
-        ValidateJWTSVIDResponse resp = new()
-        {
-            SpiffeId = id1.Id,
-        };
+        ValidateJWTSVIDResponse resp = new() { SpiffeId = id1.Id };
 
         mockGrpcClient.Setup(c => c.ValidateJWTSVIDAsync(It.IsAny<ValidateJWTSVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Unary(resp));
+            .Returns(CallHelpers.Unary(resp));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         JwtSvid s2 = await c.ValidateJwtSvidAsync(s1.Token, aud);
         s2.Id.Should().Be(id1);
         s2.Audience.Should().Equal(aud);
@@ -329,20 +327,18 @@ public class TestWorkloadApiClient
         SpiffeId spiffeId = SpiffeId.FromPath(TrustDomain, "/workload");
         string aud = "audience";
 
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         JWTSVIDResponse resp = new();
         JwtSvid expectedSvid = ca.CreateJwtSvid(spiffeId, [aud], "internal");
         resp.Svids.Add(new JWTSVID
         {
-            SpiffeId = expectedSvid.Id.Id,
-            Svid = expectedSvid.Token,
-            Hint = expectedSvid.Hint,
+            SpiffeId = expectedSvid.Id.Id, Svid = expectedSvid.Token, Hint = expectedSvid.Hint
         });
 
         mockGrpcClient.Setup(c => c.FetchJWTSVIDAsync(It.IsAny<JWTSVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Unary(resp));
+            .Returns(CallHelpers.Unary(resp));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         List<JwtSvid> r = await c.FetchJwtSvidsAsync(new JwtSvidParams(aud, [], null));
         r.Should().ContainSingle();
         r[0].Should().Be(expectedSvid);
@@ -351,11 +347,11 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestFetchJwtSvidsFails()
     {
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchJWTSVIDAsync(It.IsAny<JWTSVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Unary(new JWTSVIDResponse()));
+            .Returns(CallHelpers.Unary(new JWTSVIDResponse()));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task> f = async () => await c.FetchJwtSvidsAsync(new JwtSvidParams(null, [], null));
         await f.Should().ThrowAsync<ArgumentNullException>();
 
@@ -366,12 +362,12 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestFetchX509ContextError()
     {
-        var err = new Exception("Oops!");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Exception err = new("Oops!");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.StreamError<X509SVIDResponse>(err));
+            .Returns(CallHelpers.StreamError<X509SVIDResponse>(err));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         Func<Task<X509Context>> fetch = () => c.FetchX509ContextAsync();
         await fetch.Should().ThrowAsync<Exception>().WithMessage(err.Message);
     }
@@ -391,31 +387,31 @@ public class TestWorkloadApiClient
         TrustDomain federatedTrustDomain = TrustDomain.FromString("spiffe://example-federated.org");
         X509Certificate2 federatedCert = Certificates.FirstFromPemFile("TestData/X509/good-leaf-and-intermediate.pem");
 
-        var resp = new X509SVIDResponse();
-        resp.Svids.Add(new X509SVID()
+        X509SVIDResponse resp = new();
+        resp.Svids.Add(new X509SVID
         {
             Bundle = ByteString.CopyFrom(bundleCert.RawData),
             SpiffeId = spiffeId.Id,
             X509Svid = ByteString.CopyFrom(svidCert.RawData),
             X509SvidKey = ByteString.CopyFrom(svidKey),
-            Hint = hint,
+            Hint = hint
         });
-        resp.FederatedBundles.Add(new Dictionary<string, ByteString>()
+        resp.FederatedBundles.Add(new Dictionary<string, ByteString>
         {
-            { federatedTrustDomain.Name, ByteString.CopyFrom(federatedCert.RawData) },
+            { federatedTrustDomain.Name, ByteString.CopyFrom(federatedCert.RawData) }
         });
 
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(resp));
+            .Returns(CallHelpers.Stream(resp));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         List<X509Context> received = [];
         List<Exception> exceptions = [];
 
         using CancellationTokenSource done = new();
-        var watcher = new Watcher<X509Context>(
+        Watcher<X509Context> watcher = new(
             b =>
             {
                 received.Add(b);
@@ -434,7 +430,7 @@ public class TestWorkloadApiClient
         received[0].X509Svids.Should().ContainSingle();
         VerifyX509SvidRsa(received[0].X509Svids[0], spiffeId, svidCert, hint);
 
-        var b = received[0].X509Bundles;
+        X509BundleSet b = received[0].X509Bundles;
         b.Bundles.Should().HaveCount(2);
         VerifyX509BundleSet(b, TrustDomain, svidCert);
         VerifyX509BundleSet(b, federatedTrustDomain, federatedCert);
@@ -445,18 +441,18 @@ public class TestWorkloadApiClient
     [Fact]
     public async Task TestWatchX509ContextError()
     {
-        var err = new Exception("Oops!");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
+        Exception err = new("Oops!");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.StreamError<X509SVIDResponse>(err));
+            .Returns(CallHelpers.StreamError<X509SVIDResponse>(err));
 
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
 
         List<X509Context> received = [];
         List<Exception> exceptions = [];
 
         using CancellationTokenSource done = new();
-        var watcher = new Watcher<X509Context>(
+        Watcher<X509Context> watcher = new(
             b =>
             {
                 received.Add(b);
@@ -486,12 +482,12 @@ public class TestWorkloadApiClient
     [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestWatchErrorRethrown()
     {
-        var err = new RpcException(Status.DefaultCancelled, "test err");
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+        RpcException err = new(Status.DefaultCancelled, "test err");
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
         int okCount = 0;
         int errCount = 0;
-        var watcher = new Watcher<X509SVIDResponse>(
+        Watcher<X509SVIDResponse> watcher = new(
             _ => Interlocked.Increment(ref okCount),
             _ => Interlocked.Increment(ref errCount));
         Func<Task> f = () => c.Watch(watcher, (_, _, _) => throw err, CancellationToken.None);
@@ -503,25 +499,24 @@ public class TestWorkloadApiClient
     [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestHandleWatchError()
     {
-        var mockGrpcClient = new Mock<SpiffeWorkloadAPIClient>();
-        var c = new WorkloadApiClient(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
-        var backoff = new Backoff
-        {
-            InitialDelay = TimeSpan.Zero,
-            MaxDelay = TimeSpan.Zero,
-        };
-        bool rethrow = await c.HandleWatchError(new RpcException(Status.DefaultCancelled), backoff, CancellationToken.None);
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance, NoBackoff);
+        Backoff backoff = new() { InitialDelay = TimeSpan.Zero, MaxDelay = TimeSpan.Zero };
+        bool rethrow =
+            await c.HandleWatchError(new RpcException(Status.DefaultCancelled), backoff, CancellationToken.None);
         rethrow.Should().BeTrue();
-        rethrow = await c.HandleWatchError(new RpcException(new Status(StatusCode.InvalidArgument, string.Empty)), backoff, CancellationToken.None);
+        rethrow = await c.HandleWatchError(new RpcException(new Status(StatusCode.InvalidArgument, string.Empty)),
+            backoff, CancellationToken.None);
         rethrow.Should().BeTrue();
         rethrow = await c.HandleWatchError(new RpcException(Status.DefaultSuccess), backoff, CancellationToken.None);
         rethrow.Should().BeFalse();
     }
 
-    private static void VerifyX509BundleSet(X509BundleSet b, TrustDomain expectedTrustDomain, X509Certificate2 expectedCert)
+    private static void VerifyX509BundleSet(X509BundleSet b, TrustDomain expectedTrustDomain,
+        X509Certificate2 expectedCert)
     {
         b.Bundles.Should().ContainKey(expectedTrustDomain);
-        var bundle = b.GetX509Bundle(expectedTrustDomain);
+        X509Bundle bundle = b.GetX509Bundle(expectedTrustDomain);
         bundle.TrustDomain.Should().Be(expectedTrustDomain);
         bundle.X509Authorities.Should().ContainSingle();
         bundle.X509Authorities[0].RawData.Should().Equal(expectedCert.RawData);
@@ -542,9 +537,9 @@ public class TestWorkloadApiClient
     }
 
     private static void VerifyX509SvidRsa(X509Svid svid,
-                                          SpiffeId expectedSpiffeId,
-                                          X509Certificate2 expectedCert,
-                                          string expectedHint)
+        SpiffeId expectedSpiffeId,
+        X509Certificate2 expectedCert,
+        string expectedHint)
     {
         svid.Id.Should().Be(expectedSpiffeId);
         svid.Hint.Should().Be(expectedHint);
@@ -553,13 +548,9 @@ public class TestWorkloadApiClient
         certs.Should().ContainSingle();
         certs[0].HasPrivateKey.Should().BeTrue();
         certs[0].RawData.Should().Equal(expectedCert.RawData);
-        var expectedKey = expectedCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
+        byte[] expectedKey = expectedCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         certs[0].GetRSAPrivateKey()?.ExportPkcs8PrivateKey().Should().Equal(expectedKey);
     }
 
-    private static Backoff NoBackoff() => new()
-    {
-        InitialDelay = TimeSpan.Zero,
-        MaxDelay = TimeSpan.Zero,
-    };
+    private static Backoff NoBackoff() => new() { InitialDelay = TimeSpan.Zero, MaxDelay = TimeSpan.Zero };
 }

@@ -71,21 +71,23 @@ public class TestX509Verify
 
             exts.Add(
                 new X509BasicConstraintsExtension(
-                    certificateAuthority: true,
-                    hasPathLengthConstraint: false,
-                    pathLengthConstraint: 0,
-                    critical: true));
+                    true,
+                    false,
+                    0,
+                    true));
         });
         Func<bool> f = () => X509Verify.Verify(leafCA, intermediates, bundleSource);
         f.Should().Throw<ArgumentException>().WithMessage("Leaf certificate with CA flag set to true");
 
         // Leaf with key usage KeyCertSign
-        using X509Certificate2 leafKeyCertSign = CA.CreateX509Svid(ca.Cert, id, opts => opts.KeyUsage = X509KeyUsageFlags.KeyCertSign);
+        using X509Certificate2 leafKeyCertSign =
+            CA.CreateX509Svid(ca.Cert, id, opts => opts.KeyUsage = X509KeyUsageFlags.KeyCertSign);
         f = () => X509Verify.Verify(leafKeyCertSign, intermediates, bundleSource);
         f.Should().Throw<ArgumentException>().WithMessage("Leaf certificate with KeyCertSign key usage");
 
         // Leaf with key usage CrlSign
-        using X509Certificate2 leafCrlSign = CA.CreateX509Svid(ca.Cert, id, opts => opts.KeyUsage = X509KeyUsageFlags.CrlSign);
+        using X509Certificate2 leafCrlSign =
+            CA.CreateX509Svid(ca.Cert, id, opts => opts.KeyUsage = X509KeyUsageFlags.CrlSign);
         f = () => X509Verify.Verify(leafCrlSign, intermediates, bundleSource);
         f.Should().Throw<ArgumentException>().WithMessage("Leaf certificate with KeyCrlSign key usage");
 

@@ -14,19 +14,16 @@ using Spiffe.WorkloadApi;
 namespace Spiffe.Util;
 
 /// <summary>
-/// String helper
+///     String helper
 /// </summary>
 public static class Strings
 {
-    private static readonly JsonSerializerOptions s_jsonOpts = new()
-    {
-        WriteIndented = true,
-    };
+    private static readonly JsonSerializerOptions s_jsonOpts = new() { WriteIndented = true };
 
     private static readonly JsonFormatter s_protoJson = new(JsonFormatter.Settings.Default.WithIndentation());
 
     /// <summary>
-    /// Gets X509 context string representation.
+    ///     Gets X509 context string representation.
     /// </summary>
     /// <param name="x509Context">Context</param>
     /// <param name="verbose">Set if certificate output should contain detailed information.</param>
@@ -46,7 +43,7 @@ public static class Strings
     }
 
     /// <summary>
-    /// Gets X509 SVID string representation.
+    ///     Gets X509 SVID string representation.
     /// </summary>
     /// <param name="x509Svid">X509 SVID</param>
     /// <param name="verbose">Set if certificate output should contain detailed information.</param>
@@ -69,7 +66,7 @@ public static class Strings
     }
 
     /// <summary>
-    /// Gets JWT SVID string representation.
+    ///     Gets JWT SVID string representation.
     /// </summary>
     /// <param name="jwtSvid">JWT SVID</param>
     /// <param name="verbose">Set if certificate output should contain detailed information.</param>
@@ -112,7 +109,7 @@ public static class Strings
     }
 
     /// <summary>
-    /// Gets X509 bundle set string representation.
+    ///     Gets X509 bundle set string representation.
     /// </summary>
     /// <param name="x509BundleSet">X509 bundle set</param>
     /// <param name="verbose">Set if certificate output should contain detailed information.</param>
@@ -130,7 +127,7 @@ public static class Strings
     }
 
     /// <summary>
-    /// Gets JWT bundle set string representation.
+    ///     Gets JWT bundle set string representation.
     /// </summary>
     /// <param name="jwtBundleSet">JWT bundle set</param>
     /// <param name="verbose">Set if output should contain detailed information.</param>
@@ -148,7 +145,7 @@ public static class Strings
     }
 
     /// <summary>
-    /// Gets JWT bundle string representation.
+    ///     Gets JWT bundle string representation.
     /// </summary>
     /// <param name="jwtBundle">JWT bundle</param>
     public static string ToString(JwtBundle jwtBundle)
@@ -169,24 +166,22 @@ public static class Strings
             return certificate?.ToString(true) ?? string.Empty;
         }
 
-        return JsonSerializer.Serialize(new
-        {
-            certificate?.Subject,
-            certificate?.Issuer,
-            certificate?.Thumbprint,
-            certificate?.HasPrivateKey,
-            certificate?.NotBefore,
-            certificate?.NotAfter,
-            UrlName = certificate?.GetNameInfo(X509NameType.UrlName, false),
-            KeyUsage = GetKeyUsage(certificate),
-        },
-        s_jsonOpts);
+        return JsonSerializer.Serialize(
+            new
+            {
+                certificate?.Subject,
+                certificate?.Issuer,
+                certificate?.Thumbprint,
+                certificate?.HasPrivateKey,
+                certificate?.NotBefore,
+                certificate?.NotAfter,
+                UrlName = certificate?.GetNameInfo(X509NameType.UrlName, false),
+                KeyUsage = GetKeyUsage(certificate)
+            },
+            s_jsonOpts);
     }
 
-    internal static string ToString(JsonWebKey key)
-    {
-        return JsonSerializer.Serialize(key, s_jsonOpts);
-    }
+    internal static string ToString(JsonWebKey key) => JsonSerializer.Serialize(key, s_jsonOpts);
 
     internal static string ToString(X509Certificate2Collection certificates, bool verbose = false)
     {
@@ -202,13 +197,8 @@ public static class Strings
         return sb.ToString();
     }
 
-    internal static string ToString(IMessage proto)
-    {
-        return s_protoJson.Format(proto);
-    }
+    internal static string ToString(IMessage proto) => s_protoJson.Format(proto);
 
-    private static string? GetKeyUsage(X509Certificate2? certificate)
-    {
-        return certificate?.Extensions.OfType<X509KeyUsageExtension>().FirstOrDefault()?.KeyUsages.ToString();
-    }
+    private static string? GetKeyUsage(X509Certificate2? certificate) => certificate?.Extensions
+        .OfType<X509KeyUsageExtension>().FirstOrDefault()?.KeyUsages.ToString();
 }

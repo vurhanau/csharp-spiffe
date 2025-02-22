@@ -3,16 +3,16 @@
 namespace Spiffe.Id;
 
 /// <summary>
-/// Utility class to manage path component of a SPIFFE ID that allows unique identification of a given workload.
-/// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+///     Utility class to manage path component of a SPIFFE ID that allows unique identification of a given workload.
+///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />
 /// </summary>
 public static class SpiffePath
 {
     /// <summary>
-    /// JoinPathSegments joins one or more path segments into a slash separated
-    /// path. Segments cannot contain slashes. The resulting path must be valid or
-    /// an error is returned. If no segments are provided, an empty string is
-    /// returned.
+    ///     JoinPathSegments joins one or more path segments into a slash separated
+    ///     path. Segments cannot contain slashes. The resulting path must be valid or
+    ///     an error is returned. If no segments are provided, an empty string is
+    ///     returned.
     /// </summary>
     public static string JoinPathSegments(params string[] segments)
     {
@@ -31,8 +31,8 @@ public static class SpiffePath
     }
 
     /// <summary>
-    /// ValidatePath validates that a path string is a conformant path for a SPIFFE ID.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    ///     ValidatePath validates that a path string is a conformant path for a SPIFFE ID.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />.
     /// </summary>
     public static void ValidatePath(string path)
     {
@@ -87,9 +87,9 @@ public static class SpiffePath
     }
 
     /// <summary>
-    /// ValidatePathSegment validates that a string is a conformant segment for
-    /// inclusion in the path for a SPIFFE ID.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    ///     ValidatePathSegment validates that a string is a conformant segment for
+    ///     inclusion in the path for a SPIFFE ID.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />.
     /// </summary>
     public static void ValidatePathSegment(string segment)
     {
@@ -112,15 +112,13 @@ public static class SpiffePath
         }
     }
 
-    private static bool IsValidPathSegmentChar(char c)
-    {
-        return c switch
+    private static bool IsValidPathSegmentChar(char c) =>
+        c switch
         {
             >= 'a' and <= 'z' => true,
             >= 'A' and <= 'Z' => true,
             >= '0' and <= '9' => true,
             '-' or '.' or '_' => true,
-            _ => false,
+            _ => false
         };
-    }
 }

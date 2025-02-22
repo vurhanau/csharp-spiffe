@@ -11,8 +11,16 @@ public class TestAuthorizer
     {
         TrustDomain td1 = TrustDomain.FromString("spiffe://example1.org");
         TrustDomain td2 = TrustDomain.FromString("spiffe://example2.org");
-        SpiffeId W1() => SpiffeId.FromPath(td1, "/workload1");
-        SpiffeId W2() => SpiffeId.FromPath(td2, "/workload2");
+
+        SpiffeId W1()
+        {
+            return SpiffeId.FromPath(td1, "/workload1");
+        }
+
+        SpiffeId W2()
+        {
+            return SpiffeId.FromPath(td2, "/workload2");
+        }
 
         IAuthorizer authorizer = Authorizers.AuthorizeAny();
         authorizer.Authorize(W1()).Should().BeTrue();

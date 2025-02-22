@@ -3,20 +3,17 @@ using Spiffe.Id;
 namespace Spiffe.Ssl;
 
 /// <summary>
-/// Collection of <see cref="IAuthorizer"/> authorizers.
+///     Collection of <see cref="IAuthorizer" /> authorizers.
 /// </summary>
 public static class Authorizers
 {
     /// <summary>
-    /// Allows any SPIFFE ID.
+    ///     Allows any SPIFFE ID.
     /// </summary>
-    public static IAuthorizer AuthorizeAny()
-    {
-        return new Authorizer(_ => true);
-    }
+    public static IAuthorizer AuthorizeAny() => new Authorizer(_ => true);
 
     /// <summary>
-    /// Allows a specific SPIFFE ID.
+    ///     Allows a specific SPIFFE ID.
     /// </summary>
     public static IAuthorizer AuthorizeId(SpiffeId allowed)
     {
@@ -26,7 +23,7 @@ public static class Authorizers
     }
 
     /// <summary>
-    /// Allows any SPIFFE ID in the given list of IDs.
+    ///     Allows any SPIFFE ID in the given list of IDs.
     /// </summary>
     public static IAuthorizer AuthorizeOneOf(IEnumerable<SpiffeId> allowed)
     {
@@ -37,7 +34,7 @@ public static class Authorizers
     }
 
     /// <summary>
-    /// Allows any SPIFFE ID in the given trust domain.
+    ///     Allows any SPIFFE ID in the given trust domain.
     /// </summary>
     public static IAuthorizer AuthorizeMemberOf(TrustDomain allowed)
     {
@@ -47,7 +44,7 @@ public static class Authorizers
     }
 
     /// <summary>
-    /// Allows any SPIFFE ID that matches the given predicate.
+    ///     Allows any SPIFFE ID that matches the given predicate.
     /// </summary>
     public static IAuthorizer AuthorizeIf(Func<SpiffeId, bool> predicate)
     {

@@ -49,8 +49,8 @@ public class TestSpiffeSslConfig
 
         SslServerAuthenticationOptions opts = SpiffeSslConfig.GetMtlsServerOptions(source, any);
         RemoteCertificateValidationCallback callback = opts.RemoteCertificateValidationCallback;
-        callback(this, clientSvid1.Certificates[0], new(), SslPolicyErrors.None).Should().BeTrue();
-        callback(this, clientSvid2.Certificates[0], new(), SslPolicyErrors.None).Should().BeFalse();
+        callback(this, clientSvid1.Certificates[0], new X509Chain(), SslPolicyErrors.None).Should().BeTrue();
+        callback(this, clientSvid2.Certificates[0], new X509Chain(), SslPolicyErrors.None).Should().BeFalse();
     }
 
     [Fact]
@@ -103,8 +103,8 @@ public class TestSpiffeSslConfig
 
         SslClientAuthenticationOptions opts = SpiffeSslConfig.GetMtlsClientOptions(source, any);
         RemoteCertificateValidationCallback callback = opts.RemoteCertificateValidationCallback;
-        callback(this, clientSvid1.Certificates[0], new(), SslPolicyErrors.None).Should().BeTrue();
-        callback(this, clientSvid2.Certificates[0], new(), SslPolicyErrors.None).Should().BeFalse();
+        callback(this, clientSvid1.Certificates[0], new X509Chain(), SslPolicyErrors.None).Should().BeTrue();
+        callback(this, clientSvid2.Certificates[0], new X509Chain(), SslPolicyErrors.None).Should().BeFalse();
     }
 
     [Fact]
@@ -153,16 +153,16 @@ public class TestSpiffeSslConfig
 
         // Pass
         X509Svid svid1 = s_ca1.CreateX509Svid(s_workload1);
-        bool authorized = callback(sender, svid1.Certificates[0], new(), SslPolicyErrors.None);
+        bool authorized = callback(sender, svid1.Certificates[0], new X509Chain(), SslPolicyErrors.None);
         authorized.Should().BeTrue();
 
         // Fail
         X509Svid svid2 = s_ca2.CreateX509Svid(s_workload2);
-        authorized = callback(sender, svid2.Certificates[0], new(), SslPolicyErrors.None);
+        authorized = callback(sender, svid2.Certificates[0], new X509Chain(), SslPolicyErrors.None);
         authorized.Should().BeFalse();
 
         // Certificate is null - fail
-        authorized = callback(sender, null, new(), SslPolicyErrors.None);
+        authorized = callback(sender, null, new X509Chain(), SslPolicyErrors.None);
         authorized.Should().BeFalse();
 
         // Chain is null - fail
