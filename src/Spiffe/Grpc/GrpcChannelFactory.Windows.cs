@@ -1,5 +1,4 @@
 ﻿#if OS_WINDOWS
-
 using System.IO.Pipes;
 using System.Security.Principal;
 using Spiffe.WorkloadApi;

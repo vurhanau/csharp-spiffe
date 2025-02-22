@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json;
 using FluentAssertions;
 using Google.Protobuf;
@@ -29,7 +28,7 @@ public class TestJwtSource
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(resp));
+            .Returns(CallHelpers.Stream(resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         using JwtSource s = await JwtSource.CreateAsync(c);
 
@@ -53,18 +52,13 @@ public class TestJwtSource
         CA ca = CA.Create(td);
         JWTSVIDResponse resp = new();
         JwtSvid svid = ca.CreateJwtSvid(id, [aud.Id], "hint");
-        resp.Svids.Add(new JWTSVID
-        {
-            SpiffeId = svid.Id.Id,
-            Svid = svid.Token,
-            Hint = svid.Hint,
-        });
+        resp.Svids.Add(new JWTSVID { SpiffeId = svid.Id.Id, Svid = svid.Token, Hint = svid.Hint });
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(new JWTBundlesResponse()));
+            .Returns(CallHelpers.Stream(new JWTBundlesResponse()));
         mockGrpcClient.Setup(c => c.FetchJWTSVIDAsync(It.IsAny<JWTSVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Unary(resp));
+            .Returns(CallHelpers.Unary(resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         using JwtSource s = await JwtSource.CreateAsync(c);
 
@@ -80,13 +74,13 @@ public class TestJwtSource
         JWTBundlesResponse resp = new();
         TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, resp));
+            .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
 
-        using JwtSource s = await JwtSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
+        using JwtSource s = await JwtSource.CreateAsync(c, 60_000, cancellation.Token);
 
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
         s.IsInitialized.Should().BeFalse();
@@ -99,10 +93,10 @@ public class TestJwtSource
         JWTBundlesResponse resp = new();
         TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, resp));
+            .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => JwtSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => JwtSource.CreateAsync(c, 500));
     }
 
     [Fact]
@@ -112,22 +106,20 @@ public class TestJwtSource
         JWTBundlesResponse resp = new();
         TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, resp));
+            .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         JwtSource s = new(c);
 
         Action f = () => s.GetJwtBundle(TrustDomain.FromString("spiffe://example.org"));
         f.Should().Throw<InvalidOperationException>();
 
-        s.SetJwtBundleSet(new([]));
+        s.SetJwtBundleSet(new JwtBundleSet([]));
         s.Dispose();
 
         f.Should().Throw<ObjectDisposedException>();
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
-    public async Task TestCreateWithNullClient()
-    {
+    public async Task TestCreateWithNullClient() =>
         await Assert.ThrowsAsync<ArgumentNullException>(() => JwtSource.CreateAsync(null));
-    }
 }

@@ -4,12 +4,12 @@ using Spiffe.Id;
 namespace Spiffe.Bundle.Jwt;
 
 /// <summary>
-/// Bundle is a collection of trusted JWT authorities for a trust domain.
+///     Bundle is a collection of trusted JWT authorities for a trust domain.
 /// </summary>
 public class JwtBundle
 {
     /// <summary>
-    /// Constructor
+    ///     Constructor
     /// </summary>
     public JwtBundle(TrustDomain trustDomain, Dictionary<string, JsonWebKey> jwtAuthorities)
     {
@@ -18,12 +18,12 @@ public class JwtBundle
     }
 
     /// <summary>
-    /// Gets a trust domain associated with bundle.
+    ///     Gets a trust domain associated with bundle.
     /// </summary>
     public TrustDomain TrustDomain { get; }
 
     /// <summary>
-    /// Gets trust domain authorities.
+    ///     Gets trust domain authorities.
     /// </summary>
     public Dictionary<string, JsonWebKey> JwtAuthorities { get; }
 }

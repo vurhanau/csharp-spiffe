@@ -1,9 +1,7 @@
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
-using Spiffe.Tests.Helper;
 
 namespace Spiffe.Tests.Svid.X509;
 

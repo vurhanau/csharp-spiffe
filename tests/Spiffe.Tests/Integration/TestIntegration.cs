@@ -9,16 +9,13 @@ using Xunit.Abstractions;
 namespace Spiffe.Tests.Integration;
 
 /// <summary>
-/// Tests integration with Workload API over http transport.
+///     Tests integration with Workload API over http transport.
 /// </summary>
 public partial class TestIntegration
 {
     private readonly ITestOutputHelper _output;
 
-    public TestIntegration(ITestOutputHelper output)
-    {
-        _output = output;
-    }
+    public TestIntegration(ITestOutputHelper output) => _output = output;
 
     [Fact(Timeout = Constants.IntegrationTestTimeoutMillis)]
     [Category(Constants.Integration)]

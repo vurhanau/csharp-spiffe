@@ -5,12 +5,12 @@ using Spiffe.Id;
 namespace Spiffe.Bundle.Jwt;
 
 /// <summary>
-/// Parses JWT bundles.
+///     Parses JWT bundles.
 /// </summary>
 internal static class JwtBundleParser
 {
     /// <summary>
-    /// Parses a bundle from bytes. The data must be a standard RFC 7517 JWKS document.
+    ///     Parses a bundle from bytes. The data must be a standard RFC 7517 JWKS document.
     /// </summary>
     public static JwtBundle Parse(TrustDomain td, ReadOnlySpan<byte> bundleBytes)
     {

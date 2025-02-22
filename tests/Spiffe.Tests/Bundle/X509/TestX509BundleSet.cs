@@ -14,11 +14,7 @@ public class TestX509BundleSet
         TrustDomain td2 = TrustDomain.FromString("spiffe://example2.org");
         X509Bundle b1 = new(td1, []);
         X509Bundle b2 = new(td2, []);
-        X509BundleSet bs = new(new Dictionary<TrustDomain, X509Bundle>
-        {
-            { td1, b1 },
-            { td2, b2 },
-        });
+        X509BundleSet bs = new(new Dictionary<TrustDomain, X509Bundle> { { td1, b1 }, { td2, b2 } });
         bs.GetX509Bundle(td1).Should().Be(b1);
         bs.GetX509Bundle(td2).Should().Be(b2);
 

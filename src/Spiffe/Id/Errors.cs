@@ -2,9 +2,11 @@
 
 internal static class Errors
 {
-    internal const string BadTrustDomainChar = "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores";
+    internal const string BadTrustDomainChar =
+        "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores";
 
-    internal const string BadPathSegmentChar = "Path segment characters are limited to letters, numbers, dots, dashes, and underscores";
+    internal const string BadPathSegmentChar =
+        "Path segment characters are limited to letters, numbers, dots, dashes, and underscores";
 
     internal const string DotSegment = "Path cannot contain dot segments";
 

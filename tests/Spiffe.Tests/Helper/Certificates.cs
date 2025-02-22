@@ -35,10 +35,7 @@ internal static class Certificates
         return rsa.ExportPkcs8PrivateKey();
     }
 
-    internal static byte[] Concat(params X509Certificate2[] certs)
-    {
-        return Concat(certs.Select(c => c.RawData).ToArray());
-    }
+    internal static byte[] Concat(params X509Certificate2[] certs) => Concat(certs.Select(c => c.RawData).ToArray());
 
     internal static byte[] Concat(params byte[][] certs)
     {

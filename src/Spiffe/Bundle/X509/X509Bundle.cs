@@ -4,12 +4,12 @@ using Spiffe.Id;
 namespace Spiffe.Bundle.X509;
 
 /// <summary>
-/// Bundle is a collection of trusted X.509 authorities for a trust domain.
+///     Bundle is a collection of trusted X.509 authorities for a trust domain.
 /// </summary>
 public class X509Bundle
 {
     /// <summary>
-    /// Constructor
+    ///     Constructor
     /// </summary>
     public X509Bundle(TrustDomain trustDomain, X509Certificate2Collection x509Authorities)
     {
@@ -18,12 +18,12 @@ public class X509Bundle
     }
 
     /// <summary>
-    /// Gets a trust domain associated with bundle.
+    ///     Gets a trust domain associated with bundle.
     /// </summary>
     public TrustDomain TrustDomain { get; }
 
     /// <summary>
-    /// Gets trust domain authorities.
+    ///     Gets trust domain authorities.
     /// </summary>
     public X509Certificate2Collection X509Authorities { get; }
 }

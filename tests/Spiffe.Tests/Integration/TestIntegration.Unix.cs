@@ -1,14 +1,11 @@
 #if !OS_WINDOWS
 
 using System.ComponentModel;
-using FluentAssertions;
-using Grpc.Net.Client;
-using Spiffe.Grpc;
 
 namespace Spiffe.Tests.Integration;
 
 /// <summary>
-/// Tests integration with Workload API over unix domain socket transport.
+///     Tests integration with Workload API over unix domain socket transport.
 /// </summary>
 public partial class TestIntegration
 {

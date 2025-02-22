@@ -14,11 +14,12 @@ internal static class Jwt
         string iat = ToNumericDate(now);
         string exp = ToNumericDate(expiry);
         string iss = "FAKECA";
-        List<Claim> claims = [
+        List<Claim> claims =
+        [
             new(Claims.Sub, sub),
             new(Claims.Iss, iss),
             new(Claims.Iat, iat),
-            new(Claims.Exp, exp),
+            new(Claims.Exp, exp)
         ];
         claims.AddRange(aud.Select(a => new Claim(Claims.Aud, a)));
         return claims;
@@ -26,10 +27,7 @@ internal static class Jwt
 
     internal static string Generate(IEnumerable<Claim> claims, ECDsa signingKey, string kid = null)
     {
-        ECDsaSecurityKey securityKey = new(signingKey)
-        {
-            KeyId = kid,
-        };
+        ECDsaSecurityKey securityKey = new(signingKey) { KeyId = kid };
         SigningCredentials credentials = new(securityKey, SecurityAlgorithms.EcdsaSha256);
         JwtHeader header = new(credentials);
         JwtPayload payload = new(claims);
@@ -37,8 +35,5 @@ internal static class Jwt
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 
-    internal static string ToNumericDate(DateTime d)
-    {
-        return new DateTimeOffset(d).ToUnixTimeSeconds().ToString();
-    }
+    internal static string ToNumericDate(DateTime d) => new DateTimeOffset(d).ToUnixTimeSeconds().ToString();
 }

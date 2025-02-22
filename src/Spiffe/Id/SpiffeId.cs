@@ -4,8 +4,9 @@ using static Spiffe.Id.TrustDomain;
 namespace Spiffe.Id;
 
 /// <summary>
-/// Represents a SPIFFE ID as defined in the SPIFFE standard.
-/// See <seealso href="https://github.com/spiffe/spiffe/blob/master/standards/SPIFFE-ID.md">https://github.com/spiffe/spiffe/blob/master/standards/SPIFFE-ID.md</seealso>
+///     Represents a SPIFFE ID as defined in the SPIFFE standard.
+///     See
+///     <seealso href="https://github.com/spiffe/spiffe/blob/master/standards/SPIFFE-ID.md">https://github.com/spiffe/spiffe/blob/master/standards/SPIFFE-ID.md</seealso>
 /// </summary>
 public class SpiffeId
 {
@@ -24,102 +25,95 @@ public class SpiffeId
     }
 
     /// <summary>
-    /// Gets string representation of the SPIFFE ID, e.g.,
-    /// "spiffe://example.org/foo/bar".
+    ///     Gets string representation of the SPIFFE ID, e.g.,
+    ///     "spiffe://example.org/foo/bar".
     /// </summary>
     public string Id { get; }
 
     /// <summary>
-    /// Gets the trust domain of the SPIFFE ID.
+    ///     Gets the trust domain of the SPIFFE ID.
     /// </summary>
     public TrustDomain TrustDomain => new(Id[s_schemePrefixLength.._pathIndex]);
 
     /// <summary>
-    /// Gets the path of the SPIFFE ID inside the trust domain.
+    ///     Gets the path of the SPIFFE ID inside the trust domain.
     /// </summary>
     public string Path => Id[_pathIndex..];
 
     /// <summary>
-    /// True if the SPIFFE ID is a member of the given trust domain.
+    ///     True if the SPIFFE ID is a member of the given trust domain.
     /// </summary>
     public bool MemberOf(TrustDomain td) => TrustDomain.Equals(td);
 
     /// <summary>
-    /// Returns an ID with the appended path.
-    /// The path to append must be a valid absolute path according to
-    /// the SPIFFE specification.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    ///     Returns an ID with the appended path.
+    ///     The path to append must be a valid absolute path according to
+    ///     the SPIFFE specification.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />
     /// </summary>
     public SpiffeId AppendPath(string path)
     {
         ValidatePath(path);
-        return new(Id + path, _pathIndex);
+        return new SpiffeId(Id + path, _pathIndex);
     }
 
     /// <summary>
-    /// Returns an ID with the appended joined path segments.  It
-    /// will fail if called on a zero value. The path segments must be valid
-    /// according to the SPIFFE specification and must not contain path separators.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    ///     Returns an ID with the appended joined path segments.  It
+    ///     will fail if called on a zero value. The path segments must be valid
+    ///     according to the SPIFFE specification and must not contain path separators.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />
     /// </summary>
     public SpiffeId AppendSegments(params string[] segments)
     {
         string path = JoinPathSegments(segments);
-        return new(Id + path, _pathIndex);
+        return new SpiffeId(Id + path, _pathIndex);
     }
 
     /// <summary>
-    /// Returns an ID with the given path in the same trust domain. It
-    /// will fail if called on a zero value. The given path must be a valid absolute
-    /// path according to the SPIFFE specification.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    ///     Returns an ID with the given path in the same trust domain. It
+    ///     will fail if called on a zero value. The given path must be a valid absolute
+    ///     path according to the SPIFFE specification.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />
     /// </summary>
     public SpiffeId ReplacePath(string path) => FromPath(TrustDomain, path);
 
     /// <summary>
-    /// Returns an ID with the joined path segments in the same
-    /// trust domain. It will fail if called on a zero value. The path segments must
-    /// be valid according to the SPIFFE specification and must not contain path
-    /// separators.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>
+    ///     Returns an ID with the joined path segments in the same
+    ///     trust domain. It will fail if called on a zero value. The path segments must
+    ///     be valid according to the SPIFFE specification and must not contain path
+    ///     separators.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />
     /// </summary>
     public SpiffeId ReplaceSegments(params string[] segments) => FromSegments(TrustDomain, segments);
 
     /// <summary>
-    /// Returns the string representation of the SPIFFE ID, concatenating schema, trust domain,
-    /// and path segments (e.g. 'spiffe://example.org/path1/path2')
+    ///     Returns the string representation of the SPIFFE ID, concatenating schema, trust domain,
+    ///     and path segments (e.g. 'spiffe://example.org/path1/path2')
     /// </summary>
     public override string ToString() => Id;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public override int GetHashCode() => Id.GetHashCode();
 
-    /// <inheritdoc/>
-    public override bool Equals(object? obj)
-    {
-        return obj is SpiffeId spiffeId && string.Equals(Id, spiffeId.Id, StringComparison.Ordinal);
-    }
+    /// <inheritdoc />
+    public override bool Equals(object? obj) =>
+        obj is SpiffeId spiffeId && string.Equals(Id, spiffeId.Id, StringComparison.Ordinal);
 
     /// <summary>
-    /// URI for SPIFFE ID.
+    ///     URI for SPIFFE ID.
     /// </summary>
     public Uri ToUri()
     {
-        UriBuilder builder = new()
-        {
-            Scheme = SchemePrefix,
-            Host = TrustDomain.Name,
-            Path = Path,
-        };
+        UriBuilder builder = new() { Scheme = SchemePrefix, Host = TrustDomain.Name, Path = Path };
 
         return builder.Uri;
     }
 
     /// <summary>
-    /// FromPath returns a new SPIFFE ID in the given trust domain and with the
-    /// given path. The supplied path must be a valid absolute path according to the
-    /// SPIFFE specification.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    ///     FromPath returns a new SPIFFE ID in the given trust domain and with the
+    ///     given path. The supplied path must be a valid absolute path according to the
+    ///     SPIFFE specification.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />.
     /// </summary>
     public static SpiffeId FromPath(TrustDomain td, string path)
     {
@@ -128,10 +122,10 @@ public class SpiffeId
     }
 
     /// <summary>
-    /// FromSegments returns a new SPIFFE ID in the given trust domain with joined
-    /// path segments. The path segments must be valid according to the SPIFFE
-    /// specification and must not contain path separators.
-    /// See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path"/>.
+    ///     FromSegments returns a new SPIFFE ID in the given trust domain with joined
+    ///     path segments. The path segments must be valid according to the SPIFFE
+    ///     specification and must not contain path separators.
+    ///     See <seealso href="https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#22-path" />.
     /// </summary>
     public static SpiffeId FromSegments(TrustDomain td, params string[] segments)
     {
@@ -143,7 +137,7 @@ public class SpiffeId
     }
 
     /// <summary>
-    /// Parses a SPIFFE ID from a string.
+    ///     Parses a SPIFFE ID from a string.
     /// </summary>
     public static SpiffeId FromString(string id)
     {
@@ -183,7 +177,7 @@ public class SpiffeId
     }
 
     /// <summary>
-    /// Parses a SPIFFE ID from a URI.
+    ///     Parses a SPIFFE ID from a URI.
     /// </summary>
     public static SpiffeId FromUri(Uri uri)
     {

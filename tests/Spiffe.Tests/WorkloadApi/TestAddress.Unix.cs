@@ -5,7 +5,7 @@ using Spiffe.WorkloadApi;
 namespace Spiffe.Tests.WorkloadApi;
 
 /// <summary>
-/// Test Unix native target URI validation.
+///     Test Unix native target URI validation.
 /// </summary>
 public partial class TestAddress
 {

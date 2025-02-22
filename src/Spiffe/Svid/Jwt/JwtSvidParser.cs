@@ -6,7 +6,7 @@ using Spiffe.Id;
 namespace Spiffe.Svid.Jwt;
 
 /// <summary>
-/// Parses JWT SVID.
+///     Parses JWT SVID.
 /// </summary>
 public static class JwtSvidParser
 {
@@ -16,14 +16,16 @@ public static class JwtSvidParser
     private static readonly JsonWebTokenHandler s_jsonHandler = new();
 
     /// <summary>
-    /// Parses and validates a JWT-SVID token and returns the JWT-SVID.
-    /// The JWT-SVID signature is verified using the JWT bundle source.
+    ///     Parses and validates a JWT-SVID token and returns the JWT-SVID.
+    ///     The JWT-SVID signature is verified using the JWT bundle source.
     /// </summary>
-    public static async Task<JwtSvid> ParseAsync(string token, IJwtBundleSource bundleSource, IEnumerable<string> audience)
+    public static async Task<JwtSvid> ParseAsync(string token, IJwtBundleSource bundleSource,
+        IEnumerable<string> audience)
     {
         (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, audience);
-        TokenValidationResult result = await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, audience)
-            .ConfigureAwait(false);
+        TokenValidationResult result =
+            await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, audience)
+                .ConfigureAwait(false);
         if (!result.IsValid)
         {
             throw new JwtSvidException("JWT token validation failed", result.Exception);
@@ -33,8 +35,8 @@ public static class JwtSvidParser
     }
 
     /// <summary>
-    /// Parses and validates a JWT-SVID token and returns the
-    /// JWT-SVID. The JWT-SVID signature is not verified.
+    ///     Parses and validates a JWT-SVID token and returns the
+    ///     JWT-SVID. The JWT-SVID signature is not verified.
     /// </summary>
     public static JwtSvid ParseInsecure(string token, IEnumerable<string> audience)
     {
@@ -43,11 +45,11 @@ public static class JwtSvidParser
     }
 
     /// <summary>
-    /// Parses and validate JWT-SVID.
+    ///     Parses and validate JWT-SVID.
     /// </summary>
     public static async Task<TokenValidationResult> ValidateAsync(string token,
-                                                                  IJwtBundleSource bundleSource,
-                                                                  IEnumerable<string> validAudience)
+        IJwtBundleSource bundleSource,
+        IEnumerable<string> validAudience)
     {
         (SpiffeId Id, JsonWebToken Jwt) parsed = ParseValidate(token, validAudience);
         return await ValidateSignature(parsed.Jwt, parsed.Id.TrustDomain, bundleSource, validAudience)
@@ -85,9 +87,9 @@ public static class JwtSvidParser
     }
 
     private static async Task<TokenValidationResult> ValidateSignature(JsonWebToken jwt,
-                                                                       TrustDomain trustDomain,
-                                                                       IJwtBundleSource bundleSource,
-                                                                       IEnumerable<string> validAudiences)
+        TrustDomain trustDomain,
+        IJwtBundleSource bundleSource,
+        IEnumerable<string> validAudiences)
     {
         string kid = jwt.Kid;
         if (string.IsNullOrEmpty(kid))
@@ -103,36 +105,36 @@ public static class JwtSvidParser
         }
 
         SecurityKey key = bundle.JwtAuthorities[kid];
-        return await s_jsonHandler.ValidateTokenAsync(jwt, new TokenValidationParameters
-        {
-            ClockSkew = s_leeway,
-            ValidateAudience = true,
-            ValidateIssuer = false,
-            ValidateIssuerSigningKey = true,
-            ValidateTokenReplay = false,
-            ValidateLifetime = true,
-            IssuerSigningKey = key,
-            ValidAudiences = validAudiences,
-        }).ConfigureAwait(false);
+        return await s_jsonHandler.ValidateTokenAsync(jwt,
+            new TokenValidationParameters
+            {
+                ClockSkew = s_leeway,
+                ValidateAudience = true,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                ValidateTokenReplay = false,
+                ValidateLifetime = true,
+                IssuerSigningKey = key,
+                ValidAudiences = validAudiences
+            }).ConfigureAwait(false);
     }
 
     /// <summary>
-    /// Checks claims in a token against expected values. A
-    /// custom leeway may be specified for comparing time values. You may pass a
-    /// zero value to check time values with no leeway, but you should note that
-    /// numeric date values are rounded to the nearest second and sub-second
-    /// precision is not supported.
-    ///
-    /// The leeway gives some extra time to the token from the server's
-    /// point of view. That is, if the token is expired, ValidateWithLeeway
-    /// will still accept the token for 'leeway' amount of time. This fails
-    /// if you're using this function to check if a server will accept your
-    /// token, because it will think the token is valid even after it
-    /// expires. So if you're a client validating if the token is valid to
-    /// be submitted to a server, use leeway lte 0, if you're a server
-    /// validation a token, use leeway gte 0.
-    /// <br/>
-    /// See: <seealso href="https://github.com/go-jose/go-jose/blob/v3.0.1/jwt/validation.go#L78"/>
+    ///     Checks claims in a token against expected values. A
+    ///     custom leeway may be specified for comparing time values. You may pass a
+    ///     zero value to check time values with no leeway, but you should note that
+    ///     numeric date values are rounded to the nearest second and sub-second
+    ///     precision is not supported.
+    ///     The leeway gives some extra time to the token from the server's
+    ///     point of view. That is, if the token is expired, ValidateWithLeeway
+    ///     will still accept the token for 'leeway' amount of time. This fails
+    ///     if you're using this function to check if a server will accept your
+    ///     token, because it will think the token is valid even after it
+    ///     expires. So if you're a client validating if the token is valid to
+    ///     be submitted to a server, use leeway lte 0, if you're a server
+    ///     validation a token, use leeway gte 0.
+    ///     <br />
+    ///     See: <seealso href="https://github.com/go-jose/go-jose/blob/v3.0.1/jwt/validation.go#L78" />
     /// </summary>
     private static void ValidateLikeJose(JsonWebToken jwt, IEnumerable<string> expectedAudience)
     {
@@ -166,7 +168,7 @@ public static class JwtSvidParser
     }
 
     /// <summary>
-    /// Json web token have only one header, and it is signed for a supported algorithm
+    ///     Json web token have only one header, and it is signed for a supported algorithm
     /// </summary>
     private static void ValidateTokenAlgorithm(JsonWebToken jwt)
     {
@@ -181,14 +183,12 @@ public static class JwtSvidParser
         }
     }
 
-    private static JwtSvid CreateJwtSvid(SpiffeId id, JsonWebToken jwt)
-    {
-        return new JwtSvid(
-            token: jwt.EncodedToken,
-            id: id,
-            audience: jwt.Audiences.ToList(),
-            expiry: jwt.ValidTo,
-            claims: jwt.Claims.ToDictionary(c => c.Type, c => c.Value),
-            hint: string.Empty);
-    }
+    private static JwtSvid CreateJwtSvid(SpiffeId id, JsonWebToken jwt) =>
+        new(
+            jwt.EncodedToken,
+            id,
+            jwt.Audiences.ToList(),
+            jwt.ValidTo,
+            jwt.Claims.ToDictionary(c => c.Type, c => c.Value),
+            string.Empty);
 }

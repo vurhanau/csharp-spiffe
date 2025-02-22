@@ -12,19 +12,14 @@ internal static class Keys
 
     private static readonly ThreadLocal<Random> s_rand = new(() => new Random());
 
-    public static ECDsa CreateEC256Key()
-    {
-        return ECDsa.Create(ECCurve.NamedCurves.nistP256);
-    }
+    public static ECDsa CreateEC256Key() => ECDsa.Create(ECCurve.NamedCurves.nistP256);
 
-    public static string GenerateKeyId()
-    {
-        return new string(Enumerable.Range(0, KeyIdLength).Select(_ =>
+    public static string GenerateKeyId() =>
+        new(Enumerable.Range(0, KeyIdLength).Select(_ =>
         {
             int r = s_rand.Value!.Next(KeyIdLength);
             return Alphabet[r];
         }).ToArray());
-    }
 
     public static bool EqualJwk(JsonWebKey k1, JsonWebKey k2)
     {

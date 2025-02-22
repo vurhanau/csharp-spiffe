@@ -37,7 +37,7 @@ internal static class Convertor
 
         ParseX509Bundles(response.FederatedBundles, bundles);
 
-        return new(svids, new X509BundleSet(bundles));
+        return new X509Context(svids, new X509BundleSet(bundles));
     }
 
     public static X509BundleSet ParseX509BundleSet(X509BundlesResponse response)
@@ -47,7 +47,7 @@ internal static class Convertor
         Dictionary<TrustDomain, X509Bundle> bundles = [];
         ParseX509Bundles(response.Bundles, bundles);
 
-        return new(bundles);
+        return new X509BundleSet(bundles);
     }
 
     public static List<JwtSvid> ParseJwtSvids(JWTSVIDResponse response, List<string> audience)
@@ -70,13 +70,13 @@ internal static class Convertor
             }
 
             JwtSvid to = JwtSvidParser.ParseInsecure(from.Svid, audience);
-            to = new(
-                token: to.Token,
-                id: to.Id,
-                audience: to.Audience,
-                expiry: to.Expiry,
-                claims: to.Claims,
-                hint: from.Hint);
+            to = new JwtSvid(
+                to.Token,
+                to.Id,
+                to.Audience,
+                to.Expiry,
+                to.Claims,
+                from.Hint);
             svids.Add(to);
         }
 
@@ -103,7 +103,7 @@ internal static class Convertor
         X509Certificate2Collection certificates = Crypto.ParseCertificates(svid.X509Svid.Span);
         certificates[0] = Crypto.GetCertificateWithPrivateKey(certificates[0], svid.X509SvidKey.Span);
 
-        return new(spiffeId, certificates, svid.Hint);
+        return new X509Svid(spiffeId, certificates, svid.Hint);
     }
 
     private static X509Bundle ParseX509Bundle(TrustDomain td, ByteString bundle)
@@ -112,7 +112,8 @@ internal static class Convertor
         return new X509Bundle(td, authorities);
     }
 
-    private static void ParseX509Bundles(IEnumerable<KeyValuePair<string, ByteString>> src, Dictionary<TrustDomain, X509Bundle> dest)
+    private static void ParseX509Bundles(IEnumerable<KeyValuePair<string, ByteString>> src,
+        Dictionary<TrustDomain, X509Bundle> dest)
     {
         foreach (KeyValuePair<string, ByteString> bundle in src)
         {

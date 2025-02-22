@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Spiffe.Id;
 using static Spiffe.Tests.Id.TestConstants;
 
@@ -32,8 +31,10 @@ public class TestTrustDomain
         AssertFail("spiffe:///path", "Trust domain is missing");
         AssertFail("spiffe://trustdomain/", "Path cannot have a trailing slash");
         AssertFail("spiffe://trustdomain/path/", "Path cannot have a trailing slash");
-        AssertFail("spiffe://%F0%9F%A4%AF/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
-        AssertFail("spiffe://trustdomain/%F0%9F%A4%AF", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe://%F0%9F%A4%AF/path",
+            "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe://trustdomain/%F0%9F%A4%AF",
+            "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
 
         for (int i = 0; i < 256; i++)
         {
@@ -46,7 +47,8 @@ public class TestTrustDomain
             }
             else
             {
-                AssertFail($"trustdomain{c}", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+                AssertFail($"trustdomain{c}",
+                    "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
             }
         }
     }
@@ -70,7 +72,8 @@ public class TestTrustDomain
         AssertOk("spiffe://trustdomain");
         AssertOk("spiffe://trustdomain/path");
 
-        AssertFail(new Uri("spiffe://trustdomain/path$"), "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail(new Uri("spiffe://trustdomain/path$"),
+            "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
 
         Action f = () => TrustDomain.FromUri(null);
         f.Should().Throw<ArgumentNullException>().WithParameterName("uri");
@@ -83,7 +86,7 @@ public class TestTrustDomain
         string[] arr = ["trustdomain", "spiffe://trustdomain", "spiffe://trustdomain/path"];
         foreach (string s in arr)
         {
-            var td = TrustDomain.FromString(s);
+            TrustDomain td = TrustDomain.FromString(s);
             Assert.Equal(expected, td.SpiffeId.Id);
         }
     }

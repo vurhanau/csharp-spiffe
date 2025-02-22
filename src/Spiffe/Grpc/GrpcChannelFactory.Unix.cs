@@ -6,13 +6,13 @@ using Spiffe.WorkloadApi;
 namespace Spiffe.Grpc;
 
 /// <summary>
-/// Constructs GRPC channels.
+///     Constructs GRPC channels.
 /// </summary>
 public static partial class GrpcChannelFactory
 {
     /// <summary>
-    /// Creates a socket handler backed by Unix domain socket.
-    /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-uds?view=aspnetcore-8.0"/>
+    ///     Creates a socket handler backed by Unix domain socket.
+    ///     See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-uds?view=aspnetcore-8.0" />
     /// </summary>
     /// <param name="address">Socket path URI (ex: unix:///tmp/api.sock)</param>
     private static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
@@ -35,7 +35,7 @@ public static partial class GrpcChannelFactory
                     socket.Dispose();
                     throw;
                 }
-            },
+            }
         };
     }
 }

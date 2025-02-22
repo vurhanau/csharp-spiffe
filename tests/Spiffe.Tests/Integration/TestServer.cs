@@ -14,10 +14,7 @@ internal class TestServer
 
     private readonly ITestOutputHelper _output;
 
-    internal TestServer(ITestOutputHelper output)
-    {
-        _output = output;
-    }
+    internal TestServer(ITestOutputHelper output) => _output = output;
 
     private static string GetTestServerRoot()
     {
@@ -43,20 +40,20 @@ internal class TestServer
         // Ignore active connections
         TcpConnectionInformation[] connections = properties.GetActiveTcpConnections();
         portArray.AddRange(from n in connections
-                            where n.LocalEndPoint.Port >= StartingPort
-                            select n.LocalEndPoint.Port);
+            where n.LocalEndPoint.Port >= StartingPort
+            select n.LocalEndPoint.Port);
 
         // Ignore active tcp listners
         IPEndPoint[] endPoints = properties.GetActiveTcpListeners();
         portArray.AddRange(from n in endPoints
-                            where n.Port >= StartingPort
-                            select n.Port);
+            where n.Port >= StartingPort
+            select n.Port);
 
         // Ignore active UDP listeners
         endPoints = properties.GetActiveUdpListeners();
         portArray.AddRange(from n in endPoints
-                            where n.Port >= StartingPort
-                            select n.Port);
+            where n.Port >= StartingPort
+            select n.Port);
 
         portArray.Sort();
 
@@ -81,8 +78,8 @@ internal class TestServer
             _output.WriteLine($"Test server address: {address}");
 
             Command cmd = Cli.Wrap("dotnet")
-                            .WithArguments(["run", address, "--framework", "net8.0"])
-                            .WithWorkingDirectory(testServerRoot);
+                .WithArguments(["run", address, "--framework", "net8.0"])
+                .WithWorkingDirectory(testServerRoot);
             await foreach (CommandEvent e in cmd.ListenAsync(cancellationToken))
             {
                 switch (e)

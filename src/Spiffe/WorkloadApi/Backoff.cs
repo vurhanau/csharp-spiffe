@@ -8,15 +8,8 @@ internal class Backoff
 
     public TimeSpan MaxDelay { get; init; }
 
-    public static Backoff Create()
-    {
-        return new Backoff
-        {
-            InitialDelay = TimeSpan.FromSeconds(1),
-            MaxDelay = TimeSpan.FromSeconds(30),
-            _n = 0,
-        };
-    }
+    public static Backoff Create() =>
+        new() { InitialDelay = TimeSpan.FromSeconds(1), MaxDelay = TimeSpan.FromSeconds(30), _n = 0 };
 
     public TimeSpan Duration()
     {
@@ -26,8 +19,5 @@ internal class Backoff
         return TimeSpan.FromSeconds(d);
     }
 
-    public void Reset()
-    {
-        Interlocked.Exchange(ref _n, 0);
-    }
+    public void Reset() => Interlocked.Exchange(ref _n, 0);
 }
