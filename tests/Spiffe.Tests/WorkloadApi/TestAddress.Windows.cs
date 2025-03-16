@@ -1,5 +1,4 @@
 ﻿#if OS_WINDOWS
-
 using Spiffe.WorkloadApi;
 
 namespace Spiffe.Tests.WorkloadApi;

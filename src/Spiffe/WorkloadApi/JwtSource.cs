@@ -4,18 +4,17 @@ using Spiffe.Svid.Jwt;
 
 namespace Spiffe.WorkloadApi;
 
-/// <inheritdoc/>
+/// <inheritdoc />
 public sealed class JwtSource : IJwtSource
 {
-    private readonly ReaderWriterLockSlim _lock;
-
     private readonly IWorkloadApiClient _client;
+    private readonly ReaderWriterLockSlim _lock;
 
     private JwtBundleSet? _bundles;
 
-    private volatile int _initialized;
-
     private volatile int _disposed;
+
+    private volatile int _initialized;
 
     internal JwtSource(IWorkloadApiClient client)
     {
@@ -24,21 +23,20 @@ public sealed class JwtSource : IJwtSource
     }
 
     /// <summary>
-    /// Indicates if source is initialized.
+    ///     Indicates if source is initialized.
     /// </summary>
     public bool IsInitialized => _initialized == 1;
 
     private bool IsDisposed => _disposed != 0;
 
-    /// <inheritdoc/>
-    public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams, CancellationToken cancellationToken = default)
-    {
-        return await _client.FetchJwtSvidsAsync(jwtParams, cancellationToken)
+    /// <inheritdoc />
+    public async Task<List<JwtSvid>> FetchJwtSvidsAsync(JwtSvidParams jwtParams,
+        CancellationToken cancellationToken = default) =>
+        await _client.FetchJwtSvidsAsync(jwtParams, cancellationToken)
             .ConfigureAwait(false);
-    }
 
     /// <summary>
-    /// Returns the JWT bundle for the given trust domain.
+    ///     Returns the JWT bundle for the given trust domain.
     /// </summary>
     public JwtBundle GetJwtBundle(TrustDomain trustDomain)
     {
@@ -57,7 +55,7 @@ public sealed class JwtSource : IJwtSource
     }
 
     /// <summary>
-    /// Disposes source
+    ///     Disposes source
     /// </summary>
     public void Dispose()
     {
@@ -68,13 +66,13 @@ public sealed class JwtSource : IJwtSource
     }
 
     /// <summary>
-    /// Creates a new <see cref="JwtSource"/>. It awaits until the initial update
-    /// has been received from the Workload API for <paramref name="timeoutMillis"/>.
-    /// The source should be closed when no longer in use to free underlying resources.
+    ///     Creates a new <see cref="JwtSource" />. It awaits until the initial update
+    ///     has been received from the Workload API for <paramref name="timeoutMillis" />.
+    ///     The source should be closed when no longer in use to free underlying resources.
     /// </summary>
     public static async Task<JwtSource> CreateAsync(IWorkloadApiClient client,
-                                                    int timeoutMillis = 60_000,
-                                                    CancellationToken cancellationToken = default)
+        int timeoutMillis = 60_000,
+        CancellationToken cancellationToken = default)
     {
         _ = client ?? throw new ArgumentNullException(nameof(client));
 
@@ -91,7 +89,7 @@ public sealed class JwtSource : IJwtSource
     }
 
     /// <summary>
-    /// Visible for testing.
+    ///     Visible for testing.
     /// </summary>
     internal void SetJwtBundleSet(JwtBundleSet jwtBundleSet)
     {
@@ -110,7 +108,7 @@ public sealed class JwtSource : IJwtSource
     }
 
     /// <summary>
-    /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled.
+    ///     Waits until the source is updated or the <paramref name="cancellationToken" /> is cancelled.
     /// </summary>
     private async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
     {
@@ -132,10 +130,7 @@ public sealed class JwtSource : IJwtSource
         }
     }
 
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
-    }
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
 
     private void ThrowIfNotInitalized()
     {

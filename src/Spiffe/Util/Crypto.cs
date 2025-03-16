@@ -4,21 +4,24 @@ using System.Security.Cryptography.X509Certificates;
 namespace Spiffe.Util;
 
 /// <summary>
-/// This class adds Go crypto capabilities to C#.
+///     This class adds Go crypto capabilities to C#.
 /// </summary>
 internal static class Crypto
 {
     /// <summary>
-    /// Creates an X509 certificate with a private key.
-    /// <br/>
-    /// C# OID list: <seealso href="https://github.com/dotnet/runtime/blob/v8.0.1/src/libraries/Common/src/System/Security/Cryptography/Oids.cs"/>
-    /// <br/>
-    /// Go OID list: <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/x509.go#L462C1-L486C1"/>
+    ///     Creates an X509 certificate with a private key.
+    ///     <br />
+    ///     C# OID list:
+    ///     <seealso
+    ///         href="https://github.com/dotnet/runtime/blob/v8.0.1/src/libraries/Common/src/System/Security/Cryptography/Oids.cs" />
+    ///     <br />
+    ///     Go OID list:
+    ///     <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/x509.go#L462C1-L486C1" />
     /// </summary>
     /// <param name="cert">Certificate</param>
     /// <param name="keyBytes">Private key data</param>
     /// <returns>Certificate with a private key</returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="keyBytes"/> has an unknown key algorithm.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="keyBytes" /> has an unknown key algorithm.</exception>
     internal static X509Certificate2 GetCertificateWithPrivateKey(X509Certificate2 cert, ReadOnlySpan<byte> keyBytes)
     {
         X509Certificate2 certWithPrivateKey;
@@ -70,9 +73,10 @@ internal static class Crypto
     }
 
     /// <summary>
-    /// Parses one or more certificates from the given ASN.1 DER data.
-    /// The certificates must be concatenated with no intermediate padding.
-    /// See <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/parser.go#L1001C1-L1014C2"/>
+    ///     Parses one or more certificates from the given ASN.1 DER data.
+    ///     The certificates must be concatenated with no intermediate padding.
+    ///     See
+    ///     <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/parser.go#L1001C1-L1014C2" />
     /// </summary>
     internal static X509Certificate2Collection ParseCertificates(ReadOnlySpan<byte> der)
     {

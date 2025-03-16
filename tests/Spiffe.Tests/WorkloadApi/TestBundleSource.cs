@@ -29,13 +29,13 @@ public class TestBundleSource
         byte[] svidKey = svidCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         string hint = "internal";
         X509SVIDResponse x509Resp = new();
-        x509Resp.Svids.Add(new X509SVID()
+        x509Resp.Svids.Add(new X509SVID
         {
             SpiffeId = spiffeId.Id,
             Bundle = ByteString.CopyFrom(bundleCert.RawData),
             X509Svid = ByteString.CopyFrom(svidCert.RawData),
             X509SvidKey = ByteString.CopyFrom(svidKey),
-            Hint = hint,
+            Hint = hint
         });
 
         JWTBundlesResponse jwtResp = new();
@@ -46,9 +46,9 @@ public class TestBundleSource
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(x509Resp));
+            .Returns(CallHelpers.Stream(x509Resp));
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(jwtResp));
+            .Returns(CallHelpers.Stream(jwtResp));
 
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
         using BundleSource s = await BundleSource.CreateAsync(c);
@@ -76,13 +76,13 @@ public class TestBundleSource
         X509SVIDResponse resp = new();
         TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, resp));
+            .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
 
-        using BundleSource s = await BundleSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
+        using BundleSource s = await BundleSource.CreateAsync(c, 60_000, cancellation.Token);
 
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
         s.IsInitialized.Should().BeFalse();
@@ -95,10 +95,10 @@ public class TestBundleSource
         X509SVIDResponse resp = new();
         TimeSpan respDelay = TimeSpan.FromHours(1);
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, resp));
+            .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, 500));
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
@@ -113,13 +113,13 @@ public class TestBundleSource
         byte[] svidKey = svidCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
         string hint = "internal";
         X509SVIDResponse x509Resp = new();
-        x509Resp.Svids.Add(new X509SVID()
+        x509Resp.Svids.Add(new X509SVID
         {
             SpiffeId = spiffeId.Id,
             Bundle = ByteString.CopyFrom(bundleCert.RawData),
             X509Svid = ByteString.CopyFrom(svidCert.RawData),
             X509SvidKey = ByteString.CopyFrom(svidKey),
-            Hint = hint,
+            Hint = hint
         });
 
         JWTBundlesResponse jwtResp = new();
@@ -127,13 +127,13 @@ public class TestBundleSource
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(x509Resp));
+            .Returns(CallHelpers.Stream(x509Resp));
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, jwtResp));
+            .Returns(CallHelpers.Stream(respDelay, jwtResp));
 
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, 500));
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
@@ -151,13 +151,13 @@ public class TestBundleSource
 
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
         mockGrpcClient.Setup(c => c.FetchX509SVID(It.IsAny<X509SVIDRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, x509Resp));
+            .Returns(CallHelpers.Stream(respDelay, x509Resp));
         mockGrpcClient.Setup(c => c.FetchJWTBundles(It.IsAny<JWTBundlesRequest>(), It.IsAny<CallOptions>()))
-                      .Returns(CallHelpers.Stream(respDelay, jwtResp));
+            .Returns(CallHelpers.Stream(respDelay, jwtResp));
 
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, 500));
     }
 
     [Fact]
@@ -170,8 +170,8 @@ public class TestBundleSource
         f1.Should().Throw<InvalidOperationException>();
         f2.Should().Throw<InvalidOperationException>();
 
-        s.SetX509Context(new([], new([])));
-        s.SetJwtBundles(new([]));
+        s.SetX509Context(new X509Context([], new X509BundleSet([])));
+        s.SetJwtBundles(new JwtBundleSet([]));
         s.Dispose();
 
         f1.Should().Throw<ObjectDisposedException>();

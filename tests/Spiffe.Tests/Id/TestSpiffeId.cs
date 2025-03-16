@@ -43,7 +43,8 @@ public class TestSpiffeId
             else
             {
                 // Reject bad trustdomain char
-                AssertFail($"spiffe://trustdomain{c}/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+                AssertFail($"spiffe://trustdomain{c}/path",
+                    "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
             }
 
             if (PathChars.Contains(c))
@@ -54,7 +55,8 @@ public class TestSpiffeId
             else
             {
                 // Reject bad path char
-                AssertFail($"spiffe://trustdomain/path{c}", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+                AssertFail($"spiffe://trustdomain/path{c}",
+                    "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
             }
         }
 
@@ -86,12 +88,16 @@ public class TestSpiffeId
 
         // Reject percent encoding
         // percent-encoded unicode
-        AssertFail("spiffe://%F0%9F%A4%AF/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
-        AssertFail("spiffe://trustdomain/%F0%9F%A4%AF", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe://%F0%9F%A4%AF/path",
+            "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe://trustdomain/%F0%9F%A4%AF",
+            "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
 
         // percent-encoded ascii
-        AssertFail("spiffe://%62%61%64/path", "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
-        AssertFail("spiffe://trustdomain/%62%61%64", "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe://%62%61%64/path",
+            "Trust domain characters are limited to lowercase letters, numbers, dots, dashes, and underscores");
+        AssertFail("spiffe://trustdomain/%62%61%64",
+            "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
     [Fact]
@@ -107,8 +113,10 @@ public class TestSpiffeId
         AssertOk("spiffe://trustdomain");
         AssertOk("spiffe://trustdomain/path");
 
-        ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeId.FromUri(new Uri("spiffe://trustdomain/path$")));
-        Assert.Contains("Path segment characters are limited to letters, numbers, dots, dashes, and underscores", e.Message);
+        ArgumentException e =
+            Assert.Throws<ArgumentException>(() => SpiffeId.FromUri(new Uri("spiffe://trustdomain/path$")));
+        Assert.Contains("Path segment characters are limited to letters, numbers, dots, dashes, and underscores",
+            e.Message);
     }
 
     [Fact]
@@ -163,12 +171,10 @@ public class TestSpiffeId
     [Fact]
     public void TestUri()
     {
-        static Uri AsUri(string td, string path) => new UriBuilder()
+        static Uri AsUri(string td, string path)
         {
-            Scheme = "spiffe",
-            Host = td,
-            Path = path,
-        }.Uri;
+            return new UriBuilder { Scheme = "spiffe", Host = td, Path = path }.Uri;
+        }
 
         SpiffeId spiffeId = SpiffeId.FromSegments(Td, "path", "element");
         Assert.Equal(AsUri("trustdomain", "/path/element"), spiffeId.ToUri());
@@ -188,7 +194,8 @@ public class TestSpiffeId
 
         void AssertFail(string startsWith, string replaceWith, string expectedErr)
         {
-            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).ReplacePath(replaceWith));
+            ArgumentException e =
+                Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).ReplacePath(replaceWith));
             Assert.Contains(expectedErr, e.Message);
         }
 
@@ -211,7 +218,8 @@ public class TestSpiffeId
 
         void AssertFail(string startsWith, string[] replaceWith, string expectedErr)
         {
-            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).ReplaceSegments(replaceWith));
+            ArgumentException e =
+                Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).ReplaceSegments(replaceWith));
             Assert.Contains(expectedErr, e.Message);
         }
 
@@ -219,7 +227,8 @@ public class TestSpiffeId
         AssertOk("/path", ["foo"], "/foo");
 
         AssertFail(string.Empty, [string.Empty], "Path cannot contain empty segments");
-        AssertFail(string.Empty, ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail(string.Empty, ["/foo"],
+            "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
     [Fact]
@@ -233,7 +242,8 @@ public class TestSpiffeId
 
         void AssertFail(string startsWith, string replaceWith, string expectedErr)
         {
-            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).AppendPath(replaceWith));
+            ArgumentException e =
+                Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).AppendPath(replaceWith));
             Assert.Contains(expectedErr, e.Message);
         }
 
@@ -256,7 +266,8 @@ public class TestSpiffeId
 
         void AssertFail(string startsWith, string[] replaceWith, string expectedErr)
         {
-            ArgumentException e = Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).AppendSegments(replaceWith));
+            ArgumentException e =
+                Assert.Throws<ArgumentException>(() => SpiffeId.FromPath(Td, startsWith).AppendSegments(replaceWith));
             Assert.Contains(expectedErr, e.Message);
         }
 
@@ -264,7 +275,8 @@ public class TestSpiffeId
         AssertOk("/path", ["foo"], "/path/foo");
 
         AssertFail(string.Empty, [string.Empty], "Path cannot contain empty segments");
-        AssertFail(string.Empty, ["/foo"], "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
+        AssertFail(string.Empty, ["/foo"],
+            "Path segment characters are limited to letters, numbers, dots, dashes, and underscores");
     }
 
     [Fact]

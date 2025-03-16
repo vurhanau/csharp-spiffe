@@ -1,5 +1,4 @@
 #if OS_WINDOWS
-
 using System.ComponentModel;
 
 namespace Spiffe.Tests.Integration;

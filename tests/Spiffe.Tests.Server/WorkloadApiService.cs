@@ -25,7 +25,8 @@ public class WorkloadApiService : SpiffeWorkloadAPIBase
         MT7lix7GtnRkvgmaWRTyooxyR1C2w8PYS6lSo6FJCIV6e1EBvryj6Vm1
         -----END CERTIFICATE-----";
 
-    public override async Task FetchX509Bundles(X509BundlesRequest request, IServerStreamWriter<X509BundlesResponse> responseStream, ServerCallContext context)
+    public override async Task FetchX509Bundles(X509BundlesRequest request,
+        IServerStreamWriter<X509BundlesResponse> responseStream, ServerCallContext context)
     {
         X509BundlesResponse resp = new();
         X509Certificate2Collection c = [];

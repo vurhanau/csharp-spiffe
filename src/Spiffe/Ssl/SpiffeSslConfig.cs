@@ -8,61 +8,49 @@ using Spiffe.WorkloadApi;
 namespace Spiffe.Ssl;
 
 /// <summary>
-/// TLS configuration which verifies and authorizes
-/// the peer's X509-SVID.
+///     TLS configuration which verifies and authorizes
+///     the peer's X509-SVID.
 /// </summary>
 public static class SpiffeSslConfig
 {
     /// <summary>
-    /// Creates TLS server authentication config backed by X509 SVID.
+    ///     Creates TLS server authentication config backed by X509 SVID.
     /// </summary>
-    public static SslServerAuthenticationOptions GetTlsServerOptions(IX509Source x509Source)
-    {
-        return new SslServerAuthenticationOptions
-        {
-            ClientCertificateRequired = false,
-            ServerCertificateContext = CreateContext(x509Source),
-        };
-    }
+    public static SslServerAuthenticationOptions GetTlsServerOptions(IX509Source x509Source) =>
+        new() { ClientCertificateRequired = false, ServerCertificateContext = CreateContext(x509Source) };
 
     /// <summary>
-    /// Creates MTLS server authentication config backed by X509 SVID.
+    ///     Creates MTLS server authentication config backed by X509 SVID.
     /// </summary>
-    public static SslServerAuthenticationOptions GetMtlsServerOptions(IX509Source x509Source, IAuthorizer authorizer)
-    {
-        return new SslServerAuthenticationOptions
+    public static SslServerAuthenticationOptions GetMtlsServerOptions(IX509Source x509Source, IAuthorizer authorizer) =>
+        new()
         {
             ClientCertificateRequired = true,
             RemoteCertificateValidationCallback = (_, cert, chain, _) =>
-                                                        ValidateRemoteCertificate(cert, chain, x509Source, authorizer),
-            ServerCertificateContext = CreateContext(x509Source),
+                ValidateRemoteCertificate(cert, chain, x509Source, authorizer),
+            ServerCertificateContext = CreateContext(x509Source)
         };
-    }
 
     /// <summary>
-    /// Creates TLS client authentication config backed by X509 SVID.
+    ///     Creates TLS client authentication config backed by X509 SVID.
     /// </summary>
-    public static SslClientAuthenticationOptions GetTlsClientOptions(IX509BundleSource x509BundleSource)
-    {
-        return new SslClientAuthenticationOptions
+    public static SslClientAuthenticationOptions GetTlsClientOptions(IX509BundleSource x509BundleSource) =>
+        new()
         {
             RemoteCertificateValidationCallback = (_, cert, chain, _) =>
-                                                        ValidateRemoteCertificate(cert, chain, x509BundleSource, Authorizers.AuthorizeAny()),
+                ValidateRemoteCertificate(cert, chain, x509BundleSource, Authorizers.AuthorizeAny())
         };
-    }
 
     /// <summary>
-    /// Creates MTLS client authentication config backed by X509 SVID.
+    ///     Creates MTLS client authentication config backed by X509 SVID.
     /// </summary>
-    public static SslClientAuthenticationOptions GetMtlsClientOptions(IX509Source x509Source, IAuthorizer authorizer)
-    {
-        return new SslClientAuthenticationOptions
+    public static SslClientAuthenticationOptions GetMtlsClientOptions(IX509Source x509Source, IAuthorizer authorizer) =>
+        new()
         {
             RemoteCertificateValidationCallback = (_, cert, chain, _) =>
-                                                        ValidateRemoteCertificate(cert, chain, x509Source, authorizer),
-            ClientCertificateContext = CreateContext(x509Source),
+                ValidateRemoteCertificate(cert, chain, x509Source, authorizer),
+            ClientCertificateContext = CreateContext(x509Source)
         };
-    }
 
     private static bool ValidateRemoteCertificate(
         X509Certificate? cert,

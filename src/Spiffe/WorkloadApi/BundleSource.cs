@@ -5,57 +5,46 @@ using Spiffe.Id;
 namespace Spiffe.WorkloadApi;
 
 /// <summary>
-/// Source of SPIFFE bundles maintained via the Workload API
+///     Source of SPIFFE bundles maintained via the Workload API
 /// </summary>
 public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposable
 {
     private readonly ReaderWriterLockSlim _lock;
 
-    private X509BundleSet? _x509Bundles;
-
-    private JwtBundleSet? _jwtBundles;
+    private volatile int _disposed;
 
     private volatile int _initialized;
 
-    private volatile int _disposed;
+    private JwtBundleSet? _jwtBundles;
+
+    private X509BundleSet? _x509Bundles;
 
     /// <summary>
-    /// Constructs bundle source.
-    /// Visible for testing.
+    ///     Constructs bundle source.
+    ///     Visible for testing.
     /// </summary>
-    internal BundleSource()
-    {
-        _lock = new ReaderWriterLockSlim();
-    }
+    internal BundleSource() => _lock = new ReaderWriterLockSlim();
 
     /// <summary>
-    /// Indicates if source is initialized.
+    ///     Indicates if source is initialized.
     /// </summary>
     public bool IsInitialized => _initialized == 3;
 
     private bool IsDisposed => _disposed != 0;
 
     /// <summary>
-    /// Returns the X.509 bundle for the given trust domain.
+    ///     Disposes client
     /// </summary>
-    public X509Bundle GetX509Bundle(TrustDomain trustDomain)
+    public void Dispose()
     {
-        ThrowIfNotInitalized();
-        ThrowIfDisposed();
-
-        _lock.EnterReadLock();
-        try
+        if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
         {
-            return _x509Bundles!.GetX509Bundle(trustDomain);
-        }
-        finally
-        {
-            _lock.ExitReadLock();
+            _lock.Dispose();
         }
     }
 
     /// <summary>
-    /// Returns the JWT bundle for the given trust domain.
+    ///     Returns the JWT bundle for the given trust domain.
     /// </summary>
     public JwtBundle GetJwtBundle(TrustDomain trustDomain)
     {
@@ -74,13 +63,32 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     }
 
     /// <summary>
-    /// Creates a new <see cref="BundleSource"/>.
-    /// It blocks until the initial update has been received from the Workload API.
-    /// The source should be closed when no longer in use to free underlying resources.
+    ///     Returns the X.509 bundle for the given trust domain.
+    /// </summary>
+    public X509Bundle GetX509Bundle(TrustDomain trustDomain)
+    {
+        ThrowIfNotInitalized();
+        ThrowIfDisposed();
+
+        _lock.EnterReadLock();
+        try
+        {
+            return _x509Bundles!.GetX509Bundle(trustDomain);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    /// <summary>
+    ///     Creates a new <see cref="BundleSource" />.
+    ///     It blocks until the initial update has been received from the Workload API.
+    ///     The source should be closed when no longer in use to free underlying resources.
     /// </summary>
     public static async Task<BundleSource> CreateAsync(IWorkloadApiClient client,
-                                                       int timeoutMillis = 60_000,
-                                                       CancellationToken cancellationToken = default)
+        int timeoutMillis = 60_000,
+        CancellationToken cancellationToken = default)
     {
         _ = client ?? throw new ArgumentNullException(nameof(client));
 
@@ -102,18 +110,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     }
 
     /// <summary>
-    /// Disposes client
-    /// </summary>
-    public void Dispose()
-    {
-        if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
-        {
-            _lock.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Visible for testing.
+    ///     Visible for testing.
     /// </summary>
     internal void SetX509Context(X509Context x509Context)
     {
@@ -132,7 +129,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     }
 
     /// <summary>
-    /// Visible for testing.
+    ///     Visible for testing.
     /// </summary>
     internal void SetJwtBundles(JwtBundleSet jwtBundles)
     {
@@ -151,7 +148,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     }
 
     /// <summary>
-    /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled.
+    ///     Waits until the source is updated or the <paramref name="cancellationToken" /> is cancelled.
     /// </summary>
     private async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
     {
@@ -173,10 +170,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         }
     }
 
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
-    }
+    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(IsDisposed, this);
 
     private void ThrowIfNotInitalized()
     {
