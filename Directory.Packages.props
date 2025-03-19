@@ -13,7 +13,7 @@
         <TestSdkVersion>17.13.0</TestSdkVersion>
         <XunitVersion>2.9.3</XunitVersion>
         <XunitRunnerVersion>3.0.2</XunitRunnerVersion>
-        <FluentAssertionsVersion>8.1.1</FluentAssertionsVersion>
+        <FluentAssertionsVersion>8.2.0</FluentAssertionsVersion>
         <MoqVersion>4.20.72</MoqVersion>
         <CoverletVersion>6.0.4</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
