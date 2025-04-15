@@ -9,7 +9,7 @@ The C# SPIFFE library provides functionality to interact with the Workload API t
 
 C# implementation of [spiffe/go-spiffe](https://github.com/spiffe/go-spiffe).
 
-Requires .NET8.
+This library requires .NET 8.0 or higher.
 
 [NuGet Package](https://www.nuget.org/packages/Spiffe/)
 
