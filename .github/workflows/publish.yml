@@ -5,6 +5,11 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+          dotnet-version: [9.x]
+
     permissions:
       contents: read
     steps:
@@ -15,14 +20,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         id: setup
         with:
-          dotnet-version: 8.x
+          dotnet-version: ${{ matrix.dotnet-version }}
     
       - name: Restore Cache
         id: restore-cache
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/Directory.Packages.props') }}
+          key: ${{ runner.os }}-dotnet${{ matrix.dotnet-version }}-nuget-${{ hashFiles('**/packages.lock.json', '**/Directory.Packages.props') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
       
@@ -36,4 +41,4 @@ jobs:
         run: make pack
 
       - name: Publish
-        run: ENV_NUGET_API_KEY=${{secrets.NUGET_API_KEY}} make push
+        run: ENV_NUGET_API_KEY=${{ secrets.NUGET_API_KEY }} make push

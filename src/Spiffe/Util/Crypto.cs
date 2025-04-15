@@ -83,11 +83,20 @@ internal static class Crypto
             // If there are multiple certs are in blob - this code fails on MacOS for < .NET8.
             // https://github.com/dotnet/runtime/issues/82682
             ReadOnlySpan<byte> data = der[offset..];
-            X509Certificate2 cert = new(data);
+            X509Certificate2 cert = LoadCertificate(data);
             certs.Add(cert);
             offset += cert.RawData.Length;
         }
 
         return certs;
+    }
+
+    private static X509Certificate2 LoadCertificate(ReadOnlySpan<byte> data)
+    {
+        #if NET9_0_OR_GREATER
+            return X509CertificateLoader.LoadCertificate(data);
+        #else
+            return new X509Certificate2(data);
+        #endif
     }
 }
