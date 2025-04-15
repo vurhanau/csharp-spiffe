@@ -13,9 +13,6 @@ This library requires .NET 8.0 or higher.
 
 [NuGet Package](https://www.nuget.org/packages/Spiffe/)
 
-__IMPORTANT__ \
-This is a prerelease version and it's not ready for use in production.
-
 ## Quick Start
 
 Start [SPIRE](https://spiffe.io/spire/) or another SPIFFE Workload API
