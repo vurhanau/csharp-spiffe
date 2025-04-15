@@ -60,7 +60,9 @@ internal class TestServer
 
         portArray.Sort();
 
-        for (int i = StartingPort; i < ushort.MaxValue; i++)
+        Random random = new();
+        int offset = random.Next(1, 101);
+        for (int i = StartingPort + offset; i < ushort.MaxValue; i++)
         {
             if (!portArray.Contains(i))
             {
@@ -77,11 +79,12 @@ internal class TestServer
         Task t = Task.Factory.StartNew(async () =>
         {
             string testServerRoot = GetTestServerRoot();
+            string framework = GetTargetFramework();
             _output.WriteLine($"Test server root: {testServerRoot}");
             _output.WriteLine($"Test server address: {address}");
-
+            _output.WriteLine($"Test server dotnet framework: {framework}");
             Command cmd = Cli.Wrap("dotnet")
-                            .WithArguments(["run", address, "--framework", "net8.0"])
+                            .WithArguments(["run", address, "--framework", framework])
                             .WithWorkingDirectory(testServerRoot);
             await foreach (CommandEvent e in cmd.ListenAsync(cancellationToken))
             {
@@ -114,5 +117,14 @@ internal class TestServer
         }
 
         return t;
+    }
+
+    private static string GetTargetFramework()
+    {
+#if NET9_0_OR_GREATER
+        return "net9.0";
+#else
+        return "net8.0";
+#endif
     }
 }

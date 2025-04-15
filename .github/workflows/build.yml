@@ -9,18 +9,24 @@ jobs:
     strategy:
         matrix:
             os: [ubuntu-latest, windows-latest, macos-latest]
-            dotnet-version: [8.x, 9.x]
+            dotnet-version: [9.x]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup dotnet
+      - name: Setup dotnet8
         uses: actions/setup-dotnet@v4
-        id: setup
+        id: setup-dotnet8
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
-      
+          dotnet-version: 8.x
+
+      - name: Setup dotnet9
+        uses: actions/setup-dotnet@v4
+        id: setup-dotnet9
+        with:
+          dotnet-version: 9.x
+  
       - name: Restore Cache
         id: restore-cache
         uses: actions/cache@v4
