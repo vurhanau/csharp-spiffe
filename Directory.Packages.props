@@ -3,9 +3,9 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <SpiffeVersion>0.0.2-dev</SpiffeVersion>
         <GoogleProtobufVersion>3.30.2</GoogleProtobufVersion>
-        <GrpcAspNetCoreVersion>2.70.0</GrpcAspNetCoreVersion>
+        <GrpcAspNetCoreVersion>2.71.0</GrpcAspNetCoreVersion>
         <GrpcCoreVersion>2.71.0</GrpcCoreVersion>
-        <GrpcNetClientVersion>2.70.0</GrpcNetClientVersion>
+        <GrpcNetClientVersion>2.71.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.71.0</GrpcToolsVersion>
         <IdentityModelVersion>8.8.0</IdentityModelVersion>
         <LoggingVersion>8.0.1</LoggingVersion>
