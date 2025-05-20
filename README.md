@@ -60,6 +60,27 @@ The X509-SVIDs are presented by each peer and authenticated against the X.509
 bundles. Both sides continue to be updated with X509-SVIDs and X.509 bundles
 streamed from the Workload API (e.g. secret rotation).
 
+## API Documentation
+
+It is highly recommended to generate HTML documentation from the XML comments in the source code using a tool like [DocFX](https://dotnet.github.io/docfx/). This improves the discoverability and usability of the API for library consumers. The generated documentation can be hosted on GitHub Pages for easy access.
+
+Here's a high-level outline of the steps involved:
+
+1.  **Install DocFX**: Install DocFX as a .NET tool:
+    ```bash
+    dotnet tool install -g docfx
+    ```
+2.  **Initialize DocFX Project**: Initialize a new DocFX project in your repository:
+    ```bash
+    docfx init -q
+    ```
+3.  **Configure `docfx.json`**: Modify the `docfx.json` file to specify the source code files (e.g., `src/**/*.csproj`) and any other project-specific configurations.
+4.  **Build Documentation**: Build the documentation:
+    ```bash
+    docfx build docfx.json
+    ```
+5.  **Automate with GitHub Actions**: Set up a GitHub Action to automate the documentation build and deployment to the `gh-pages` branch upon pushes to the main branch.
+
 ## Examples
 
 The [samples](https://github.com/vurhanau/csharp-spiffe/tree/main/samples) directory contains examples for a variety of circumstances.

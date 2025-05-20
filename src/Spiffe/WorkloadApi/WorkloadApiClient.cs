@@ -7,6 +7,7 @@ using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Svid.Jwt;
 using Spiffe.Util;
+using Spiffe.WorkloadApi;
 using static Spiffe.WorkloadApi.SpiffeWorkloadAPI;
 
 namespace Spiffe.WorkloadApi;
@@ -235,7 +236,7 @@ public class WorkloadApiClient : IWorkloadApiClient
                 .ConfigureAwait(false);
             if (!hasItem)
             {
-                throw new InvalidOperationException("Failed to fetch item: enumerator is empty");
+                throw new EmptyWorkloadApiResponseException("Failed to fetch item: The Workload API response stream was empty.");
             }
 
             return mapperFunc(enumerator.Current);

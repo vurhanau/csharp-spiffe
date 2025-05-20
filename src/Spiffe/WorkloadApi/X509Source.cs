@@ -143,9 +143,13 @@ public sealed class X509Source : IX509Source
     /// </summary>
     internal static X509Svid GetDefaultSvid(List<X509Svid> svids)
     {
-        if (svids == null || svids.Count == 0)
+        if (svids == null)
         {
-            throw new ArgumentException("SVIDs must be non-empty");
+            throw new ArgumentNullException(nameof(svids));
+        }
+        if (svids.Count == 0)
+        {
+            throw new ArgumentException("SVID list cannot be empty.", nameof(svids));
         }
 
         return svids[0];
