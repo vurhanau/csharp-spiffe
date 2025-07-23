@@ -17,13 +17,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference 
-            Include="StyleCop.Analyzers" 
-            PrivateAssets="all" 
-            Condition="$(MSBuildProjectExtension) == '.csproj'"/>
-        <PackageReference
-            Include="SonarAnalyzer.CSharp"
-            PrivateAssets="all"
-            Condition="$(MSBuildProjectExtension) == '.csproj'"/>
+        <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" Condition="$(MSBuildProjectExtension) == '.csproj'" />
+        <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" Condition="$(MSBuildProjectExtension) == '.csproj'" />
     </ItemGroup>
 </Project>
