@@ -6,7 +6,7 @@
 
     <ItemGroup>
         <PackageVersion Include="Spiffe" Version="0.0.1-beta.*"/>
-        <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.6"/>
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.8"/>
         <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.6"/>
         <PackageVersion Include="Google.Protobuf" Version="3.31.1"/>
         <PackageVersion Include="Grpc.Net.Client" Version="2.71.0"/>
