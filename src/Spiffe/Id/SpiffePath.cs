@@ -103,12 +103,9 @@ public static class SpiffePath
             throw new ArgumentException(Errors.DotSegment, nameof(segment));
         }
 
-        foreach (char c in segment)
+        if (segment.Any(c => !IsValidPathSegmentChar(c)))
         {
-            if (!IsValidPathSegmentChar(c))
-            {
-                throw new ArgumentException(Errors.BadPathSegmentChar, nameof(segment));
-            }
+            throw new ArgumentException(Errors.BadPathSegmentChar, nameof(segment));
         }
     }
 
