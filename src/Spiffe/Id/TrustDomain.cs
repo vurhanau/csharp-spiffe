@@ -42,12 +42,9 @@ public class TrustDomain
             return id.TrustDomain;
         }
 
-        foreach (char c in idOrName)
+        if (idOrName.Any(c => !IsValidTrustDomainChar(c)))
         {
-            if (!IsValidTrustDomainChar(c))
-            {
-                throw new ArgumentException(Errors.BadTrustDomainChar, nameof(idOrName));
-            }
+            throw new ArgumentException(Errors.BadTrustDomainChar, nameof(idOrName));
         }
 
         return new(idOrName);
