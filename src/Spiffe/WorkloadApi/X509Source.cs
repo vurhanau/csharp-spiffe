@@ -13,36 +13,23 @@ namespace Spiffe.WorkloadApi;
 /// Implements the <see cref="IDisposable"/> interface to close the source.
 /// Other source methods will return an error after close has been called.
 /// </summary>
-public sealed class X509Source : IX509Source
+public sealed class X509Source : Source, IX509Source
 {
     private readonly Func<List<X509Svid>, X509Svid> _picker;
-
-    private readonly ReaderWriterLockSlim _lock;
 
     private X509Svid? _svid;
 
     private X509BundleSet? _bundles;
-
-    private volatile int _initialized;
-
-    private volatile int _disposed;
 
     /// <summary>
     /// Constructs X509 source.
     /// Visible for testing.
     /// </summary>
     internal X509Source(Func<List<X509Svid>, X509Svid> picker)
+        : base()
     {
         _picker = picker;
-        _lock = new ReaderWriterLockSlim();
     }
-
-    /// <summary>
-    /// Indicates if source is initialized.
-    /// </summary>
-    public bool IsInitialized => _initialized == 1;
-
-    private bool IsDisposed => _disposed != 0;
 
     /// <summary>
     /// Creates a new <see cref="X509Source"/>. It awaits until the initial update
@@ -64,7 +51,7 @@ public sealed class X509Source : IX509Source
             cancellationToken);
 
         await source.WaitUntilUpdated(timeoutMillis, cancellationToken)
-            .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
         return source;
     }
@@ -72,70 +59,24 @@ public sealed class X509Source : IX509Source
     /// <summary>
     /// Gets a default SVID.
     /// </summary>
-    public X509Svid GetX509Svid()
-    {
-        ThrowIfNotInitalized();
-        ThrowIfDisposed();
-
-        _lock.EnterReadLock();
-        try
-        {
-            return _svid!;
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
+    public X509Svid GetX509Svid() => ReadLocked(() => _svid!);
 
     /// <summary>
     /// Gets a trust bundle associated with trust domain.
     /// </summary>
-    public X509Bundle GetX509Bundle(TrustDomain trustDomain)
-    {
-        ThrowIfNotInitalized();
-        ThrowIfDisposed();
-
-        _lock.EnterReadLock();
-        try
-        {
-            return _bundles!.GetX509Bundle(trustDomain);
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
-
-    /// <summary>
-    /// Disposes client
-    /// </summary>
-    public void Dispose()
-    {
-        if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
-        {
-            _lock.Dispose();
-        }
-    }
+    public X509Bundle GetX509Bundle(TrustDomain trustDomain) => ReadLocked(() => _bundles!.GetX509Bundle(trustDomain));
 
     /// <summary>
     /// Visible for testing.
     /// </summary>
     internal void SetX509Context(X509Context x509Context)
     {
-        ThrowIfDisposed();
-
-        _lock.EnterWriteLock();
-        try
+        WriteLocked(() =>
         {
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
-            _initialized = 1;
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
-        }
+            Initialized();
+        });
     }
 
     /// <summary>
@@ -149,41 +90,5 @@ public sealed class X509Source : IX509Source
         }
 
         return svids[0];
-    }
-
-    /// <summary>
-    /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled.
-    /// </summary>
-    private async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
-    {
-        using CancellationTokenSource timeout = new();
-        timeout.CancelAfter(timeoutMillis);
-
-        while (!IsInitialized &&
-               !IsDisposed &&
-               !timeout.IsCancellationRequested &&
-               !cancellationToken.IsCancellationRequested)
-        {
-            await Task.Delay(50, CancellationToken.None)
-                .ConfigureAwait(false);
-        }
-
-        if (!IsInitialized)
-        {
-            timeout.Token.ThrowIfCancellationRequested();
-        }
-    }
-
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
-    }
-
-    private void ThrowIfNotInitalized()
-    {
-        if (!IsInitialized)
-        {
-            throw new InvalidOperationException("X509 source is not initialized");
-        }
     }
 }
