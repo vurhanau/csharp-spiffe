@@ -86,10 +86,10 @@ public class TestJwtSource
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
 
-        using JwtSource s = await JwtSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
-
+        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => JwtSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token));
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
-        s.IsInitialized.Should().BeFalse();
+        ex.Message.Should().Be("Source initialization was cancelled.");
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
@@ -102,7 +102,8 @@ public class TestJwtSource
                       .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => JwtSource.CreateAsync(c, timeoutMillis: 500));
+        TimeoutException ex = await Assert.ThrowsAsync<TimeoutException>(() => JwtSource.CreateAsync(c, timeoutMillis: 500));
+        ex.Message.Should().Be("Source was not initialized within the specified timeout of 500 milliseconds.");
     }
 
     [Fact]
