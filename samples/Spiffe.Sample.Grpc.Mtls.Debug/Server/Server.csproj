@@ -3,8 +3,9 @@
     <!-- TODO: remove -->
     <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Spiffe" />
+      <PackageReference Include="Spiffe" />
   </ItemGroup>
 
   <ItemGroup>
