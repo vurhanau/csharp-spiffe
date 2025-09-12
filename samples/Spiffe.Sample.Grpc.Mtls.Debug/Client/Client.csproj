@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- TODO: remove -->
+    <NoWarn>NU1605</NoWarn>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spiffe" />
+    <PackageReference Include="Microsoft.Extensions.Logging"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\Proto\greet.proto" GrpcServices="Client" Link="Protos\greet.proto" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+  </ItemGroup>
+</Project>

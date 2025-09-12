@@ -66,3 +66,20 @@ Stop:
 export SAMPLE_DIR=Spiffe.Sample.AspNetCore.Jwt
 docker-compose -p spiffe-aspnetcore-jwt down
 ```
+
+#### [Debug: GRPC - mTLS with X509-SVIDs](./Spiffe.Sample.Grpc.Mtls.Debug/)
+Start:
+```sh
+export SAMPLE_DIR=Spiffe.Sample.Grpc.Mtls.Debug
+pushd ../ && make pack && popd
+mkdir -p ${SAMPLE_DIR}/LocalFeed
+cp ../nupkg/Spiffe.*-dev.nupkg ${SAMPLE_DIR}/LocalFeed
+docker-compose -f compose-debug.yaml -p spiffe-grpc-mtls-debug build --no-cache
+docker-compose -f compose-debug.yaml -p spiffe-grpc-mtls-debug up -d
+```
+Stop:
+```sh
+export SAMPLE_DIR=Spiffe.Sample.Grpc.Mtls.Debug
+rm -rf ${SAMPLE_DIR}/LocalFeed
+docker-compose -f compose-debug.yaml -p spiffe-grpc-mtls-debug down
+```
