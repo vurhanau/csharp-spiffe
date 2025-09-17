@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Spiffe/Spiffe.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\Proto\greet.proto" GrpcServices="Server" Link="Protos\greet.proto" />
+    <PackageReference Include="Grpc.AspNetCore" />
+  </ItemGroup>
+</Project>

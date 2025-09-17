@@ -3,11 +3,12 @@ updates:
   - package-ecosystem: "nuget"
     directories:
       - "."
-      - "/samples/Spiffe.Sample.AspNetCore.Jwt"
-      - "/samples/Spiffe.Sample.AspNetCore.Mtls"
-      - "/samples/Spiffe.Sample.AspNetCore.Tls"
-      - "/samples/Spiffe.Sample.Grpc.Mtls"
-      - "/samples/Spiffe.Sample.Grpc.Tls"
+      - "/samples/local/Spiffe.Sample.Grpc.Mtls"
+      - "/samples/docker/Spiffe.Sample.AspNetCore.Jwt"
+      - "/samples/docker/Spiffe.Sample.AspNetCore.Mtls"
+      - "/samples/docker/Spiffe.Sample.AspNetCore.Tls"
+      - "/samples/docker/Spiffe.Sample.Grpc.Mtls"
+      - "/samples/docker/Spiffe.Sample.Grpc.Tls"
     schedule:
       interval: "weekly"
       day: "wednesday"
