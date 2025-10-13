@@ -185,6 +185,12 @@ public class WorkloadApiClient : IWorkloadApiClient
             }
         }
 
+        if (e is ObjectDisposedException disposedException)
+        {
+            _logger.LogWarning("Object '{ObjectName}' disposed - no backoff", disposedException.ObjectName);
+            return true;
+        }
+
         TimeSpan retryAfter = backoff.Duration();
         _logger.LogWarning(e, "Failed to watch the Workload API, retrying in {RetryIn} seconds", retryAfter.TotalSeconds);
 

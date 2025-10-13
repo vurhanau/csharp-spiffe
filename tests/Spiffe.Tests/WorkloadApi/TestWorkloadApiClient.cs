@@ -3,6 +3,7 @@ using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Moq;
@@ -516,6 +517,21 @@ public class TestWorkloadApiClient
         rethrow.Should().BeTrue();
         rethrow = await c.HandleWatchError(new RpcException(Status.DefaultSuccess), backoff, CancellationToken.None);
         rethrow.Should().BeFalse();
+    }
+
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
+    public async Task TestThrowsWhenChannelDisposed()
+    {
+        var channel = GrpcChannel.ForAddress("http://localhost:1");
+        var client = WorkloadApiClient.Create(channel);
+        channel.Dispose();
+
+        Func<Task> fetchX509Context = async () => await client.FetchX509ContextAsync(CancellationToken.None);
+        await fetchX509Context.Should().ThrowAsync<ObjectDisposedException>();
+
+        var watcher = new Watcher<X509Context>(_ => { }, _ => { });
+        Func<Task> watchX509Context = async () => await client.WatchX509ContextAsync(watcher, CancellationToken.None);
+        await watchX509Context.Should().ThrowAsync<ObjectDisposedException>();
     }
 
     private static void VerifyX509BundleSet(X509BundleSet b, TrustDomain expectedTrustDomain, X509Certificate2 expectedCert)
