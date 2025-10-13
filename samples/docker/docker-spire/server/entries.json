@@ -1,7 +1,7 @@
 {
     "entries":[
         {
-            "parent_id": "spiffe://example.org/spire/agent/cn/agent.example.com",
+            "parent_id": "spiffe://example.org/spire/agent/x509pop/cn/agent.example.com",
             "spiffe_id": "spiffe://example.org/client",
             "selectors": [{
                 "type": "docker",
@@ -9,7 +9,7 @@
             }]
         },
         {
-            "parent_id": "spiffe://example.org/spire/agent/cn/agent.example.com",
+            "parent_id": "spiffe://example.org/spire/agent/x509pop/cn/agent.example.com",
             "spiffe_id": "spiffe://example.org/server",
             "selectors": [{
                 "type": "docker",
