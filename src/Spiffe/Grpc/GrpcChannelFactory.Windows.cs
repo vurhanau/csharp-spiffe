@@ -1,6 +1,4 @@
-﻿#if OS_WINDOWS
-
-using System.IO.Pipes;
+﻿using System.IO.Pipes;
 using System.Security.Principal;
 using Spiffe.WorkloadApi;
 
@@ -15,9 +13,10 @@ public static partial class GrpcChannelFactory
     /// Creates a socket handler backed by Windows named pipe.
     /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-namedpipes?view=aspnetcore-8.0"/>
     /// </summary>
-    private static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
+    private static SocketsHttpHandler CreateNamedPipeHandler(string address)
     {
         string pipeName = Address.ParseNamedPipeTarget(address);
+
         return new SocketsHttpHandler
         {
             ConnectCallback = async (ignored, cancellationToken) =>
@@ -45,5 +44,3 @@ public static partial class GrpcChannelFactory
         };
     }
 }
-
-#endif

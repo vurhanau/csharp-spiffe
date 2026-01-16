@@ -1,6 +1,5 @@
-#if OS_WINDOWS
-
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace Spiffe.Tests.Integration;
 
@@ -13,8 +12,12 @@ public partial class TestIntegration
     [Category(Constants.Integration)]
     public async Task TestFetchViaNamedPipe()
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         string namedPipe = $"npipe:workload-api-{Guid.NewGuid()}";
         await RunTest(namedPipe);
     }
 }
-#endif

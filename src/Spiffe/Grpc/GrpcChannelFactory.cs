@@ -1,4 +1,5 @@
-﻿using Grpc.Net.Client;
+﻿using System.Runtime.InteropServices;
+using Grpc.Net.Client;
 using Spiffe.WorkloadApi;
 
 namespace Spiffe.Grpc;
@@ -26,7 +27,7 @@ public static partial class GrpcChannelFactory
         GrpcChannelOptions options = new();
         if (!Address.IsHttpOrHttps(address))
         {
-            options.HttpHandler = CreateNativeSocketHandler(address);
+            options.HttpHandler = CreateNativeSocketHandler(address, OSPlatformSupport.CurrentPlatform);
             address = "http://localhost";
         }
 
@@ -35,8 +36,19 @@ public static partial class GrpcChannelFactory
         return GrpcChannel.ForAddress(address, options);
     }
 
-    /// <summary>
-    /// Creates a platform specific socket handler.
-    /// </summary>
-    private static partial SocketsHttpHandler CreateNativeSocketHandler(string address);
+    // visible for testing
+    internal static SocketsHttpHandler CreateNativeSocketHandler(string address, OSPlatform os)
+    {
+        if (os == OSPlatform.Windows)
+        {
+            return CreateNamedPipeHandler(address);
+        }
+
+        if (os == OSPlatform.Linux || os == OSPlatform.OSX || os == OSPlatform.FreeBSD)
+        {
+            return CreateUnixDomainSocketHandler(address);
+        }
+
+        throw new PlatformNotSupportedException("Unsupported platform");
+    }
 }

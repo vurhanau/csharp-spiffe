@@ -1,6 +1,4 @@
-﻿#if OS_WINDOWS
-
-using Spiffe.WorkloadApi;
+﻿using Spiffe.WorkloadApi;
 
 namespace Spiffe.Tests.WorkloadApi;
 
@@ -59,4 +57,3 @@ public partial class TestAddress
         AssertParse(testCases, Address.ParseNamedPipeTarget);
     }
 }
-#endif

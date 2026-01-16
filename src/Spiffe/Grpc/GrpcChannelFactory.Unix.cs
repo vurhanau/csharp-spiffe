@@ -1,6 +1,4 @@
-﻿#if !OS_WINDOWS
-
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using Spiffe.WorkloadApi;
 
 namespace Spiffe.Grpc;
@@ -15,9 +13,10 @@ public static partial class GrpcChannelFactory
     /// See <seealso href="https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-uds?view=aspnetcore-8.0"/>
     /// </summary>
     /// <param name="address">Socket path URI (ex: unix:///tmp/api.sock)</param>
-    private static partial SocketsHttpHandler CreateNativeSocketHandler(string address)
+    private static SocketsHttpHandler CreateUnixDomainSocketHandler(string address)
     {
         string socketPath = Address.ParseUnixSocketTarget(address);
+
         return new SocketsHttpHandler
         {
             ConnectCallback = async (_, cancellationToken) =>
@@ -39,5 +38,3 @@ public static partial class GrpcChannelFactory
         };
     }
 }
-
-#endif
