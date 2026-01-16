@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Grpc.Core;
 using Grpc.Net.Client;
 using Spiffe.WorkloadApi;
 
@@ -25,9 +26,18 @@ public static partial class GrpcChannelFactory
     public static GrpcChannel CreateChannel(string address, Action<GrpcChannelOptions>? configureOptions = null)
     {
         GrpcChannelOptions options = new();
+
+        var callCredentials = CallCredentials.FromInterceptor((context, metadata) =>
+        {
+            metadata.Add("workload.spiffe.io", "true");
+            return Task.CompletedTask;
+        });
+
         if (!Address.IsHttpOrHttps(address))
         {
             options.HttpHandler = CreateNativeSocketHandler(address, OSPlatformSupport.CurrentPlatform);
+            options.UnsafeUseInsecureChannelCallCredentials = true;
+            options.Credentials = ChannelCredentials.Create(ChannelCredentials.Insecure, callCredentials);
             address = "http://localhost";
         }
 
