@@ -1,8 +1,5 @@
 <Project>
     <PropertyGroup>
-        <!-- ISSUE: https://github.com/vurhanau/csharp-spiffe/issues/359 -->
-        <NoWarn>NU1605</NoWarn>
-        <!-- ISSUE -->
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
     </PropertyGroup>

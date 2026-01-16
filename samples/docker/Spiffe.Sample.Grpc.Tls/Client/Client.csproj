@@ -1,4 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- ISSUE: https://github.com/vurhanau/csharp-spiffe/issues/359 -->
+    <NoWarn>NU1605</NoWarn>
+    <!-- ISSUE -->
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Spiffe" />
   </ItemGroup>
