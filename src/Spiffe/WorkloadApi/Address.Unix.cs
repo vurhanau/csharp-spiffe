@@ -1,5 +1,4 @@
-﻿#if !OS_WINDOWS
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Spiffe.Tests")]
 
@@ -70,5 +69,3 @@ internal static partial class Address
         return string.IsNullOrEmpty(uri.Host) && !uri.PathAndQuery.StartsWith('/');
     }
 }
-
-#endif
