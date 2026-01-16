@@ -59,7 +59,7 @@ clean: ## Cleans the project
 	rm -rf src/Spiffe/obj
 
 .PHONY: build-samples
-build-samples: samples/*  ## Builds the samples
+build-samples: samples/local/* samples/docker/*  ## Builds the samples
 	@for file in $^ ; do \
 		[[ "$${file}" =~ "Spiffe.Sample." ]] && dotnet restore "$${file}" && dotnet build "$${file}" --no-restore || true; \
 	done
