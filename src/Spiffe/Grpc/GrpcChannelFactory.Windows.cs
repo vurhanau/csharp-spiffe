@@ -37,8 +37,7 @@ public static partial class GrpcChannelFactory
                 }
                 catch
                 {
-                    await clientStream.DisposeAsync()
-                        .ConfigureAwait(false);
+                    clientStream.Dispose();
                     throw;
                 }
             },
