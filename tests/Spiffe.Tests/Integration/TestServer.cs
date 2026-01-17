@@ -8,9 +8,7 @@ namespace Spiffe.Tests.Integration;
 
 internal class TestServer
 {
-    private const int StartingPort = 15000;
-
-    private const string TestServerStartedLog = "Application started";
+    private static readonly int[] StartingPorts = [5000, 10000, 15000, 25000];
 
     private readonly ITestOutputHelper _output;
 
@@ -36,6 +34,8 @@ internal class TestServer
 
     internal static int GetAvailablePort()
     {
+        int startingPort = StartingPorts[Random.Shared.Next(0, StartingPorts.Length)];
+
         List<int> portArray = [];
 
         IPGlobalProperties properties = IPGlobalProperties.GetIPGlobalProperties();
@@ -43,26 +43,26 @@ internal class TestServer
         // Ignore active connections
         TcpConnectionInformation[] connections = properties.GetActiveTcpConnections();
         portArray.AddRange(from n in connections
-                            where n.LocalEndPoint.Port >= StartingPort
+                            where n.LocalEndPoint.Port >= startingPort
                             select n.LocalEndPoint.Port);
 
         // Ignore active tcp listners
         IPEndPoint[] endPoints = properties.GetActiveTcpListeners();
         portArray.AddRange(from n in endPoints
-                            where n.Port >= StartingPort
+                            where n.Port >= startingPort
                             select n.Port);
 
         // Ignore active UDP listeners
         endPoints = properties.GetActiveUdpListeners();
         portArray.AddRange(from n in endPoints
-                            where n.Port >= StartingPort
+                            where n.Port >= startingPort
                             select n.Port);
 
         portArray.Sort();
 
         Random random = new();
         int offset = random.Next(1, 101);
-        for (int i = StartingPort + offset; i < ushort.MaxValue; i++)
+        for (int i = startingPort + offset; i < ushort.MaxValue; i++)
         {
             if (!portArray.Contains(i))
             {
@@ -94,14 +94,16 @@ internal class TestServer
                     case StartedCommandEvent started:
                         _output.WriteLine($"Process started; ID: {started.ProcessId}");
                         break;
+
                     case StandardOutputCommandEvent stdOut:
                         _output.WriteLine($"Out> {stdOut.Text}");
-                        if (stdOut.Text.Contains(TestServerStartedLog))
+                        if (stdOut.Text.Contains("Application started"))
                         {
                             started.SetResult(true);
                         }
 
                         break;
+
                     case StandardErrorCommandEvent stdErr:
                         _output.WriteLine($"Err> {stdErr.Text}");
                         if (stdErr.Text.Contains("Failed to bind") && !failed.Task.IsCompleted)
@@ -110,6 +112,7 @@ internal class TestServer
                         }
 
                         break;
+
                     case ExitedCommandEvent exited:
                         _output.WriteLine($"Process exited; Code: {exited.ExitCode}");
                         break;
