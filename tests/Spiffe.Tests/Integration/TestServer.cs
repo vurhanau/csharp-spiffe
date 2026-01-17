@@ -8,7 +8,7 @@ namespace Spiffe.Tests.Integration;
 
 internal class TestServer
 {
-    private const int StartingPort = 5000;
+    private const int StartingPort = 15000;
 
     private const string TestServerStartedLog = "Application started";
 
@@ -76,6 +76,7 @@ internal class TestServer
     internal async Task<Task> ListenAsync(string address, CancellationToken cancellationToken)
     {
         TaskCompletionSource<bool> started = new();
+        TaskCompletionSource<bool> failed = new();
         Task t = Task.Factory.StartNew(async () =>
         {
             string testServerRoot = GetTestServerRoot();
@@ -103,6 +104,11 @@ internal class TestServer
                         break;
                     case StandardErrorCommandEvent stdErr:
                         _output.WriteLine($"Err> {stdErr.Text}");
+                        if (stdErr.Text.Contains("Failed to bind") && !failed.Task.IsCompleted)
+                        {
+                            failed.SetException(new InvalidOperationException($"Server failed to start: {stdErr.Text}"));
+                        }
+
                         break;
                     case ExitedCommandEvent exited:
                         _output.WriteLine($"Process exited; Code: {exited.ExitCode}");
@@ -111,7 +117,12 @@ internal class TestServer
             }
         });
 
-        await started.Task.WaitAsync(cancellationToken);
+        // Wait for either success or failure
+        Task completedTask = await Task.WhenAny(started.Task, failed.Task).ConfigureAwait(false);
+        if (completedTask == failed.Task)
+        {
+            await failed.Task; // This will throw the exception
+        }
 
         return t;
     }
