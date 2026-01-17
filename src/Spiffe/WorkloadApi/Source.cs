@@ -7,19 +7,20 @@ namespace Spiffe.WorkloadApi
     {
         private readonly ReaderWriterLockSlim _lock;
 
-        private volatile int _initialized;
+        private readonly TaskCompletionSource<bool> _initialized;
 
         private volatile int _disposed;
 
         private protected Source()
         {
             _lock = new ReaderWriterLockSlim();
+            _initialized = new TaskCompletionSource<bool>();
         }
 
         /// <summary>
         /// Indicates if source is initialized.
         /// </summary>
-        public virtual bool IsInitialized => _initialized == 1;
+        public virtual bool IsInitialized => _initialized.Task.IsCompletedSuccessfully;
 
         private bool IsDisposed => _disposed != 0;
 
@@ -48,7 +49,7 @@ namespace Spiffe.WorkloadApi
         /// <summary>
         /// Marks the source as initialized.
         /// </summary>
-        protected virtual void Initialized() => _initialized = 1;
+        protected virtual void Initialized() => _initialized.SetResult(true);
 
         /// <summary>
         /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled or the timeout is reached.
@@ -60,12 +61,14 @@ namespace Spiffe.WorkloadApi
 
             using CancellationTokenSource combined = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
 
-            while (!IsInitialized &&
-                   !IsDisposed &&
-                   !combined.Token.IsCancellationRequested)
+            try
             {
-                await Task.Delay(50, combined.Token)
-                          .ConfigureAwait(false);
+                await _initialized.Task.WaitAsync(combined.Token)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                _initialized.TrySetResult(false);
             }
 
             ThrowIfCancelled(cancellationToken);
