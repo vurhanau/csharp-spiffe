@@ -75,7 +75,7 @@ internal class TestServer
 
     internal async Task<Task> ListenAsync(string address, CancellationToken cancellationToken)
     {
-        bool started = false;
+        TaskCompletionSource<bool> started = new();
         Task t = Task.Factory.StartNew(async () =>
         {
             string testServerRoot = GetTestServerRoot();
@@ -97,7 +97,7 @@ internal class TestServer
                         _output.WriteLine($"Out> {stdOut.Text}");
                         if (stdOut.Text.Contains(TestServerStartedLog))
                         {
-                            started = true;
+                            started.SetResult(true);
                         }
 
                         break;
@@ -111,17 +111,16 @@ internal class TestServer
             }
         });
 
-        while (!started && !cancellationToken.IsCancellationRequested)
-        {
-            await Task.Delay(100);
-        }
+        await started.Task.WaitAsync(cancellationToken);
 
         return t;
     }
 
     private static string GetTargetFramework()
     {
-#if NET9_0_OR_GREATER
+#if NET10_0_OR_GREATER
+        return "net10.0";
+#elif NET9_0_OR_GREATER
         return "net9.0";
 #else
         return "net8.0";
