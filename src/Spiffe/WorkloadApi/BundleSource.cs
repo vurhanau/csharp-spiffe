@@ -1,6 +1,7 @@
 using Spiffe.Bundle.Jwt;
 using Spiffe.Bundle.X509;
 using Spiffe.Id;
+using Spiffe.Util;
 
 namespace Spiffe.WorkloadApi;
 
@@ -11,11 +12,13 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
 {
     private readonly ReaderWriterLockSlim _lock;
 
+    private readonly TaskCompletionSource<bool> _initializedX509;
+
+    private readonly TaskCompletionSource<bool> _initializedJwt;
+
     private X509BundleSet? _x509Bundles;
 
     private JwtBundleSet? _jwtBundles;
-
-    private volatile int _initialized;
 
     private volatile int _disposed;
 
@@ -26,12 +29,15 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     internal BundleSource()
     {
         _lock = new ReaderWriterLockSlim();
+        _initializedX509 = new TaskCompletionSource<bool>();
+        _initializedJwt = new TaskCompletionSource<bool>();
     }
 
     /// <summary>
     /// Indicates if source is initialized.
     /// </summary>
-    public bool IsInitialized => _initialized == 3;
+    public bool IsInitialized =>
+        _initializedX509.Task.IsCompleted && _initializedJwt.Task.IsCompleted;
 
     private bool IsDisposed => _disposed != 0;
 
@@ -40,8 +46,8 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// </summary>
     public X509Bundle GetX509Bundle(TrustDomain trustDomain)
     {
-        ThrowIfNotInitalized();
-        ThrowIfDisposed();
+        Throws.IfNotInitialized(nameof(BundleSource), IsInitialized);
+        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
 
         _lock.EnterReadLock();
         try
@@ -59,8 +65,8 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// </summary>
     public JwtBundle GetJwtBundle(TrustDomain trustDomain)
     {
-        ThrowIfNotInitalized();
-        ThrowIfDisposed();
+        Throws.IfNotInitialized(nameof(BundleSource), IsInitialized);
+        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
 
         _lock.EnterReadLock();
         try
@@ -96,7 +102,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
             cancellationToken);
 
         await source.WaitUntilUpdated(timeoutMillis, cancellationToken)
-            .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
         return source;
     }
@@ -117,13 +123,13 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// </summary>
     internal void SetX509Context(X509Context x509Context)
     {
-        ThrowIfDisposed();
+        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
 
         _lock.EnterWriteLock();
         try
         {
             _x509Bundles = x509Context.X509Bundles;
-            Interlocked.Or(ref _initialized, 1);
+            _initializedX509.SetResult(true);
         }
         finally
         {
@@ -136,13 +142,13 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// </summary>
     internal void SetJwtBundles(JwtBundleSet jwtBundles)
     {
-        ThrowIfDisposed();
+        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
 
         _lock.EnterWriteLock();
         try
         {
             _jwtBundles = jwtBundles;
-            Interlocked.Or(ref _initialized, 2);
+            _initializedJwt.SetResult(true);
         }
         finally
         {
@@ -155,35 +161,17 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// </summary>
     private async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
     {
-        using CancellationTokenSource timeout = new();
-        timeout.CancelAfter(timeoutMillis);
-
-        using CancellationTokenSource combined = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-
-        while (!IsInitialized &&
-               !IsDisposed &&
-               !combined.Token.IsCancellationRequested)
-        {
-            await Task.Delay(50, combined.Token)
-                      .ConfigureAwait(false);
-        }
-
-        if (!IsInitialized)
-        {
-            timeout.Token.ThrowIfCancellationRequested();
-        }
-    }
-
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(IsDisposed, this);
-    }
-
-    private void ThrowIfNotInitalized()
-    {
-        if (!IsInitialized)
-        {
-            throw new InvalidOperationException("Bundle source is not initialized");
-        }
+        await Wait.Until(
+            "Bundle source",
+            [_initializedX509.Task, _initializedJwt.Task],
+            () =>
+            {
+                _initializedX509.TrySetResult(false);
+                _initializedJwt.TrySetResult(false);
+            },
+            () => IsInitialized,
+            () => IsDisposed,
+            timeoutMillis,
+            cancellationToken);
     }
 }

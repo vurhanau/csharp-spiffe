@@ -1,3 +1,5 @@
+using Spiffe.Util;
+
 namespace Spiffe.WorkloadApi
 {
     /// <summary>
@@ -56,25 +58,14 @@ namespace Spiffe.WorkloadApi
         /// </summary>
         protected async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
         {
-            using CancellationTokenSource timeout = new();
-            timeout.CancelAfter(timeoutMillis);
-
-            using CancellationTokenSource combined = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-
-            try
-            {
-                await _initialized.Task.WaitAsync(combined.Token)
-                    .ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                _initialized.TrySetResult(false);
-            }
-
-            ThrowIfCancelled(cancellationToken);
-            ThrowIfTimeout(timeout.Token, timeoutMillis);
-            ThrowIfNotInitialized();
-            ThrowIfDisposed();
+            await Wait.Until(
+                "Source",
+                [_initialized.Task],
+                () => _initialized.SetResult(false),
+                () => IsInitialized,
+                () => IsDisposed,
+                timeoutMillis,
+                cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -84,8 +75,8 @@ namespace Spiffe.WorkloadApi
         /// <typeparam name="T">Return type</typeparam>
         protected T ReadLocked<T>(Func<T> op)
         {
-            ThrowIfNotInitialized();
-            ThrowIfDisposed();
+            Throws.IfNotInitialized(nameof(Source), IsInitialized);
+            ObjectDisposedException.ThrowIf(IsDisposed, "Source has been disposed");
 
             _lock.EnterReadLock();
             try
@@ -104,7 +95,7 @@ namespace Spiffe.WorkloadApi
         /// </summary>
         protected void WriteLocked(Action op)
         {
-            ThrowIfDisposed();
+            Throws.IfDisposed(nameof(Source), IsDisposed);
 
             _lock.EnterWriteLock();
             try
@@ -115,35 +106,6 @@ namespace Spiffe.WorkloadApi
             {
                 _lock.ExitWriteLock();
             }
-        }
-
-        private static void ThrowIfCancelled(CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new OperationCanceledException("Source initialization was cancelled.", cancellationToken);
-            }
-        }
-
-        private static void ThrowIfTimeout(CancellationToken timeout, int timeoutMillis)
-        {
-            if (timeout.IsCancellationRequested)
-            {
-                throw new TimeoutException($"Source was not initialized within the specified timeout of {timeoutMillis} milliseconds.");
-            }
-        }
-
-        private void ThrowIfNotInitialized()
-        {
-            if (!IsInitialized)
-            {
-                throw new InvalidOperationException("Source is not initialized");
-            }
-        }
-
-        private void ThrowIfDisposed()
-        {
-            ObjectDisposedException.ThrowIf(IsDisposed, this);
         }
     }
 }

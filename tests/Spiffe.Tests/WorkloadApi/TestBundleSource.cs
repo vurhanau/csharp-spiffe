@@ -17,7 +17,7 @@ namespace Spiffe.Tests.WorkloadApi;
 
 public class TestBundleSource
 {
-    // [Fact(Timeout = Constants.TestTimeoutMillis)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestGetBundles()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -69,7 +69,7 @@ public class TestBundleSource
         json1.Should().Be(json2);
     }
 
-    // [Fact(Timeout = Constants.TestTimeoutMillis)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateCancelled()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -82,13 +82,13 @@ public class TestBundleSource
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
 
-        using BundleSource s = await BundleSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
-
+        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => BundleSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token));
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
-        s.IsInitialized.Should().BeFalse();
+        ex.Message.Should().Be("Bundle source initialization was cancelled.");
     }
 
-    // [Fact(Timeout = Constants.TestTimeoutMillis)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateTimedOut()
     {
         Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
@@ -98,10 +98,10 @@ public class TestBundleSource
                       .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<TimeoutException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
-    // [Fact(Timeout = Constants.TestTimeoutMillis)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateJwtTimedOut()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -133,10 +133,10 @@ public class TestBundleSource
 
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<TimeoutException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
-    // [Fact(Timeout = Constants.TestTimeoutMillis)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestCreateX509TimedOut()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -157,10 +157,10 @@ public class TestBundleSource
 
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<TimeoutException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
-    // [Fact]
+    [Fact]
     public void TestFailWhenInvalidState()
     {
         TrustDomain td = TrustDomain.FromString("spiffe://example.org");
@@ -178,7 +178,7 @@ public class TestBundleSource
         f2.Should().Throw<ObjectDisposedException>();
     }
 
-    // [Fact(Timeout = Constants.TestTimeoutMillis)]
+    [Fact(Timeout = Constants.TestTimeoutMillis)]
     public async Task TestBundleSourceCreateWithNullClient()
     {
         Func<Task> f = () => BundleSource.CreateAsync(null);
