@@ -58,12 +58,13 @@ namespace Spiffe.WorkloadApi
             using CancellationTokenSource timeout = new();
             timeout.CancelAfter(timeoutMillis);
 
+            using CancellationTokenSource combined = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
+
             while (!IsInitialized &&
                    !IsDisposed &&
-                   !timeout.IsCancellationRequested &&
-                   !cancellationToken.IsCancellationRequested)
+                   !combined.Token.IsCancellationRequested)
             {
-                await Task.Delay(50, CancellationToken.None)
+                await Task.Delay(50, combined.Token)
                           .ConfigureAwait(false);
             }
 
