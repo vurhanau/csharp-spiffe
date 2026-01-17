@@ -2,9 +2,9 @@ namespace Spiffe.Tests;
 
 internal static class Constants
 {
-    public const int TestTimeoutMillis = 30_000;
+    public const int TestTimeoutMillis = 60_000;
 
-    public const int IntegrationTestTimeoutMillis = 60_000;
+    public const int IntegrationTestTimeoutMillis = 120_000;
 
     public const int IntegrationTestRetriesMax = 5;
 

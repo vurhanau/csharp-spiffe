@@ -37,6 +37,9 @@ test: ## Runs unit, integration tests and generates code coverage report
 		--results-directory ./coverage \
 		--settings coverlet.runsettings
 
+.PHONY: test2
+test2: clean build test ## Runs unit tests after rebuild
+
 .PHONY: report
 report: coverage ## Shows code coverage report
 	@cd coverage/* && \

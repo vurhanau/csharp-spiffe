@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Moq;
 using Spiffe.Util;
@@ -30,12 +31,18 @@ public class TestCrypto
         string keyPath = "TestData/X509/key-pkcs8-ecdsa.pem";
 
         using X509Certificate2 expected = X509Certificate2.CreateFromPemFile(certPath, keyPath);
-        byte[] ecdsaPrivateKey = expected.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey();
         using X509Certificate2 tmp = FirstFromPemFile(certPath);
-        using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, ecdsaPrivateKey.AsSpan());
+        using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, expected.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey());
 
         actual.RawData.Should().Equal(expected.RawData);
-        actual.GetECDsaPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(ecdsaPrivateKey);
+
+        // Compare keys by their parameters rather than exported bytes, as encoding can differ across platforms
+        ECParameters expectedKey = expected.GetECDsaPrivateKey()!.ExportParameters(true);
+        ECParameters actualKey = actual.GetECDsaPrivateKey()!.ExportParameters(true);
+        actualKey.Curve.Oid.Value.Should().Be(expectedKey.Curve.Oid.Value);
+        actualKey.D.Should().Equal(expectedKey.D);
+        actualKey.Q.X.Should().Equal(expectedKey.Q.X);
+        actualKey.Q.Y.Should().Equal(expectedKey.Q.Y);
     }
 
     [Fact]

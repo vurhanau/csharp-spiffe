@@ -82,10 +82,10 @@ public class TestBundleSource
         using CancellationTokenSource cancellation = new();
         cancellation.CancelAfter(500);
 
-        using BundleSource s = await BundleSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token);
-
+        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(
+            () => BundleSource.CreateAsync(c, timeoutMillis: 60_000, cancellationToken: cancellation.Token));
         cancellation.Token.IsCancellationRequested.Should().BeTrue();
-        s.IsInitialized.Should().BeFalse();
+        ex.Message.Should().Be("Bundle source initialization was cancelled.");
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
@@ -98,7 +98,7 @@ public class TestBundleSource
                       .Returns(CallHelpers.Stream(respDelay, resp));
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<TimeoutException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
@@ -133,7 +133,7 @@ public class TestBundleSource
 
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<TimeoutException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
     [Fact(Timeout = Constants.TestTimeoutMillis)]
@@ -157,7 +157,7 @@ public class TestBundleSource
 
         WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
+        await Assert.ThrowsAsync<TimeoutException>(() => BundleSource.CreateAsync(c, timeoutMillis: 500));
     }
 
     [Fact]

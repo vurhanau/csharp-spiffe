@@ -19,9 +19,9 @@ public static partial class GrpcChannelFactory
 
         return new SocketsHttpHandler
         {
-            ConnectCallback = async (ignored, cancellationToken) =>
+            ConnectCallback = async (_, cancellationToken) =>
             {
-                // TODO: dispose
+                // SocketsHttpHandler owns the stream after it's returned and will dispose it when the connection closes
                 var clientStream = new NamedPipeClientStream(
                     serverName: ".",
                     pipeName: pipeName,
