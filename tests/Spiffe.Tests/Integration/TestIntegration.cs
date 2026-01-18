@@ -24,26 +24,34 @@ public partial class TestIntegration
     [Category(Constants.Integration)]
     public async Task TestFetchViaHttp()
     {
-        int port = TestServer.GetAvailablePort();
-        string address = $"http://localhost:{port}";
-        await RunTest(address);
+        await RunTest(() =>
+        {
+            int port = TestServer.GetAvailablePort();
+            return $"http://localhost:{port}";
+        });
     }
 
-    private async Task RunTest(string address)
+    private async Task RunTest(Func<string> addressFunc)
     {
-        using CancellationTokenSource cts = new();
-        cts.CancelAfter(Constants.IntegrationTestTimeoutMillis);
-        TestServer server = new(_output);
-        Task serverTask = await server.ListenAsync(address, cts.Token);
-
         for (int i = 0; i < Constants.IntegrationTestRetriesMax; i++)
         {
             try
             {
+                using CancellationTokenSource cts = new();
+                cts.CancelAfter(Constants.IntegrationTestTimeoutMillis);
+
+                string address = addressFunc();
+                TestServer server = new(_output);
+                Task serverTask = await server.ListenAsync(address, cts.Token);
+
                 using GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
                 IWorkloadApiClient c = WorkloadApiClient.Create(ch);
                 X509BundleSet resp = await c.FetchX509BundlesAsync();
                 resp.Bundles.Should().ContainSingle();
+
+                await cts.CancelAsync();
+                await serverTask;
+
                 break;
             }
             catch (Exception e)
@@ -52,8 +60,5 @@ public partial class TestIntegration
                 await Task.Delay(100);
             }
         }
-
-        await cts.CancelAsync();
-        await serverTask;
     }
 }
