@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
@@ -30,12 +31,21 @@ using HttpClient http = new(new SocketsHttpHandler()
 
 while (true)
 {
-    string clientCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
-    logger.LogDebug("Client certificate:\n {Cert}", clientCertificate);
+    try
+    {
+        string clientCertificate = x509Source.GetX509Svid().Certificates[0].ToString(true);
+        logger.LogDebug("Client certificate:\n {Cert}", clientCertificate);
 
-    HttpResponseMessage resp = await http.GetAsync("https://server:5000");
-    string str = await resp.Content.ReadAsStringAsync();
-    logger.LogInformation("Response: {StatusCode} - {Content}", (int)resp.StatusCode, str);
-
-    await Task.Delay(5000);
+        HttpResponseMessage resp = await http.GetAsync("https://server:5000");
+        string str = await resp.Content.ReadAsStringAsync();
+        logger.LogInformation("Response: {StatusCode} - {Content}", (int)resp.StatusCode, str);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred");
+    }
+    finally
+    {
+        await Task.Delay(5000);
+    }
 }

@@ -18,6 +18,6 @@ public partial class TestIntegration
         }
 
         string namedPipe = $"npipe:workload-api-{Guid.NewGuid()}";
-        await RunTest(namedPipe);
+        await RunTest(() => namedPipe);
     }
 }

@@ -99,7 +99,7 @@ internal class TestServer
                         _output.WriteLine($"Out> {stdOut.Text}");
                         if (stdOut.Text.Contains("Application started"))
                         {
-                            started.SetResult(true);
+                            started.TrySetResult(true);
                         }
 
                         break;
@@ -108,7 +108,7 @@ internal class TestServer
                         _output.WriteLine($"Err> {stdErr.Text}");
                         if (stdErr.Text.Contains("Failed to bind") && !failed.Task.IsCompleted)
                         {
-                            failed.SetException(new InvalidOperationException($"Server failed to start: {stdErr.Text}"));
+                            failed.TrySetException(new InvalidOperationException($"Server failed to start: {stdErr.Text}"));
                         }
 
                         break;

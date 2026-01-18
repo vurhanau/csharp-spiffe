@@ -18,8 +18,14 @@ public partial class TestIntegration
             return;
         }
 
-        string socket = Path.Join(Path.GetTempPath(), $"workload-api-{Guid.NewGuid()}.sock");
-        await RunTest($"unix://{socket}");
-        File.Delete(socket);
+        Action cleanup = () => { };
+        await RunTest(() =>
+        {
+            string socket = Path.Join(Path.GetTempPath(), $"workload-api-{Guid.NewGuid()}.sock");
+            cleanup += () => File.Delete(socket);
+            return $"unix://{socket}";
+        });
+
+        cleanup();
     }
 }

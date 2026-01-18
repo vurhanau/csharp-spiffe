@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,17 @@ using GrpcChannel channel = GrpcChannel.ForAddress("https://server:5000", new Gr
 GreeterClient client = new(channel);
 while (true)
 {
-    HelloReply reply = await client.SayHelloAsync(new HelloRequest());
-    logger.LogInformation("Response: {Message}", reply.Message);
-    await Task.Delay(5000);
+    try
+    {
+        HelloReply reply = await client.SayHelloAsync(new HelloRequest());
+        logger.LogInformation("Response: {Message}", reply.Message);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred");
+    }
+    finally
+    {
+        await Task.Delay(5000);
+    }
 }
