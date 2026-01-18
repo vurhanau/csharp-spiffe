@@ -37,7 +37,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// Indicates if source is initialized.
     /// </summary>
     public bool IsInitialized =>
-        _initializedX509.Task.IsCompleted && _initializedJwt.Task.IsCompleted;
+        _initializedX509.Task.IsCompletedSuccessfully && _initializedJwt.Task.IsCompletedSuccessfully;
 
     private bool IsDisposed => _disposed != 0;
 
@@ -129,12 +129,13 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         try
         {
             _x509Bundles = x509Context.X509Bundles;
-            _initializedX509.SetResult(true);
         }
         finally
         {
             _lock.ExitWriteLock();
         }
+
+        _initializedX509.SetResult(true);
     }
 
     /// <summary>
@@ -148,12 +149,13 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         try
         {
             _jwtBundles = jwtBundles;
-            _initializedJwt.SetResult(true);
         }
         finally
         {
             _lock.ExitWriteLock();
         }
+
+        _initializedJwt.SetResult(true);
     }
 
     /// <summary>
