@@ -30,24 +30,33 @@ using HttpClient http = new();
 
 while (true)
 {
-    List<JwtSvid> svids = await jwtSource.FetchJwtSvidsAsync(new JwtSvidParams(
-                                                                audience: "spiffe://example.org/server",
-                                                                extraAudiences: [],
-                                                                subject: null));
-
-    JwtSvid svid = svids[0];
-    HttpResponseMessage resp = await http.SendAsync(new()
+    try
     {
-        Method = HttpMethod.Get,
-        RequestUri = new Uri("http://server:5000"),
-        Headers =
+        List<JwtSvid> svids = await jwtSource.FetchJwtSvidsAsync(new JwtSvidParams(
+                                                            audience: "spiffe://example.org/server",
+                                                            extraAudiences: [],
+                                                            subject: null));
+
+        JwtSvid svid = svids[0];
+        HttpResponseMessage resp = await http.SendAsync(new()
         {
-            Authorization = new AuthenticationHeaderValue("Bearer", svid.Token),
-        },
-    });
+            Method = HttpMethod.Get,
+            RequestUri = new Uri("http://server:5000"),
+            Headers =
+            {
+                Authorization = new AuthenticationHeaderValue("Bearer", svid.Token),
+            },
+        });
 
-    string str = await resp.Content.ReadAsStringAsync();
-    logger.LogInformation("Response: {StatusCode} - {Content}", (int)resp.StatusCode, str);
-
-    await Task.Delay(5000);
+        string str = await resp.Content.ReadAsStringAsync();
+        logger.LogInformation("Response: {StatusCode} - {Content}", (int)resp.StatusCode, str);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred");
+    }
+    finally
+    {
+        await Task.Delay(5000);
+    }
 }

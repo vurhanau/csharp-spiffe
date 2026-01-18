@@ -61,7 +61,7 @@ namespace Spiffe.WorkloadApi
             await Wait.Until(
                 "Source",
                 [_initialized.Task],
-                () => _initialized.SetResult(false),
+                () => _initialized.TrySetResult(false),
                 () => IsInitialized,
                 () => IsDisposed,
                 timeoutMillis,
