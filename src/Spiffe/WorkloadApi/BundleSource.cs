@@ -155,7 +155,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
             _lock.ExitWriteLock();
         }
 
-        _initializedJwt.SetResult(true);
+        _initializedJwt.TrySetResult(true);
     }
 
     /// <summary>

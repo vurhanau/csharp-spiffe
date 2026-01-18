@@ -51,7 +51,7 @@ namespace Spiffe.WorkloadApi
         /// <summary>
         /// Marks the source as initialized.
         /// </summary>
-        protected virtual void Initialized() => _initialized.SetResult(true);
+        protected virtual void Initialized() => _initialized.TrySetResult(true);
 
         /// <summary>
         /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled or the timeout is reached.
