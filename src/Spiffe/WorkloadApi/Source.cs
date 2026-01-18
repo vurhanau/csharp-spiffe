@@ -1,3 +1,5 @@
+using Spiffe.Util;
+
 namespace Spiffe.WorkloadApi
 {
     /// <summary>
@@ -7,19 +9,20 @@ namespace Spiffe.WorkloadApi
     {
         private readonly ReaderWriterLockSlim _lock;
 
-        private volatile int _initialized;
+        private readonly TaskCompletionSource<bool> _initialized;
 
         private volatile int _disposed;
 
         private protected Source()
         {
             _lock = new ReaderWriterLockSlim();
+            _initialized = new TaskCompletionSource<bool>();
         }
 
         /// <summary>
         /// Indicates if source is initialized.
         /// </summary>
-        public virtual bool IsInitialized => _initialized == 1;
+        public virtual bool IsInitialized => _initialized.Task.IsCompletedSuccessfully;
 
         private bool IsDisposed => _disposed != 0;
 
@@ -48,29 +51,21 @@ namespace Spiffe.WorkloadApi
         /// <summary>
         /// Marks the source as initialized.
         /// </summary>
-        protected virtual void Initialized() => _initialized = 1;
+        protected virtual void Initialized() => _initialized.TrySetResult(true);
 
         /// <summary>
         /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled or the timeout is reached.
         /// </summary>
         protected async Task WaitUntilUpdated(int timeoutMillis, CancellationToken cancellationToken = default)
         {
-            using CancellationTokenSource timeout = new();
-            timeout.CancelAfter(timeoutMillis);
-
-            while (!IsInitialized &&
-                   !IsDisposed &&
-                   !timeout.IsCancellationRequested &&
-                   !cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(50, CancellationToken.None)
-                          .ConfigureAwait(false);
-            }
-
-            ThrowIfCancelled(cancellationToken);
-            ThrowIfTimeout(timeout.Token, timeoutMillis);
-            ThrowIfNotInitialized();
-            ThrowIfDisposed();
+            await Wait.Until(
+                "Source",
+                [_initialized.Task],
+                () => _initialized.SetResult(false),
+                () => IsInitialized,
+                () => IsDisposed,
+                timeoutMillis,
+                cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -80,8 +75,8 @@ namespace Spiffe.WorkloadApi
         /// <typeparam name="T">Return type</typeparam>
         protected T ReadLocked<T>(Func<T> op)
         {
-            ThrowIfNotInitialized();
-            ThrowIfDisposed();
+            Throws.IfNotInitialized(nameof(Source), IsInitialized);
+            ObjectDisposedException.ThrowIf(IsDisposed, "Source has been disposed");
 
             _lock.EnterReadLock();
             try
@@ -100,7 +95,7 @@ namespace Spiffe.WorkloadApi
         /// </summary>
         protected void WriteLocked(Action op)
         {
-            ThrowIfDisposed();
+            Throws.IfDisposed(nameof(Source), IsDisposed);
 
             _lock.EnterWriteLock();
             try
@@ -111,35 +106,6 @@ namespace Spiffe.WorkloadApi
             {
                 _lock.ExitWriteLock();
             }
-        }
-
-        private static void ThrowIfCancelled(CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                throw new OperationCanceledException("Source initialization was cancelled.", cancellationToken);
-            }
-        }
-
-        private static void ThrowIfTimeout(CancellationToken timeout, int timeoutMillis)
-        {
-            if (timeout.IsCancellationRequested)
-            {
-                throw new TimeoutException($"Source was not initialized within the specified timeout of {timeoutMillis} milliseconds.");
-            }
-        }
-
-        private void ThrowIfNotInitialized()
-        {
-            if (!IsInitialized)
-            {
-                throw new InvalidOperationException("Source is not initialized");
-            }
-        }
-
-        private void ThrowIfDisposed()
-        {
-            ObjectDisposedException.ThrowIf(IsDisposed, this);
         }
     }
 }

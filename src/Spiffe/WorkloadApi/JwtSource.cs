@@ -57,10 +57,7 @@ public sealed class JwtSource : Source, IJwtSource
     /// </summary>
     internal void SetJwtBundleSet(JwtBundleSet jwtBundleSet)
     {
-        WriteLocked(() =>
-        {
-            _bundles = jwtBundleSet;
-            Initialized();
-        });
+        WriteLocked(() => _bundles = jwtBundleSet);
+        Initialized();
     }
 }

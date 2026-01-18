@@ -75,8 +75,9 @@ public sealed class X509Source : Source, IX509Source
         {
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
-            Initialized();
         });
+
+        Initialized();
     }
 
     /// <summary>
