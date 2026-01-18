@@ -8,10 +8,8 @@ namespace Spiffe.WorkloadApi;
 /// <summary>
 /// Source of SPIFFE bundles maintained via the Workload API
 /// </summary>
-public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposable
+public sealed class BundleSource : Source, IX509BundleSource, IJwtBundleSource
 {
-    private readonly ReaderWriterLockSlim _lock;
-
     private readonly TaskCompletionSource<bool> _initializedX509;
 
     private readonly TaskCompletionSource<bool> _initializedJwt;
@@ -20,15 +18,12 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
 
     private JwtBundleSet? _jwtBundles;
 
-    private volatile int _disposed;
-
     /// <summary>
     /// Constructs bundle source.
     /// Visible for testing.
     /// </summary>
     internal BundleSource()
     {
-        _lock = new ReaderWriterLockSlim();
         _initializedX509 = new TaskCompletionSource<bool>();
         _initializedJwt = new TaskCompletionSource<bool>();
     }
@@ -36,48 +31,18 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// <summary>
     /// Indicates if source is initialized.
     /// </summary>
-    public bool IsInitialized =>
-        _initializedX509.Task.IsCompleted && _initializedJwt.Task.IsCompleted;
-
-    private bool IsDisposed => _disposed != 0;
+    public override bool IsInitialized =>
+        _initializedX509.Task.IsCompletedSuccessfully && _initializedJwt.Task.IsCompletedSuccessfully;
 
     /// <summary>
     /// Returns the X.509 bundle for the given trust domain.
     /// </summary>
-    public X509Bundle GetX509Bundle(TrustDomain trustDomain)
-    {
-        Throws.IfNotInitialized(nameof(BundleSource), IsInitialized);
-        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
-
-        _lock.EnterReadLock();
-        try
-        {
-            return _x509Bundles!.GetX509Bundle(trustDomain);
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
+    public X509Bundle GetX509Bundle(TrustDomain trustDomain) => ReadLocked(() => _x509Bundles!.GetX509Bundle(trustDomain));
 
     /// <summary>
     /// Returns the JWT bundle for the given trust domain.
     /// </summary>
-    public JwtBundle GetJwtBundle(TrustDomain trustDomain)
-    {
-        Throws.IfNotInitialized(nameof(BundleSource), IsInitialized);
-        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
-
-        _lock.EnterReadLock();
-        try
-        {
-            return _jwtBundles!.GetJwtBundle(trustDomain);
-        }
-        finally
-        {
-            _lock.ExitReadLock();
-        }
-    }
+    public JwtBundle GetJwtBundle(TrustDomain trustDomain) => ReadLocked(() => _jwtBundles!.GetJwtBundle(trustDomain));
 
     /// <summary>
     /// Creates a new <see cref="BundleSource"/>.
@@ -108,32 +73,24 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     }
 
     /// <summary>
-    /// Disposes client
+    /// Gets the name of the source.
     /// </summary>
-    public void Dispose()
-    {
-        if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
-        {
-            _lock.Dispose();
-        }
-    }
+    protected override string SourceName => "Bundle source";
+
+    /// <summary>
+    /// Gets the initialization tasks of the source.
+    /// </summary>
+    protected override IEnumerable<Task> InitializationTasks => [_initializedX509.Task, _initializedJwt.Task];
 
     /// <summary>
     /// Visible for testing.
     /// </summary>
     internal void SetX509Context(X509Context x509Context)
     {
-        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
-
-        _lock.EnterWriteLock();
-        try
+        WriteLocked(() => _x509Bundles = x509Context.X509Bundles);
+        if (!_initializedX509.Task.IsCompletedSuccessfully)
         {
-            _x509Bundles = x509Context.X509Bundles;
             _initializedX509.SetResult(true);
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
         }
     }
 
@@ -142,17 +99,10 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// </summary>
     internal void SetJwtBundles(JwtBundleSet jwtBundles)
     {
-        Throws.IfDisposed(nameof(BundleSource), IsDisposed);
-
-        _lock.EnterWriteLock();
-        try
+        WriteLocked(() => _jwtBundles = jwtBundles);
+        if (!_initializedJwt.Task.IsCompletedSuccessfully)
         {
-            _jwtBundles = jwtBundles;
             _initializedJwt.SetResult(true);
-        }
-        finally
-        {
-            _lock.ExitWriteLock();
         }
     }
 

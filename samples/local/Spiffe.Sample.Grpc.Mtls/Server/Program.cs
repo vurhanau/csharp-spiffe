@@ -34,6 +34,8 @@ using X509Source x509Source = await X509Source.CreateAsync(workload,
                                                            timeoutMillis: 60000,
                                                            cancellationToken: close.Token);
 
+logger.LogInformation("Current X509 SVID: {SpiffeId}", x509Source.GetX509Svid().Id);
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseKestrel(kestrel =>
 {

@@ -1,4 +1,5 @@
-﻿using Spiffe.Bundle.X509;
+﻿using System.Globalization;
+using Spiffe.Bundle.X509;
 using Spiffe.Id;
 using Spiffe.Svid.X509;
 
@@ -15,7 +16,13 @@ namespace Spiffe.WorkloadApi;
 /// </summary>
 public sealed class X509Source : Source, IX509Source
 {
+    private readonly IWorkloadApiClient _client;
+
     private readonly Func<List<X509Svid>, X509Svid> _picker;
+
+    private readonly CancellationTokenSource _watcherCancellation;
+
+    private Task? _watcherTask;
 
     private X509Svid? _svid;
 
@@ -25,10 +32,15 @@ public sealed class X509Source : Source, IX509Source
     /// Constructs X509 source.
     /// Visible for testing.
     /// </summary>
-    internal X509Source(Func<List<X509Svid>, X509Svid> picker)
+    internal X509Source(
+        IWorkloadApiClient client,
+        Func<List<X509Svid>, X509Svid> picker,
+        CancellationTokenSource watcherCancellation)
         : base()
     {
+        _client = client;
         _picker = picker;
+        _watcherCancellation = watcherCancellation;
     }
 
     /// <summary>
@@ -44,11 +56,10 @@ public sealed class X509Source : Source, IX509Source
         _ = client ?? throw new ArgumentNullException(nameof(client));
         picker ??= GetDefaultSvid;
 
-        X509Source source = new(picker);
-        Watcher<X509Context> watcher = new(source.SetX509Context);
-        _ = Task.Run(
-            () => client.WatchX509ContextAsync(watcher, cancellationToken),
-            cancellationToken);
+        CancellationTokenSource watcherCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        X509Source source = new(client, picker, watcherCancellation);
+        source.Watch(cancellationToken);
 
         await source.WaitUntilUpdated(timeoutMillis, cancellationToken)
                     .ConfigureAwait(false);
@@ -75,8 +86,17 @@ public sealed class X509Source : Source, IX509Source
         {
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
-            Initialized();
         });
+
+        Initialized();
+    }
+
+    private void Watch(CancellationToken cancellationToken)
+    {
+        Watcher<X509Context> watcher = new(SetX509Context);
+        _watcherTask = Task.Run(
+            () => _client.WatchX509ContextAsync(watcher, _watcherCancellation.Token),
+            cancellationToken);
     }
 
     /// <summary>
@@ -90,5 +110,30 @@ public sealed class X509Source : Source, IX509Source
         }
 
         return svids[0];
+    }
+
+    /// <summary>
+    /// Disposes the X509Source.
+    /// </summary>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _watcherCancellation.Cancel();
+            try
+            {
+                _watcherTask?.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception) when (_watcherCancellation.Token.IsCancellationRequested)
+            {
+                // Task was cancelled - this is expected
+            }
+            finally
+            {
+                _watcherCancellation.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
     }
 }

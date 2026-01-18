@@ -124,7 +124,8 @@ public class TestX509Source
     [Fact]
     public void TestFailWhenInvalidState()
     {
-        X509Source s = new(_ => null);
+        using CancellationTokenSource cts = new();
+        X509Source s = new(null, _ => null, cts);
         Action f1 = () => s.GetX509Bundle(TrustDomain.FromString("spiffe://example.org"));
         Action f2 = () => s.GetX509Svid();
 

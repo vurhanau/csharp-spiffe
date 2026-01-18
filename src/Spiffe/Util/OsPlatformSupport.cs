@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Spiffe.Grpc;
+namespace Spiffe.Util;
 
 internal static class OSPlatformSupport
 {

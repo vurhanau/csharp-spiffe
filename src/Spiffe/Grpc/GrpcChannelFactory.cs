@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Grpc.Net.Client;
+using Spiffe.Util;
 using Spiffe.WorkloadApi;
 
 namespace Spiffe.Grpc;

@@ -24,8 +24,8 @@ internal static class Wait
         try
         {
             await Task.WhenAll(tasks)
-                        .WaitAsync(combined.Token)
-                        .ConfigureAwait(false);
+                      .WaitAsync(combined.Token)
+                      .ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
