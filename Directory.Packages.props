@@ -4,9 +4,9 @@
         <SpiffeVersion>0.0.4-dev</SpiffeVersion>
         <GoogleProtobufVersion>3.33.4</GoogleProtobufVersion>
         <GrpcAspNetCoreVersion>2.76.0</GrpcAspNetCoreVersion>
-        <GrpcCoreVersion>2.71.0</GrpcCoreVersion>
+        <GrpcCoreVersion>2.76.0</GrpcCoreVersion>
         <GrpcNetClientVersion>2.76.0</GrpcNetClientVersion>
-        <GrpcToolsVersion>2.72.0</GrpcToolsVersion>
+        <GrpcToolsVersion>2.76.0</GrpcToolsVersion>
         <IdentityModelVersion>8.14.0</IdentityModelVersion>
         <LoggingVersion>8.0.1</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
@@ -21,6 +21,7 @@
         <SonarVersion>10.15.0.120848</SonarVersion>
         <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
         <AspNetCoreTestHostVersion>8.0.3</AspNetCoreTestHostVersion>
+        <CliWrapVersion>3.10.0</CliWrapVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -50,7 +51,7 @@
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="$(IdentityModelVersion)" />
         <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="$(AspNetCoreTestHostVersion)" />
         <PackageVersion Include="Grpc.Core.Api" Version="$(GrpcCoreVersion)" />
-        <PackageVersion Include="CliWrap" Version="3.10.0" />
+        <PackageVersion Include="CliWrap" Version="$(CliWrapVersion)" />
 
         <!-- Spiffe.Tests.Server -->
         <PackageVersion Include="Grpc.AspNetCore.Server.Reflection" Version="$(GrpcAspNetCoreVersion)" />
