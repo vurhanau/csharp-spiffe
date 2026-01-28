@@ -10,7 +10,7 @@
         <IdentityModelVersion>8.14.0</IdentityModelVersion>
         <LoggingVersion>8.0.1</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
-        <TestSdkVersion>18.0.0</TestSdkVersion>
+        <TestSdkVersion>18.0.1</TestSdkVersion>
         <XunitVersion>2.9.3</XunitVersion>
         <XunitRunnerVersion>3.1.5</XunitRunnerVersion>
         <FluentAssertionsVersion>8.8.0</FluentAssertionsVersion>
