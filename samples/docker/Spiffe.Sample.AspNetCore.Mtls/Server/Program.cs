@@ -43,11 +43,11 @@ builder.WebHost.UseKestrel(kestrel =>
 
 WebApplication app = builder.Build();
 app.Lifetime.ApplicationStopped.Register(close.Cancel);
-app.MapGet("/", (HttpContext ctx) =>
+app.MapGet("/", async (HttpContext ctx) =>
 {
     string caller = ctx.Connection.ClientCertificate?.GetNameInfo(X509NameType.UrlName, false) ?? "unknown";
     app.Logger.LogInformation("Request from '{Caller}'", caller);
-    ctx.Response.WriteAsync($"Hello, {caller}");
+    await ctx.Response.WriteAsync($"Hello, {caller}");
 });
 
 await app.RunAsync();

@@ -10,10 +10,10 @@ public class GreetService : Greeter.GreeterBase
 {
     private readonly ILogger<GreetService> _logger;
 
-	public GreetService(ILogger<GreetService> logger)
-	{
-		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-	}
+    public GreetService(ILogger<GreetService> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     public override Task<HelloReply> SayHello(HelloRequest request, ServerCallContext context)
     {

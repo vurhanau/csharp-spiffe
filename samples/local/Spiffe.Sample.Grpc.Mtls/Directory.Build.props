@@ -2,4 +2,10 @@
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" Condition="$(MSBuildProjectExtension) == '.csproj'" />
+        <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" Condition="$(MSBuildProjectExtension) == '.csproj'" />
+        <PackageReference Include="ErrorProne.NET.CoreAnalyzers" PrivateAssets="all" Condition="$(MSBuildProjectExtension) == '.csproj'" />
+    </ItemGroup>
 </Project>

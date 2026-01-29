@@ -22,6 +22,8 @@
         <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
         <AspNetCoreTestHostVersion>8.0.3</AspNetCoreTestHostVersion>
         <CliWrapVersion>3.10.0</CliWrapVersion>
+        <ErrorProneAnalyzerVersion>0.8.2-beta.1</ErrorProneAnalyzerVersion>
+
     </PropertyGroup>
 
     <ItemGroup>
@@ -63,5 +65,6 @@
         <!-- Analyzers -->
         <PackageVersion Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
         <PackageVersion Include="SonarAnalyzer.CSharp" Version="$(SonarVersion)" />
+        <PackageVersion Include="ErrorProne.NET.CoreAnalyzers" Version="$(ErrorProneAnalyzerVersion)" />
     </ItemGroup>
 </Project>
