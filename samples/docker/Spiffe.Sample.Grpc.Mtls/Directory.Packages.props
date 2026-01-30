@@ -4,6 +4,12 @@
         <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
+        <SonarVersion>10.18.0.131500</SonarVersion>
+        <ErrorProneAnalyzerVersion>0.8.2-beta.1</ErrorProneAnalyzerVersion>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageVersion Include="Spiffe" Version="0.0.3"/>
         <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.9"/>
@@ -14,5 +20,8 @@
         <PackageVersion Include="Grpc.Tools" Version="[2.67.0]"/>
         <PackageVersion Include="Grpc.AspNetCore" Version="[2.67.0]"/>
         <!-- ISSUE -->
+        <PackageVersion Include="StyleCop.Analyzers" Version="$(StyleCopVersion)" />
+        <PackageVersion Include="SonarAnalyzer.CSharp" Version="$(SonarVersion)" />
+        <PackageVersion Include="ErrorProne.NET.CoreAnalyzers" Version="$(ErrorProneAnalyzerVersion)" />
     </ItemGroup>
 </Project>
