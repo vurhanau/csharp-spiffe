@@ -73,6 +73,8 @@ public sealed class X509Source : Source, IX509Source
     {
         WriteLocked(() =>
         {
+            // Dispose the previous SVID, if any.
+            _svid?.Dispose();
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
         });
@@ -91,5 +93,19 @@ public sealed class X509Source : Source, IX509Source
         }
 
         return svids[0];
+    }
+
+    /// <summary>
+    /// Cleans up any persisted private keys, needed for windows.
+    /// </summary>
+    public new void Dispose()
+    {
+        WriteLocked(() =>
+        {
+            _svid?.Dispose();
+            _svid = null;
+            _bundles = null;
+        });
+        base.Dispose();
     }
 }

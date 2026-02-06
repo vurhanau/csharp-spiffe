@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Spiffe.Id;
+using Spiffe.Util;
 
 namespace Spiffe.Svid.X509;
 
@@ -8,8 +9,10 @@ namespace Spiffe.Svid.X509;
 /// <br/>
 /// Contains a SPIFFE ID, a private key and a chain of X.509 certificates.
 /// </summary>
-public class X509Svid
+public class X509Svid : IDisposable
 {
+    private bool _disposed;
+
     /// <summary>
     /// Creates X509 SVID.
     /// </summary>
@@ -50,4 +53,41 @@ public class X509Svid
     /// identity should be used by a workload when more than one SVID is returned.
     /// </summary>
     public string Hint { get; }
+
+    /// <summary>
+    /// Disposes the SVID and cleans up any persisted private keys.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes the SVID and cleans up any persisted private keys.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            // Clean up persisted private keys on Windows
+            if (Certificates.Count > 0 && Certificates[0].HasPrivateKey)
+            {
+                Crypto.DeletePrivateKey(Certificates[0]);
+            }
+
+            // Dispose all certificates
+            foreach (X509Certificate2 cert in Certificates)
+            {
+                cert.Dispose();
+            }
+        }
+
+        _disposed = true;
+    }
 }
