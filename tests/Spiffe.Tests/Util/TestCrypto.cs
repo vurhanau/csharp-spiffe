@@ -217,15 +217,10 @@ public class TestCrypto
 
         // Act: Clean up the private key
         Crypto.DeletePrivateKey(cert);
-        cert.Dispose();
 
-        await Task.Delay(100); // Give system time to clean up
-
-        // Assert: Try to use the key - it should fail or not exist
-        // We can't easily verify the key is gone from the store, but we can verify
-        // that a new certificate created the same way works independently
-        using X509Certificate2 tmp2 = FirstFromPemFile(certPath);
-        using X509Certificate2 cert2 = Crypto.GetCertificateWithPrivateKey(tmp2, rsaPrivateKey.AsSpan());
-        cert2.HasPrivateKey.Should().BeTrue("New certificate should have its own private key");
+        // Attempt to use key after cleanup - sign data to verify it fails
+        byte[] data = "test data"u8.ToArray();
+        Action a = () => cert.GetRSAPrivateKey().SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        a.Should().Throw<CryptographicException>("Private key should not be usable after cleanup");
     }
 }
