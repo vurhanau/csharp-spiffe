@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using FluentAssertions;
 using Google.Protobuf;
 using Grpc.Core;
@@ -152,9 +153,9 @@ public class TestX509Source
     }
 
     private static void VerifyX509SvidRsa(X509Svid svid,
-                                          SpiffeId expectedSpiffeId,
-                                          X509Certificate2 expectedCert,
-                                          string expectedHint)
+                                         SpiffeId expectedSpiffeId,
+                                         X509Certificate2 expectedCert,
+                                         string expectedHint)
     {
         svid.Id.Should().Be(expectedSpiffeId);
         svid.Hint.Should().Be(expectedHint);
@@ -163,7 +164,10 @@ public class TestX509Source
         certs.Should().ContainSingle();
         certs[0].HasPrivateKey.Should().BeTrue();
         certs[0].RawData.Should().Equal(expectedCert.RawData);
-        byte[] expectedKey = expectedCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
-        certs[0].GetRSAPrivateKey()?.ExportPkcs8PrivateKey().Should().Equal(expectedKey);
+        byte[] testData = "test-data"u8.ToArray();
+        using RSA expectedPrivKey = expectedCert.GetRSAPrivateKey()!;
+        using RSA actualPrivKey = certs[0].GetRSAPrivateKey()!;
+        byte[] signature = expectedPrivKey.SignData(testData, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        actualPrivKey.VerifyData(testData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1).Should().BeTrue();
     }
 }

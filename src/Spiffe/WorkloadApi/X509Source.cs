@@ -73,8 +73,6 @@ public sealed class X509Source : Source, IX509Source
     {
         WriteLocked(() =>
         {
-            // Dispose the previous SVID, if any.
-            _svid?.Dispose();
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
         });

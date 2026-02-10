@@ -24,7 +24,13 @@ public class TestCrypto
         using X509Certificate2 actual = Crypto.GetCertificateWithPrivateKey(tmp, rsaPrivateKey.AsSpan());
 
         actual.RawData.Should().Equal(expected.RawData);
-        actual.GetRSAPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(rsaPrivateKey);
+
+        // Verify both keys represent the same cryptographic material by signing and verifying
+        using RSA expectedRsa = expected.GetRSAPrivateKey()!;
+        using RSA actualRsa = actual.GetRSAPrivateKey()!;
+        byte[] testData = "test-data"u8.ToArray();
+        byte[] signature = expectedRsa.SignData(testData, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        actualRsa.VerifyData(testData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1).Should().BeTrue();
     }
 
     [Fact]
@@ -39,13 +45,12 @@ public class TestCrypto
 
         actual.RawData.Should().Equal(expected.RawData);
 
-        // Compare keys by their parameters rather than exported bytes, as encoding can differ across platforms
-        ECParameters expectedKey = expected.GetECDsaPrivateKey()!.ExportParameters(true);
-        ECParameters actualKey = actual.GetECDsaPrivateKey()!.ExportParameters(true);
-        actualKey.Curve.Oid.Value.Should().Be(expectedKey.Curve.Oid.Value);
-        actualKey.D.Should().Equal(expectedKey.D);
-        actualKey.Q.X.Should().Equal(expectedKey.Q.X);
-        actualKey.Q.Y.Should().Equal(expectedKey.Q.Y);
+        // Verify both keys represent the same cryptographic material by signing and verifying
+        using ECDsa expectedEcdsa = expected.GetECDsaPrivateKey()!;
+        using ECDsa actualEcdsa = actual.GetECDsaPrivateKey()!;
+        byte[] testData = "test-data"u8.ToArray();
+        byte[] signature = expectedEcdsa.SignData(testData, HashAlgorithmName.SHA256);
+        actualEcdsa.VerifyData(testData, signature, HashAlgorithmName.SHA256).Should().BeTrue();
     }
 
     [Fact]

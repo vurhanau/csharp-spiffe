@@ -69,8 +69,8 @@ internal static class Crypto
                 }
         }
 
-        // On Windows, Schannel requires private keys to be accessible via the certificate store.
-        // We use PersistKeySet so Schannel can access it, but the caller is responsible for cleanup.
+        // On Windows, Schannel (responsible for the TLS handshake) requires private keys to be stored in a
+        // persistant Key storage provider. The caller should dispose of the key as needed.
         if (OperatingSystem.IsWindows())
         {
             byte[] pfxBytes = certWithPrivateKey.Export(X509ContentType.Pkcs12);
@@ -79,12 +79,12 @@ internal static class Crypto
             certWithPrivateKey = X509CertificateLoader.LoadPkcs12(
                 pfxBytes,
                 null,
-                X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.Exportable);
+                X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet);
 #else
             certWithPrivateKey = new X509Certificate2(
                 pfxBytes,
                 (string?)null,
-                X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.Exportable);
+                X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet);
 #endif
             Array.Clear(pfxBytes, 0, pfxBytes.Length);
         }
