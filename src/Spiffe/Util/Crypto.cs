@@ -171,7 +171,7 @@ internal static class Crypto
         }
         catch (Exception ex)
         {
-            // If cleanup fails, the key will eventually be orphaned
+            // If cleanup fails, do not block.
             _ = ex;
         }
     }
