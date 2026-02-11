@@ -11,6 +11,9 @@ internal static class Crypto
     /// <summary>
     /// Creates an X509 certificate with a private key.
     /// <br/>
+    /// On Windows, the private key is persisted to the certificate store so Schannel can access it.
+    /// The caller should call <see cref="DeletePrivateKey"/> when done with the certificate to clean up.
+    /// <br/>
     /// C# OID list: <seealso href="https://github.com/dotnet/runtime/blob/v8.0.1/src/libraries/Common/src/System/Security/Cryptography/Oids.cs"/>
     /// <br/>
     /// Go OID list: <seealso href="https://github.com/golang/go/blob/release-branch.go1.22/src/crypto/x509/x509.go#L462C1-L486C1"/>
@@ -66,6 +69,26 @@ internal static class Crypto
                 }
         }
 
+        // On Windows, Schannel (responsible for the TLS handshake) requires private keys to be stored in a
+        // persistant Key storage provider. The caller should dispose of the key as needed.
+        if (OperatingSystem.IsWindows())
+        {
+            byte[] pfxBytes = certWithPrivateKey.Export(X509ContentType.Pkcs12);
+            certWithPrivateKey.Dispose();
+#if NET9_0_OR_GREATER
+            certWithPrivateKey = X509CertificateLoader.LoadPkcs12(
+                pfxBytes,
+                null,
+                X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet);
+#else
+            certWithPrivateKey = new X509Certificate2(
+                pfxBytes,
+                (string?)null,
+                X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.PersistKeySet);
+#endif
+            Array.Clear(pfxBytes, 0, pfxBytes.Length);
+        }
+
         return certWithPrivateKey;
     }
 
@@ -89,6 +112,102 @@ internal static class Crypto
         }
 
         return certs;
+    }
+
+    /// <summary>
+    /// Deletes the persisted private key associated with a certificate (Windows only).
+    /// This should be called when disposing certificates created with <see cref="GetCertificateWithPrivateKey"/>.
+    /// </summary>
+    /// <param name="cert">The certificate whose private key should be deleted</param>
+    internal static void DeletePrivateKey(X509Certificate2 cert)
+    {
+        if (!OperatingSystem.IsWindows() || !cert.HasPrivateKey)
+        {
+            return;
+        }
+
+        try
+        {
+            string ka = cert.GetKeyAlgorithm();
+            switch (ka)
+            {
+                case "1.2.840.113549.1.1.1": // RSA
+                    {
+                        RSA? rsaPivateKey = cert.GetRSAPrivateKey();
+                        if (rsaPivateKey is not null)
+                        {
+                            DeleteRsaPrivateKey(rsaPivateKey);
+                        }
+
+                        break;
+                    }
+
+                case "1.2.840.10040.4.1": // DSA
+                    {
+                        DSA? dsaPrivateKey = cert.GetDSAPrivateKey();
+                        if (dsaPrivateKey is not null)
+                        {
+                            DeleteDsaPrivateKey(dsaPrivateKey);
+                        }
+
+                        break;
+                    }
+
+                case "1.2.840.10045.2.1": // ECDSA
+                    {
+                        ECDsa? ecdsaPrivateKey = cert.GetECDsaPrivateKey();
+                        if (ecdsaPrivateKey is not null)
+                        {
+                            DeleteEcdsaPrivateKey(ecdsaPrivateKey);
+                        }
+
+                        break;
+                    }
+
+                default:
+                    // Unknown key algorithm - we don't know how to delete it, so skip cleanup
+                    return;
+            }
+        }
+        catch (Exception ex)
+        {
+            // If cleanup fails, do not block.
+            _ = ex;
+        }
+    }
+
+    private static void DeleteRsaPrivateKey(RSA rsa)
+    {
+        if (rsa is RSACryptoServiceProvider rsaCsp)
+        {
+            rsaCsp.PersistKeyInCsp = false;
+            rsaCsp.Clear();
+        }
+        else if (rsa is RSACng rsaCng)
+        {
+            rsaCng.Key.Delete();
+        }
+    }
+
+    private static void DeleteEcdsaPrivateKey(ECDsa ecdsa)
+    {
+        if (ecdsa is ECDsaCng ecdsaCng)
+        {
+            ecdsaCng.Key.Delete();
+        }
+    }
+
+    private static void DeleteDsaPrivateKey(DSA dsa)
+    {
+        if (dsa is DSACryptoServiceProvider dsaCsp)
+        {
+            dsaCsp.PersistKeyInCsp = false;
+            dsaCsp.Clear();
+        }
+        else if (dsa is DSACng dsaCng)
+        {
+            dsaCng.Key.Delete();
+        }
     }
 
     private static X509Certificate2 LoadCertificate(ReadOnlySpan<byte> data)

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using FluentAssertions;
 using Google.Protobuf;
@@ -569,8 +570,11 @@ public class TestWorkloadApiClient
         certs.Should().ContainSingle();
         certs[0].HasPrivateKey.Should().BeTrue();
         certs[0].RawData.Should().Equal(expectedCert.RawData);
-        var expectedKey = expectedCert.GetRSAPrivateKey()!.ExportPkcs8PrivateKey();
-        certs[0].GetRSAPrivateKey()?.ExportPkcs8PrivateKey().Should().Equal(expectedKey);
+        byte[] testData = "test-data"u8.ToArray();
+        using RSA expectedPrivKey = expectedCert.GetRSAPrivateKey()!;
+        using RSA actualPrivKey = certs[0].GetRSAPrivateKey()!;
+        byte[] signature = expectedPrivKey.SignData(testData, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        actualPrivKey.VerifyData(testData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1).Should().BeTrue();
     }
 
     private static Backoff NoBackoff() => new()

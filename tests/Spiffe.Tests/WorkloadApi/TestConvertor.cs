@@ -156,7 +156,12 @@ public class TestConvertor
         svid2.Hint.Should().Be(hint2);
         svid2.Certificates.Should().ContainSingle();
         svid2.Certificates[0].RawData.Should().Equal(cert2);
-        svid2.Certificates[0].GetRSAPrivateKey()!.ExportPkcs8PrivateKey().Should().Equal(key2);
+        using RSA expectedRsa = RSA.Create();
+        expectedRsa.ImportPkcs8PrivateKey(key2, out _);
+        using RSA actualRsa = svid2.Certificates[0].GetRSAPrivateKey()!;
+        byte[] testData = "test-data"u8.ToArray();
+        byte[] signature = expectedRsa.SignData(testData, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        actualRsa.VerifyData(testData, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1).Should().BeTrue();
 
         // Parse 2 SVIDs with the same hint - should return just first
         r.Svids[1] = new X509SVID(s2)
