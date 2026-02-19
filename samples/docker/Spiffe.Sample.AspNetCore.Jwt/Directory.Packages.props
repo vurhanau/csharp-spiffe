@@ -6,7 +6,7 @@
 
     <PropertyGroup>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>10.18.0.131500</SonarVersion>
+        <SonarVersion>10.19.0.132793</SonarVersion>
         <ErrorProneAnalyzerVersion>0.8.2-beta.1</ErrorProneAnalyzerVersion>
     </PropertyGroup>
 
