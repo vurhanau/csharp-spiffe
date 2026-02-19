@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.Tools" VersionOverride="2.78.0" />
     <Protobuf Include="..\..\src\Proto\workload.proto" GrpcServices="Server" Link="Protos\workload.proto" />
     <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Grpc.AspNetCore.Server.Reflection" />
