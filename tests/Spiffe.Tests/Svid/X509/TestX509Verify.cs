@@ -106,4 +106,17 @@ public class TestX509Verify
         Action f = () => X509Verify.GetSpiffeIdFromCertificate(null);
         f.Should().Throw<ArgumentNullException>();
     }
+
+    [Fact]
+    public void TestGetSpiffeIdFromCertificateSucceeds()
+    {
+        TrustDomain td = TrustDomain.FromString("domain1.test");
+        SpiffeId expected = SpiffeId.FromPath(td, "/workload");
+        using CA ca = CA.Create(td);
+        X509Svid svid = ca.CreateX509Svid(expected);
+        X509Certificate2 leaf = svid.Certificates[0];
+
+        SpiffeId actual = X509Verify.GetSpiffeIdFromCertificate(leaf);
+        actual.Should().Be(expected);
+    }
 }

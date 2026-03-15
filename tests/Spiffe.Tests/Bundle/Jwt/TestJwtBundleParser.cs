@@ -26,4 +26,23 @@ public class TestJwtBundleParser
         Action nullTrustDomain = () => JwtBundleParser.Parse(null, jwksBytes);
         nullTrustDomain.Should().ThrowExactly<ArgumentNullException>();
     }
+
+    [Fact]
+    public void TestParseEmptyKeys()
+    {
+        TrustDomain td = TrustDomain.FromString("spiffe://example.org");
+        byte[] emptyKeysJson = "{\"keys\":[]}"u8.ToArray();
+        JwtBundle b = JwtBundleParser.Parse(td, emptyKeysJson);
+        b.TrustDomain.Should().Be(td);
+        b.JwtAuthorities.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TestParseMalformedJson()
+    {
+        TrustDomain td = TrustDomain.FromString("spiffe://example.org");
+        byte[] malformedBytes = "not-valid-json-at-all!!!"u8.ToArray();
+        Action f = () => JwtBundleParser.Parse(td, malformedBytes);
+        f.Should().ThrowExactly<JwtBundleException>().WithMessage("Unable to parse JWKS");
+    }
 }

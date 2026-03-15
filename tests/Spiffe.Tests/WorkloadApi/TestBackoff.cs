@@ -50,6 +50,17 @@ public class TestBackoff
         IterateUntilMax(backoff);
     }
 
+    [Fact]
+    public void TestCreate()
+    {
+        Backoff backoff = Backoff.Create();
+        backoff.InitialDelay.Should().Be(TimeSpan.FromSeconds(1));
+        backoff.MaxDelay.Should().Be(TimeSpan.FromSeconds(30));
+
+        // First Duration() call returns InitialDelay (1 * 1s)
+        backoff.Duration().Should().Be(TimeSpan.FromSeconds(1));
+    }
+
     private static Backoff GetBackoff()
     {
         return new()

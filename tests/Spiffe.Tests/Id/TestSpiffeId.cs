@@ -289,6 +289,27 @@ public class TestSpiffeId
     }
 
     [Fact]
+    public void TestGetHashCode()
+    {
+        SpiffeId id1 = SpiffeId.FromString("spiffe://example.org/myworkload");
+        SpiffeId id2 = SpiffeId.FromString("spiffe://example.org/myworkload");
+        SpiffeId id3 = SpiffeId.FromString("spiffe://example.org/other");
+
+        id1.GetHashCode().Should().Be(id2.GetHashCode());
+        id1.GetHashCode().Should().NotBe(id3.GetHashCode());
+
+        // Hash code must be consistent with Equals
+        id1.Equals(id2).Should().BeTrue();
+        id1.Equals(id3).Should().BeFalse();
+
+        // Usable in HashSet
+        HashSet<SpiffeId> set = [id1, id2, id3];
+        set.Should().HaveCount(2);
+        set.Should().Contain(id1);
+        set.Should().Contain(id3);
+    }
+
+    [Fact]
     public void TestFromSegmentsFails()
     {
         Action f = () => SpiffeId.FromSegments(null);

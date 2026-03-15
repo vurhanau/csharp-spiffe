@@ -99,4 +99,31 @@ public class TestTrustDomain
         td1.Equals(td3).Should().BeFalse();
         td1.Equals(new object()).Should().BeFalse();
     }
+
+    [Fact]
+    public void TestGetHashCode()
+    {
+        TrustDomain td1 = TrustDomain.FromString("spiffe://example1.org");
+        TrustDomain td2 = TrustDomain.FromString("spiffe://example1.org");
+        TrustDomain td3 = TrustDomain.FromString("spiffe://example2.org");
+
+        td1.GetHashCode().Should().Be(td2.GetHashCode());
+        td1.GetHashCode().Should().NotBe(td3.GetHashCode());
+
+        // Usable in HashSet / Dictionary
+        HashSet<TrustDomain> set = [td1, td2, td3];
+        set.Should().HaveCount(2);
+        set.Should().Contain(td1);
+        set.Should().Contain(td3);
+    }
+
+    [Fact]
+    public void TestToString()
+    {
+        TrustDomain td = TrustDomain.FromString("example.org");
+        td.ToString().Should().Be("example.org");
+
+        TrustDomain tdFromUri = TrustDomain.FromString("spiffe://example.org");
+        tdFromUri.ToString().Should().Be("example.org");
+    }
 }

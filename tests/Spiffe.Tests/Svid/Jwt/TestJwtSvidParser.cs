@@ -240,6 +240,104 @@ public class TestJwtSvidParser
     }
 
     [Fact]
+    public void TestParseInsecure()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Iat, J.ToNumericDate(now)),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        JwtSvid parsed = JwtSvidParser.ParseInsecure(jwt, [s_workload2.Id]);
+        parsed.Id.Should().Be(s_workload1);
+        parsed.Audience.Should().Equal([s_workload2.Id]);
+        parsed.Token.Should().Be(jwt);
+    }
+
+    [Fact]
+    public void TestParseInsecureFailsIfMissingSubject()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Iat, J.ToNumericDate(now)),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        Action f = () => JwtSvidParser.ParseInsecure(jwt, [s_workload2.Id]);
+        f.Should().Throw<JwtSvidException>().WithMessage("Token missing sub claim");
+    }
+
+    [Fact]
+    public void TestParseInsecureFailsIfMissingExp()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Iat, J.ToNumericDate(now)),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        Action f = () => JwtSvidParser.ParseInsecure(jwt, [s_workload2.Id]);
+        f.Should().Throw<JwtSvidException>().WithMessage("Token missing exp claim");
+    }
+
+    [Fact]
+    public void TestParseInsecureFailsIfSubjectInvalid()
+    {
+        DateTime now = DateTime.UtcNow;
+        string sub = "invalid spiffe id";
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, sub),
+            new(Claims.Iat, J.ToNumericDate(now)),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        Action f = () => JwtSvidParser.ParseInsecure(jwt, [s_workload2.Id]);
+        f.Should().Throw<JwtSvidException>().WithMessage($"Token has an invalid subject claim: '{sub}'");
+    }
+
+    [Fact]
+    public void TestParseInsecureFailsIfAudienceMismatch()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Iat, J.ToNumericDate(now)),
+            new(Claims.Exp, J.ToNumericDate(now.AddHours(1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        SpiffeId workload3 = SpiffeId.FromPath(s_td, "/workload3");
+        Action f = () => JwtSvidParser.ParseInsecure(jwt, [workload3.Id]);
+        f.Should().Throw<JwtSvidException>().WithMessage($"Expected audience is {workload3.Id} (audience={s_workload2.Id})");
+    }
+
+    [Fact]
+    public void TestParseInsecureFailsIfExpired()
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Claim> claims = [
+            new(Claims.Iss, "FAKECA"),
+            new(Claims.Sub, s_workload1.Id),
+            new(Claims.Iat, J.ToNumericDate(now.AddYears(-2))),
+            new(Claims.Exp, J.ToNumericDate(now.AddYears(-1))),
+            new(Claims.Aud, s_workload2.Id),
+        ];
+        string jwt = Jwt(claims);
+        Action f = () => JwtSvidParser.ParseInsecure(jwt, [s_workload2.Id]);
+        f.Should().Throw<JwtSvidException>().WithMessage("Validation failed, token is expired (exp)");
+    }
+
+    [Fact]
     public async Task TestParseWithInvalidSignature()
     {
         string jwt1 = s_ca.CreateJwtSvid(s_workload1, [s_workload2.Id]).Token;
