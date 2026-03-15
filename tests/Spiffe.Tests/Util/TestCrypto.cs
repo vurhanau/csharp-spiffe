@@ -145,8 +145,13 @@ public class TestCrypto
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
 
-        Exception exception = null;
+        Exception serverException = null;
+        Exception clientException = null;
         bool handshakeSucceeded = false;
+
+        // Use SslStreamCertificateContext with offline validation to match production usage
+        // (see SpiffeSslConfig.CreateContext) and avoid hanging on CRL/OCSP checks on Windows CI.
+        var certContext = SslStreamCertificateContext.Create(actual, additionalCertificates: null, offline: true);
 
         var serverTask = Task.Run(async () =>
         {
@@ -158,43 +163,64 @@ public class TestCrypto
 
                 await sslStream.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
                 {
-                    ServerCertificate = actual,
+                    ServerCertificateContext = certContext,
                     ClientCertificateRequired = false,
-                    EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12,
                 });
 
                 handshakeSucceeded = sslStream.IsAuthenticated;
             }
             catch (Exception ex)
             {
-                exception = ex;
+                serverException = ex;
             }
         });
 
         // Create client to connect and complete TLS handshake
         var clientTask = Task.Run(async () =>
         {
-            await Task.Delay(50);
-            using var client = new TcpClient();
-            await client.ConnectAsync(IPAddress.Loopback, port);
-            using NetworkStream stream = client.GetStream();
+            try
+            {
+                await Task.Delay(50);
+                using var client = new TcpClient();
+                await client.ConnectAsync(IPAddress.Loopback, port);
+                using NetworkStream stream = client.GetStream();
 #pragma warning disable CA5359 // Test code accepting self-signed certificate
-            using var sslStream = new SslStream(stream, false, (_, _, _, _) => true);
+                using var sslStream = new SslStream(stream, false, (_, _, _, _) => true);
 #pragma warning restore CA5359
-            await sslStream.AuthenticateAsClientAsync("localhost");
+                await sslStream.AuthenticateAsClientAsync("localhost");
+            }
+            catch (Exception ex)
+            {
+                clientException = ex;
+            }
         });
 
-        var timeout = Task.Delay(5000);
-        await Task.WhenAny(Task.WhenAll(serverTask, clientTask), timeout);
+        var timeout = Task.Delay(10000);
+        var completed = await Task.WhenAny(Task.WhenAll(serverTask, clientTask), timeout);
 
         listener.Stop();
 
-        if (exception != null)
+        // Wait for tasks to finish after stopping the listener
+        await Task.WhenAll(serverTask, clientTask).ContinueWith(_ => { });
+
+        if (serverException != null)
         {
-            Assert.Fail($"Schannel could not access private key: {exception.GetType().Name}: {exception.Message}");
+            Assert.Fail($"Server TLS handshake failed: {serverException.GetType().Name}: {serverException.Message}");
         }
 
-        handshakeSucceeded.Should().BeTrue("Schannel should complete TLS handshake using the private key");
+        if (clientException != null)
+        {
+            Assert.Fail($"Client TLS handshake failed: {clientException.GetType().Name}: {clientException.Message}");
+        }
+
+        if (completed != timeout)
+        {
+            handshakeSucceeded.Should().BeTrue("Schannel should complete TLS handshake using the private key");
+        }
+        else
+        {
+            Assert.Fail("TLS handshake timed out - Schannel may not be able to access the private key");
+        }
     }
 
     [Fact]
