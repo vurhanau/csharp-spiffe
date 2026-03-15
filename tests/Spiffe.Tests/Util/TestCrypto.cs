@@ -140,6 +140,10 @@ public class TestCrypto
 
         actual.HasPrivateKey.Should().BeTrue();
 
+        // Use a cancellation token to ensure all async operations are bounded by the timeout.
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var ct = cts.Token;
+
         // Create listener to accept a TLS connection using the certificate
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -157,51 +161,78 @@ public class TestCrypto
         {
             try
             {
-                using TcpClient client = await listener.AcceptTcpClientAsync();
+                using TcpClient client = await listener.AcceptTcpClientAsync(ct);
                 using NetworkStream stream = client.GetStream();
                 using SslStream sslStream = new(stream, false);
 
-                await sslStream.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
-                {
-                    ServerCertificateContext = certContext,
-                    ClientCertificateRequired = false,
-                });
+                await sslStream.AuthenticateAsServerAsync(
+                    new SslServerAuthenticationOptions
+                    {
+                        ServerCertificateContext = certContext,
+                        ClientCertificateRequired = false,
+                    },
+                    ct);
 
                 handshakeSucceeded = sslStream.IsAuthenticated;
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout — handled below
             }
             catch (Exception ex)
             {
                 serverException = ex;
             }
-        });
+        },
+        ct);
 
         // Create client to connect and complete TLS handshake
         var clientTask = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(50);
+                await Task.Delay(50, ct);
                 using var client = new TcpClient();
-                await client.ConnectAsync(IPAddress.Loopback, port);
+                await client.ConnectAsync(IPAddress.Loopback, port, ct);
                 using NetworkStream stream = client.GetStream();
 #pragma warning disable CA5359 // Test code accepting self-signed certificate
                 using var sslStream = new SslStream(stream, false, (_, _, _, _) => true);
 #pragma warning restore CA5359
-                await sslStream.AuthenticateAsClientAsync("localhost");
+                await sslStream.AuthenticateAsClientAsync(
+                    new SslClientAuthenticationOptions
+                    {
+                        TargetHost = "localhost",
+                    },
+                    ct);
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout — handled below
             }
             catch (Exception ex)
             {
                 clientException = ex;
             }
-        });
+        },
+        ct);
 
-        var timeout = Task.Delay(10000);
-        var completed = await Task.WhenAny(Task.WhenAll(serverTask, clientTask), timeout);
+        try
+        {
+            await Task.WhenAll(serverTask, clientTask);
+        }
+        catch (OperationCanceledException)
+        {
+            // Timeout fired — fall through to assertions
+        }
+        finally
+        {
+            listener.Stop();
+        }
 
-        listener.Stop();
-
-        // Wait for tasks to finish after stopping the listener
-        await Task.WhenAll(serverTask, clientTask).ContinueWith(_ => { });
+        if (ct.IsCancellationRequested && !handshakeSucceeded)
+        {
+            Assert.Fail("TLS handshake timed out - Schannel may not be able to access the private key");
+        }
 
         if (serverException != null)
         {
@@ -213,14 +244,7 @@ public class TestCrypto
             Assert.Fail($"Client TLS handshake failed: {clientException.GetType().Name}: {clientException.Message}");
         }
 
-        if (completed != timeout)
-        {
-            handshakeSucceeded.Should().BeTrue("Schannel should complete TLS handshake using the private key");
-        }
-        else
-        {
-            Assert.Fail("TLS handshake timed out - Schannel may not be able to access the private key");
-        }
+        handshakeSucceeded.Should().BeTrue("Schannel should complete TLS handshake using the private key");
     }
 
     [Fact]
