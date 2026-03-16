@@ -35,14 +35,15 @@ public partial class TestIntegration
     {
         for (int i = 0; i < Constants.IntegrationTestRetriesMax; i++)
         {
+            using CancellationTokenSource cts = new();
+            cts.CancelAfter(Constants.IntegrationTestTimeoutMillis);
+            Task serverTask = null;
+
             try
             {
-                using CancellationTokenSource cts = new();
-                cts.CancelAfter(Constants.IntegrationTestTimeoutMillis);
-
                 string address = addressFunc();
                 TestServer server = new(_output);
-                Task serverTask = await server.ListenAsync(address, cts.Token);
+                serverTask = await server.ListenAsync(address, cts.Token);
 
                 using GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
                 IWorkloadApiClient c = WorkloadApiClient.Create(ch);
@@ -57,7 +58,25 @@ public partial class TestIntegration
             catch (Exception e)
             {
                 _output.WriteLine($"Test failed, attempt: {i + 1}: {e.Message}");
-                await Task.Delay(100);
+
+                // Ensure the server process is killed before retrying
+                // to avoid "address already in use" errors.
+                await cts.CancelAsync();
+                if (serverTask != null)
+                {
+                    try
+                    {
+                        await serverTask;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Expected — server was cancelled
+                        _output.WriteLine($"Server shutdown: {ex.GetType().Name}: {ex.Message}");
+                    }
+                }
+
+                // Allow time for the OS to release resources (named pipes, sockets)
+                await Task.Delay(1000);
             }
         }
     }
