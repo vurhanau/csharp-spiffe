@@ -15,7 +15,7 @@
         <XunitRunnerVersion>3.1.5</XunitRunnerVersion>
         <FluentAssertionsVersion>8.8.0</FluentAssertionsVersion>
         <MoqVersion>4.20.72</MoqVersion>
-        <CoverletVersion>8.0.0</CoverletVersion>
+        <CoverletVersion>8.0.1</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
         <SonarVersion>10.20.0.135146</SonarVersion>
