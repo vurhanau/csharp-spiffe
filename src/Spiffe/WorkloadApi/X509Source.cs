@@ -96,14 +96,18 @@ public sealed class X509Source : Source, IX509Source
     /// <summary>
     /// Cleans up any persisted private keys, needed for windows.
     /// </summary>
-    public new void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        WriteLocked(() =>
+        if (disposing)
         {
-            _svid?.Dispose();
-            _svid = null;
-            _bundles = null;
-        });
-        base.Dispose();
+            WriteLocked(() =>
+            {
+                _svid?.Dispose();
+                _svid = null;
+                _bundles = null;
+            });
+        }
+
+        base.Dispose(disposing);
     }
 }
