@@ -24,10 +24,7 @@ IWorkloadApiClient workload = WorkloadApiClient.Create(channel, logger);
 logger.LogInformation("Creating x509 source");
 X509Source x509Source = await X509Source.CreateAsync(workload, timeoutMillis: 60_000);
 
-using HttpClient http = new(new SocketsHttpHandler()
-{
-    SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source, Authorizers.AuthorizeAny()),
-});
+using HttpClient http = new(new SpiffeHttpHandler(x509Source, Authorizers.AuthorizeAny()));
 
 while (true)
 {

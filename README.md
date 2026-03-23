@@ -45,12 +45,10 @@ To dial an mTLS server:
 GrpcChannel channel = GrpcChannelFactory.CreateChannel("unix:///tmp/agent.sock");
 IWorkloadApiClient client = WorkloadApiClient.Create(channel);
 X509Source x509Source = await X509Source.CreateAsync(client);
-HttpClient http = new(new SocketsHttpHandler()
-{
-    // Configure mTLS client options
-    SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source, Authorizers.AuthorizeAny()),
-});
+HttpClient http = new(new SpiffeHttpHandler(x509Source, Authorizers.AuthorizeAny()));
 ```
+
+`SpiffeHttpHandler` swaps its inner `SocketsHttpHandler` each time the `X509Source` receives a rotated SVID, so every new connection presents the current certificate including any intermediate CAs.
 
 The client and server obtain
 [X509-SVIDs](https://github.com/spiffe/spiffe/blob/main/standards/X509-SVID.md)
