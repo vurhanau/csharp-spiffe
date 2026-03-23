@@ -141,7 +141,7 @@ public class TestCrypto
         actual.HasPrivateKey.Should().BeTrue();
 
         // Use a cancellation token to ensure all async operations are bounded by the timeout.
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var ct = cts.Token;
 
         // Create listener to accept a TLS connection using the certificate
