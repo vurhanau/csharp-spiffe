@@ -26,11 +26,22 @@ Skip any files that look sensitive (`.env`, `*.pfx`, `*secret*`, credentials).
 - Pass the message via HEREDOC.
 - Append the Co-Authored-By trailer.
 
-### 5. Push
+### 5. Sync with main
+Before pushing, fetch and rebase onto the latest `main`:
+1. Run `git fetch origin main`.
+2. Run `git rebase origin/main`.
+3. If the rebase reports conflicts:
+   - Show the user which files conflict (`git status`).
+   - For each conflicted file, read both sides and resolve the conflict by keeping the correct content.
+   - Stage each resolved file with `git add <file>`.
+   - Continue the rebase with `git rebase --continue` (pass the commit message via HEREDOC to avoid interactive prompts if needed).
+   - If the conflict is too complex to resolve automatically, abort with `git rebase --abort` and tell the user what happened so they can resolve it manually.
+
+### 6. Push
 Run `git push -u origin HEAD`.
 If the branch already tracks a remote and `git status` shows "up to date", skip the push.
 
-### 6. Open PR
+### 7. Open PR
 Run `gh pr create --base main` with a HEREDOC body:
 
 ```
