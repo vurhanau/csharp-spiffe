@@ -24,7 +24,10 @@ namespace Spiffe.WorkloadApi
         /// </summary>
         public virtual bool IsInitialized => _initialized.Task.IsCompletedSuccessfully;
 
-        private bool IsDisposed => _disposed != 0;
+        /// <summary>
+        /// Indicates if the source has been disposed.
+        /// </summary>
+        protected bool IsDisposed => _disposed != 0;
 
         /// <summary>
         /// Disposes the source, freeing underlying resources.

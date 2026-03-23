@@ -98,7 +98,7 @@ public sealed class X509Source : Source, IX509Source
     /// </summary>
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && !IsDisposed)
         {
             WriteLocked(() =>
             {

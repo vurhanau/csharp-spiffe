@@ -66,7 +66,7 @@ A workload uses `WorkloadApiClient` to connect to the SPIFFE Workload API over g
 
 `X509Source`, `JwtSource`, and `BundleSource` all extend an abstract `Source` base class that:
 - Uses `ReaderWriterLockSlim` for thread-safe reads during background Watch updates
-- Tracks initialization state; callers `await source.WaitUntilReadyAsync()`
+- Tracks initialization state; factory methods like `CreateAsync` wait for the first update before returning, and callers can check `IsInitialized` if needed
 - Implements `IDisposable` — always dispose sources when done
 
 ### Proto
