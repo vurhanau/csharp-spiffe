@@ -21,7 +21,7 @@
         <SonarVersion>10.20.0.135146</SonarVersion>
         <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
         <AspNetCoreTestHostVersion>8.0.3</AspNetCoreTestHostVersion>
-        <CliWrapVersion>3.10.0</CliWrapVersion>
+        <CliWrapVersion>3.10.1</CliWrapVersion>
         <ErrorProneAnalyzerVersion>0.8.2-beta.1</ErrorProneAnalyzerVersion>
 
     </PropertyGroup>
