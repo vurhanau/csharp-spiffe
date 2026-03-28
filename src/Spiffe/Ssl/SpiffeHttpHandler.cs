@@ -22,6 +22,8 @@ public sealed class SpiffeHttpHandler : HttpMessageHandler
 
     private readonly TimeSpan _drainDelay;
 
+    private readonly object _lock = new();
+
     private volatile HttpMessageInvoker _inner;
 
     private volatile bool _disposed;
@@ -39,6 +41,11 @@ public sealed class SpiffeHttpHandler : HttpMessageHandler
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _authorizer = authorizer ?? throw new ArgumentNullException(nameof(authorizer));
+        if (drainDelay.HasValue && (drainDelay.Value < TimeSpan.Zero || drainDelay.Value > TimeSpan.FromMinutes(10)))
+        {
+            throw new ArgumentOutOfRangeException(nameof(drainDelay), "drainDelay must be between 0 and 10 minutes.");
+        }
+
         _drainDelay = drainDelay ?? TimeSpan.FromSeconds(30);
         _inner = CreateInvoker();
         _source.Updated += Refresh;
@@ -54,15 +61,25 @@ public sealed class SpiffeHttpHandler : HttpMessageHandler
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
-        if (disposing && !_disposed)
+        if (disposing)
         {
-            _disposed = true;
-            _source.Updated -= Refresh;
-            _inner.Dispose();
+            lock (_lock)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                _source.Updated -= Refresh;
+                _inner.Dispose();
+            }
         }
 
         base.Dispose(disposing);
     }
+
+    internal HttpMessageInvoker CurrentInvoker => _inner;
 
     private HttpMessageInvoker CreateInvoker() => new(new SocketsHttpHandler
     {
@@ -76,7 +93,20 @@ public sealed class SpiffeHttpHandler : HttpMessageHandler
             return;
         }
 
-        HttpMessageInvoker old = Interlocked.Exchange(ref _inner, CreateInvoker());
+        HttpMessageInvoker newInvoker = CreateInvoker();
+        HttpMessageInvoker old;
+        lock (_lock)
+        {
+            if (_disposed)
+            {
+                newInvoker.Dispose();
+                return;
+            }
+
+            old = _inner;
+            _inner = newInvoker;
+        }
+
         _ = Task.Delay(_drainDelay).ContinueWith(_ => old.Dispose(), TaskScheduler.Default);
     }
 }

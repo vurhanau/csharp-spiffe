@@ -43,19 +43,17 @@ public class TestSpiffeHttpHandler
     public void TestHandlerRefreshesOnSourceUpdate()
     {
         using X509Source source = MakeInitializedSource();
-        int refreshCount = 0;
-
-        // Intercept Updated to count refreshes triggered by SpiffeHttpHandler's subscription
-        // We add our own listener alongside SpiffeHttpHandler's internal listener.
         using SpiffeHttpHandler handler = new(source, Authorizers.AuthorizeAny());
-        source.Updated += () => refreshCount++;
+        HttpMessageInvoker first = handler.CurrentInvoker;
 
-        // Trigger two more updates
         source.SetX509Context(MakeContext());
-        source.SetX509Context(MakeContext());
+        HttpMessageInvoker second = handler.CurrentInvoker;
 
-        // Our counter saw 2 updates; SpiffeHttpHandler saw the same and refreshed its inner handler
-        refreshCount.Should().Be(2);
+        source.SetX509Context(MakeContext());
+        HttpMessageInvoker third = handler.CurrentInvoker;
+
+        second.Should().NotBeSameAs(first);
+        third.Should().NotBeSameAs(second);
     }
 
     [Fact]
@@ -63,11 +61,13 @@ public class TestSpiffeHttpHandler
     {
         using X509Source source = MakeInitializedSource();
         SpiffeHttpHandler handler = new(source, Authorizers.AuthorizeAny());
+        HttpMessageInvoker invokerBeforeDispose = handler.CurrentInvoker;
         handler.Dispose();
 
-        // After disposal, firing Updated must not throw (handler already unsubscribed)
-        Action trigger = () => source.SetX509Context(MakeContext());
-        trigger.Should().NotThrow();
+        source.SetX509Context(MakeContext());
+
+        // Refresh must not have run: inner invoker unchanged after disposal
+        handler.CurrentInvoker.Should().BeSameAs(invokerBeforeDispose);
     }
 
     [Fact]
@@ -91,6 +91,17 @@ public class TestSpiffeHttpHandler
 
         nullSource.Should().Throw<ArgumentNullException>().WithParameterName("source");
         nullAuthorizer.Should().Throw<ArgumentNullException>().WithParameterName("authorizer");
+    }
+
+    [Fact]
+    public void TestInvalidDrainDelayThrows()
+    {
+        using X509Source source = MakeInitializedSource();
+        Action negative = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), TimeSpan.FromSeconds(-1));
+        Action tooLarge = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), TimeSpan.FromMinutes(11));
+
+        negative.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("drainDelay");
+        tooLarge.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("drainDelay");
     }
 
     private static X509Source MakeInitializedSource()
