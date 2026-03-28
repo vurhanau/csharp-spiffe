@@ -74,9 +74,9 @@ public static class JwtSvidParser
         {
             spiffeId = SpiffeId.FromString(jwt.Subject);
         }
-        catch
+        catch (Exception e)
         {
-            throw new JwtSvidException($"Token has an invalid subject claim: '{jwt.Subject}'");
+            throw new JwtSvidException($"Token has an invalid subject claim: '{jwt.Subject}'", e);
         }
 
         ValidateLikeJose(jwt, validAudience);
