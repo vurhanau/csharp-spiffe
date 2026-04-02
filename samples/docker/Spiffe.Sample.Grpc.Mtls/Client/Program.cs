@@ -28,7 +28,7 @@ X509Source x509Source = await X509Source.CreateAsync(workload, timeoutMillis: 60
 
 using GrpcChannel channel = GrpcChannel.ForAddress("https://server:5000", new GrpcChannelOptions()
 {
-    HttpHandler = new SocketsHttpHandler()
+    HttpHandler = new SocketsHttpHandler
     {
         SslOptions = SpiffeSslConfig.GetMtlsClientOptions(x509Source, Authorizers.AuthorizeAny()),
     },
