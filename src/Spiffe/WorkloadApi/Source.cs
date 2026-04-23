@@ -16,7 +16,7 @@ namespace Spiffe.WorkloadApi
         private protected Source()
         {
             _lock = new ReaderWriterLockSlim();
-            _initialized = new TaskCompletionSource<bool>();
+            _initialized = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         /// <summary>
@@ -52,9 +52,18 @@ namespace Spiffe.WorkloadApi
         }
 
         /// <summary>
+        /// Raised each time the source receives new data from the Workload API.
+        /// </summary>
+        public event Action? Updated;
+
+        /// <summary>
         /// Marks the source as initialized.
         /// </summary>
-        protected virtual void Initialized() => _initialized.TrySetResult(true);
+        protected virtual void Initialized()
+        {
+            _initialized.TrySetResult(true);
+            Updated?.Invoke();
+        }
 
         /// <summary>
         /// Waits until the source is updated or the <paramref name="cancellationToken"/> is cancelled or the timeout is reached.
