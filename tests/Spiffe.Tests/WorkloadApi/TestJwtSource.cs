@@ -131,4 +131,21 @@ public class TestJwtSource
     {
         await Assert.ThrowsAsync<ArgumentNullException>(() => JwtSource.CreateAsync(null));
     }
+
+    [Fact]
+    public void TestSetJwtBundleSetContinuesWhenUpdatedSubscriberThrows()
+    {
+        Mock<SpiffeWorkloadAPIClient> mockGrpcClient = new();
+        WorkloadApiClient c = new(mockGrpcClient.Object, _ => { }, NullLogger.Instance);
+        JwtSource s = new(c);
+        int callCount = 0;
+        s.Updated += () => throw new InvalidOperationException("boom");
+        s.Updated += () => callCount++;
+
+        Action set = () => s.SetJwtBundleSet(new([]));
+
+        set.Should().NotThrow();
+        callCount.Should().Be(1);
+        s.IsInitialized.Should().BeTrue();
+    }
 }

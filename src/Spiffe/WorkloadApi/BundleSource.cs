@@ -141,7 +141,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         }
 
         _initializedX509.TrySetResult(true);
-        Updated?.Invoke();
+        NotifyUpdated();
     }
 
     /// <summary>
@@ -162,7 +162,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         }
 
         _initializedJwt.TrySetResult(true);
-        Updated?.Invoke();
+        NotifyUpdated();
     }
 
     /// <summary>
@@ -182,5 +182,26 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
             () => IsDisposed,
             timeoutMillis,
             cancellationToken);
+    }
+
+    private void NotifyUpdated()
+    {
+        Action? handlers = Updated;
+        if (handlers == null)
+        {
+            return;
+        }
+
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((Action)handler)();
+            }
+            catch (Exception ex)
+            {
+                _ = ex;
+            }
+        }
     }
 }

@@ -62,7 +62,28 @@ namespace Spiffe.WorkloadApi
         protected virtual void Initialized()
         {
             _initialized.TrySetResult(true);
-            Updated?.Invoke();
+            NotifyUpdated();
+        }
+
+        private void NotifyUpdated()
+        {
+            Action? handlers = Updated;
+            if (handlers == null)
+            {
+                return;
+            }
+
+            foreach (Delegate handler in handlers.GetInvocationList())
+            {
+                try
+                {
+                    ((Action)handler)();
+                }
+                catch (Exception ex)
+                {
+                    _ = ex;
+                }
+            }
         }
 
         /// <summary>

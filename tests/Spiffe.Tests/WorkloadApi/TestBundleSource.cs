@@ -184,4 +184,32 @@ public class TestBundleSource
         Func<Task> f = () => BundleSource.CreateAsync(null);
         await f.Should().ThrowAsync<ArgumentNullException>().WithParameterName("client");
     }
+
+    [Fact]
+    public void TestSetX509ContextContinuesWhenUpdatedSubscriberThrows()
+    {
+        BundleSource s = new();
+        int callCount = 0;
+        s.Updated += () => throw new InvalidOperationException("boom");
+        s.Updated += () => callCount++;
+
+        Action set = () => s.SetX509Context(new([], new([])));
+
+        set.Should().NotThrow();
+        callCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void TestSetJwtBundlesContinuesWhenUpdatedSubscriberThrows()
+    {
+        BundleSource s = new();
+        int callCount = 0;
+        s.Updated += () => throw new InvalidOperationException("boom");
+        s.Updated += () => callCount++;
+
+        Action set = () => s.SetJwtBundles(new([]));
+
+        set.Should().NotThrow();
+        callCount.Should().Be(1);
+    }
 }
