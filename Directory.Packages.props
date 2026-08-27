@@ -7,7 +7,7 @@
         <GrpcCoreVersion>2.76.0</GrpcCoreVersion>
         <GrpcNetClientVersion>2.80.0</GrpcNetClientVersion>
         <GrpcToolsVersion>2.81.0</GrpcToolsVersion>
-        <IdentityModelVersion>8.18.0</IdentityModelVersion>
+        <IdentityModelVersion>8.19.1</IdentityModelVersion>
         <LoggingVersion>8.0.1</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
         <TestSdkVersion>18.5.1</TestSdkVersion>
