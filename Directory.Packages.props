@@ -6,7 +6,7 @@
         <GrpcAspNetCoreVersion>2.80.0</GrpcAspNetCoreVersion>
         <GrpcCoreVersion>2.76.0</GrpcCoreVersion>
         <GrpcNetClientVersion>2.80.0</GrpcNetClientVersion>
-        <GrpcToolsVersion>2.80.0</GrpcToolsVersion>
+        <GrpcToolsVersion>2.81.0</GrpcToolsVersion>
         <IdentityModelVersion>8.19.1</IdentityModelVersion>
         <LoggingVersion>8.0.1</LoggingVersion>
         <ConfigurationVersion>8.0.0</ConfigurationVersion>
@@ -18,7 +18,7 @@
         <CoverletVersion>10.0.1</CoverletVersion>
         <CommandLineParserVersion>2.9.1</CommandLineParserVersion>
         <StyleCopVersion>1.2.0-beta.556</StyleCopVersion>
-        <SonarVersion>10.25.0.139117</SonarVersion>
+        <SonarVersion>10.27.0.140913</SonarVersion>
         <AspNetCoreJwtAuthenticationVersion>8.0.1</AspNetCoreJwtAuthenticationVersion>
         <AspNetCoreTestHostVersion>8.0.3</AspNetCoreTestHostVersion>
         <CliWrapVersion>3.10.2</CliWrapVersion>
