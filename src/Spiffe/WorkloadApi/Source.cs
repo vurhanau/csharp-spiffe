@@ -54,15 +54,41 @@ namespace Spiffe.WorkloadApi
         /// <summary>
         /// Raised each time the source receives new data from the Workload API.
         /// </summary>
+        /// <remarks>
+        /// Handlers run synchronously on the Workload API update thread. Exceptions thrown by
+        /// handlers are swallowed so that a faulty subscriber cannot stop subsequent updates.
+        /// Keep handlers short.
+        /// </remarks>
         public event Action? Updated;
 
         /// <summary>
         /// Marks the source as initialized.
         /// </summary>
-        protected virtual void Initialized()
+        protected virtual void Initialized() => _initialized.TrySetResult(true);
+
+        /// <summary>
+        /// Raises <see cref="Updated"/> without allowing a subscriber failure to interrupt updates.
+        /// </summary>
+        private protected void RaiseUpdated()
         {
-            _initialized.TrySetResult(true);
-            Updated?.Invoke();
+            Action? handlers = Updated;
+            if (handlers is null)
+            {
+                return;
+            }
+
+            foreach (Action handler in handlers.GetInvocationList().Cast<Action>())
+            {
+                try
+                {
+                    handler();
+                }
+                catch (Exception exception)
+                {
+                    // Subscriber exceptions must not interrupt the Workload API update loop.
+                    System.Diagnostics.Debug.WriteLine(exception);
+                }
+            }
         }
 
         /// <summary>

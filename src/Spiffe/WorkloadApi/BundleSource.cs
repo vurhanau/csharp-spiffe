@@ -25,6 +25,11 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     /// <summary>
     /// Raised each time the source receives new data from the Workload API.
     /// </summary>
+    /// <remarks>
+    /// Handlers run synchronously on the Workload API update thread. Exceptions thrown by
+    /// handlers are swallowed so that a faulty subscriber cannot stop subsequent updates.
+    /// Keep handlers short.
+    /// </remarks>
     public event Action? Updated;
 
     /// <summary>
@@ -141,7 +146,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         }
 
         _initializedX509.TrySetResult(true);
-        Updated?.Invoke();
+        RaiseUpdated();
     }
 
     /// <summary>
@@ -162,7 +167,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         }
 
         _initializedJwt.TrySetResult(true);
-        Updated?.Invoke();
+        RaiseUpdated();
     }
 
     /// <summary>
@@ -182,5 +187,27 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
             () => IsDisposed,
             timeoutMillis,
             cancellationToken);
+    }
+
+    private void RaiseUpdated()
+    {
+        Action? handlers = Updated;
+        if (handlers is null)
+        {
+            return;
+        }
+
+        foreach (Action handler in handlers.GetInvocationList().Cast<Action>())
+        {
+            try
+            {
+                handler();
+            }
+            catch (Exception exception)
+            {
+                // Subscriber exceptions must not interrupt the Workload API update loop.
+                System.Diagnostics.Debug.WriteLine(exception);
+            }
+        }
     }
 }
