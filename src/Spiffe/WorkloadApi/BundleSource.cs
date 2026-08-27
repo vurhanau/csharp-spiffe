@@ -23,14 +23,19 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
     private volatile int _disposed;
 
     /// <summary>
+    /// Raised each time the source receives new data from the Workload API.
+    /// </summary>
+    public event Action? Updated;
+
+    /// <summary>
     /// Constructs bundle source.
     /// Visible for testing.
     /// </summary>
     internal BundleSource()
     {
         _lock = new ReaderWriterLockSlim();
-        _initializedX509 = new TaskCompletionSource<bool>();
-        _initializedJwt = new TaskCompletionSource<bool>();
+        _initializedX509 = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _initializedJwt = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     /// <summary>
@@ -136,6 +141,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         }
 
         _initializedX509.TrySetResult(true);
+        Updated?.Invoke();
     }
 
     /// <summary>
@@ -156,6 +162,7 @@ public sealed class BundleSource : IX509BundleSource, IJwtBundleSource, IDisposa
         }
 
         _initializedJwt.TrySetResult(true);
+        Updated?.Invoke();
     }
 
     /// <summary>
