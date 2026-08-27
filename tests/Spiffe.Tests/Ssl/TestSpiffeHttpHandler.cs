@@ -30,6 +30,20 @@ public class TestSpiffeHttpHandler
     }
 
     [Fact]
+    public void TestThrowingUpdatedSubscriberDoesNotPreventOtherSubscribers()
+    {
+        using X509Source source = new(_ => s_ca.CreateX509Svid(s_workloadId));
+        int updateCount = 0;
+        source.Updated += () => throw new InvalidOperationException();
+        source.Updated += () => updateCount++;
+
+        Action update = () => source.SetX509Context(MakeContext());
+
+        update.Should().NotThrow();
+        updateCount.Should().Be(1);
+    }
+
+    [Fact]
     public void TestHandlerCreatedWithCurrentSvid()
     {
         using X509Source source = MakeInitializedSource();
@@ -44,16 +58,32 @@ public class TestSpiffeHttpHandler
     {
         using X509Source source = MakeInitializedSource();
         using SpiffeHttpHandler handler = new(source, Authorizers.AuthorizeAny());
-        HttpMessageInvoker first = handler.CurrentInvoker;
+        RetiringInvoker first = handler.CurrentInvoker;
 
         source.SetX509Context(MakeContext());
-        HttpMessageInvoker second = handler.CurrentInvoker;
+        RetiringInvoker second = handler.CurrentInvoker;
 
         source.SetX509Context(MakeContext());
-        HttpMessageInvoker third = handler.CurrentInvoker;
+        RetiringInvoker third = handler.CurrentInvoker;
 
         second.Should().NotBeSameAs(first);
         third.Should().NotBeSameAs(second);
+    }
+
+    [Fact]
+    public void TestHandlerDoesNotRefreshWhenSvidIsUnchanged()
+    {
+        using X509Source source = MakeInitializedSource();
+        using SpiffeHttpHandler handler = new(source, Authorizers.AuthorizeAny());
+        RetiringInvoker first = handler.CurrentInvoker;
+        X509Context context = MakeContext();
+
+        source.SetX509Context(context);
+        RetiringInvoker second = handler.CurrentInvoker;
+        source.SetX509Context(context);
+
+        handler.CurrentInvoker.Should().BeSameAs(second);
+        second.Should().NotBeSameAs(first);
     }
 
     [Fact]
@@ -61,7 +91,7 @@ public class TestSpiffeHttpHandler
     {
         using X509Source source = MakeInitializedSource();
         SpiffeHttpHandler handler = new(source, Authorizers.AuthorizeAny());
-        HttpMessageInvoker invokerBeforeDispose = handler.CurrentInvoker;
+        RetiringInvoker invokerBeforeDispose = handler.CurrentInvoker;
         handler.Dispose();
 
         source.SetX509Context(MakeContext());
@@ -94,19 +124,23 @@ public class TestSpiffeHttpHandler
     }
 
     [Fact]
-    public void TestInvalidDrainDelayThrows()
+    public void TestInvalidDrainParametersThrow()
     {
         using X509Source source = MakeInitializedSource();
-        Action negative = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), TimeSpan.FromSeconds(-1));
-        Action tooLarge = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), TimeSpan.FromMinutes(11));
+        Action negativeMinimum = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), TimeSpan.FromSeconds(-1));
+        Action negativeMaximum = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), maxDrain: TimeSpan.FromSeconds(-1));
+        Action minimumExceedsMaximum = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(1));
+        Action invalidLifetime = () => _ = new SpiffeHttpHandler(source, Authorizers.AuthorizeAny(), connectionLifetime: TimeSpan.FromSeconds(-1));
 
-        negative.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("drainDelay");
-        tooLarge.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("drainDelay");
+        negativeMinimum.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("minDrain");
+        negativeMaximum.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("maxDrain");
+        minimumExceedsMaximum.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("minDrain");
+        invalidLifetime.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("connectionLifetime");
     }
 
     private static X509Source MakeInitializedSource()
     {
-        X509Source source = new(_ => s_ca.CreateX509Svid(s_workloadId));
+        X509Source source = new(svids => svids[0]);
         source.SetX509Context(MakeContext());
         return source;
     }

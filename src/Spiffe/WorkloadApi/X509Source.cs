@@ -73,11 +73,13 @@ public sealed class X509Source : Source, IX509Source
     {
         WriteLocked(() =>
         {
+            // The previous SVID remains live for retiring handlers' in-flight connections.
             _svid = _picker(x509Context.X509Svids);
             _bundles = x509Context.X509Bundles;
         });
 
         Initialized();
+        RaiseUpdated();
     }
 
     /// <summary>

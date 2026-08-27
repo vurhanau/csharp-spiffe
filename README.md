@@ -48,7 +48,7 @@ X509Source x509Source = await X509Source.CreateAsync(client);
 HttpClient http = new(new SpiffeHttpHandler(x509Source, Authorizers.AuthorizeAny()));
 ```
 
-`SpiffeHttpHandler` swaps its inner `SocketsHttpHandler` each time the `X509Source` receives a rotated SVID, so every new connection presents the current certificate including any intermediate CAs.
+`SpiffeHttpHandler` swaps its inner `SocketsHttpHandler` each time the `X509Source` receives a rotated SVID, so every new connection presents the current certificate including any intermediate CAs. Existing requests drain until their credential expires (subject to a configurable maximum); pooled connections are also periodically renewed as a safeguard if an update notification is missed. A single long-lived stream remains pinned to its original connection until it completes.
 
 The client and server obtain
 [X509-SVIDs](https://github.com/spiffe/spiffe/blob/main/standards/X509-SVID.md)
