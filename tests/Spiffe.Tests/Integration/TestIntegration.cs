@@ -53,7 +53,14 @@ public partial class TestIntegration
                 resp.Bundles.Should().ContainSingle();
 
                 await cts.CancelAsync();
-                await serverTask;
+                try
+                {
+                    await serverTask;
+                }
+                catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                {
+                    // Expected when stopping the test server.
+                }
 
                 return;
             }
