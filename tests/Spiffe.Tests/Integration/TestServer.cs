@@ -75,50 +75,60 @@ internal class TestServer
 
     internal async Task<Task> ListenAsync(string address, CancellationToken cancellationToken)
     {
-        TaskCompletionSource<bool> started = new();
-        TaskCompletionSource<bool> failed = new();
-        Task t = Task.Factory.StartNew(async () =>
+        TaskCompletionSource<bool> started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> failed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task serverTask = RunServerAsync();
+
+        async Task RunServerAsync()
         {
-            string testServerRoot = GetTestServerRoot();
-            string framework = GetTargetFramework();
-            _output.WriteLine($"Test server root: {testServerRoot}");
-            _output.WriteLine($"Test server address: {address}");
-            _output.WriteLine($"Test server dotnet framework: {framework}");
-            Command cmd = Cli.Wrap("dotnet")
-                            .WithArguments(["run", address, "--framework", framework])
-                            .WithWorkingDirectory(testServerRoot);
-            await foreach (CommandEvent e in cmd.ListenAsync(cancellationToken))
+            try
             {
-                switch (e)
+                string testServerRoot = GetTestServerRoot();
+                string framework = GetTargetFramework();
+                _output.WriteLine($"Test server root: {testServerRoot}");
+                _output.WriteLine($"Test server address: {address}");
+                _output.WriteLine($"Test server dotnet framework: {framework}");
+                Command cmd = Cli.Wrap("dotnet")
+                                .WithArguments(["run", address, "--framework", framework])
+                                .WithWorkingDirectory(testServerRoot);
+                await foreach (CommandEvent e in cmd.ListenAsync(cancellationToken))
                 {
-                    case StartedCommandEvent started:
-                        _output.WriteLine($"Process started; ID: {started.ProcessId}");
-                        break;
+                    switch (e)
+                    {
+                        case StartedCommandEvent processStarted:
+                            _output.WriteLine($"Process started; ID: {processStarted.ProcessId}");
+                            break;
 
-                    case StandardOutputCommandEvent stdOut:
-                        _output.WriteLine($"Out> {stdOut.Text}");
-                        if (stdOut.Text.Contains("Application started"))
-                        {
-                            started.TrySetResult(true);
-                        }
+                        case StandardOutputCommandEvent stdOut:
+                            _output.WriteLine($"Out> {stdOut.Text}");
+                            if (stdOut.Text.Contains("Application started"))
+                            {
+                                started.TrySetResult(true);
+                            }
 
-                        break;
+                            break;
 
-                    case StandardErrorCommandEvent stdErr:
-                        _output.WriteLine($"Err> {stdErr.Text}");
-                        if (stdErr.Text.Contains("Failed to bind") && !failed.Task.IsCompleted)
-                        {
-                            failed.TrySetException(new InvalidOperationException($"Server failed to start: {stdErr.Text}"));
-                        }
+                        case StandardErrorCommandEvent stdErr:
+                            _output.WriteLine($"Err> {stdErr.Text}");
+                            if (stdErr.Text.Contains("Failed to bind"))
+                            {
+                                failed.TrySetException(new InvalidOperationException($"Server failed to start: {stdErr.Text}"));
+                            }
 
-                        break;
+                            break;
 
-                    case ExitedCommandEvent exited:
-                        _output.WriteLine($"Process exited; Code: {exited.ExitCode}");
-                        break;
+                        case ExitedCommandEvent exited:
+                            _output.WriteLine($"Process exited; Code: {exited.ExitCode}");
+                            break;
+                    }
                 }
             }
-        });
+            catch (Exception ex)
+            {
+                failed.TrySetException(ex);
+                throw;
+            }
+        }
 
         // Wait for either success or failure
         Task completedTask = await Task.WhenAny(started.Task, failed.Task).ConfigureAwait(false);
@@ -127,7 +137,7 @@ internal class TestServer
             await failed.Task; // This will throw the exception
         }
 
-        return t;
+        return serverTask;
     }
 
     private static string GetTargetFramework()

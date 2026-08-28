@@ -32,6 +32,7 @@ test: ## Runs unit, integration tests and generates code coverage report
 	@rm -rf coverage/* && \
 	dotnet test \
 		--no-build \
+		--maxcpucount:1 \
 		--verbosity normal \
 		--collect:"XPlat Code Coverage" \
 		--results-directory ./coverage \

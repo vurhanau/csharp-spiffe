@@ -33,6 +33,8 @@ public partial class TestIntegration
 
     private async Task RunTest(Func<string> addressFunc)
     {
+        Exception lastException = null;
+
         for (int i = 0; i < Constants.IntegrationTestRetriesMax; i++)
         {
             using CancellationTokenSource cts = new();
@@ -47,16 +49,17 @@ public partial class TestIntegration
 
                 using GrpcChannel ch = GrpcChannelFactory.CreateChannel(address);
                 IWorkloadApiClient c = WorkloadApiClient.Create(ch);
-                X509BundleSet resp = await c.FetchX509BundlesAsync();
+                X509BundleSet resp = await c.FetchX509BundlesAsync(cts.Token);
                 resp.Bundles.Should().ContainSingle();
 
                 await cts.CancelAsync();
                 await serverTask;
 
-                break;
+                return;
             }
             catch (Exception e)
             {
+                lastException = e;
                 _output.WriteLine($"Test failed, attempt: {i + 1}: {e.Message}");
 
                 // Ensure the server process is killed before retrying
@@ -79,5 +82,9 @@ public partial class TestIntegration
                 await Task.Delay(1000);
             }
         }
+
+        throw new InvalidOperationException(
+            $"Integration test failed after {Constants.IntegrationTestRetriesMax} attempts.",
+            lastException);
     }
 }
